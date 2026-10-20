@@ -1,6 +1,7 @@
 import { type FormEvent, type ReactNode, useMemo, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
+import RulesCalculator from '@/components/rules-calculator';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
@@ -13,7 +14,7 @@ import {
 
 const queryClient = new QueryClient();
 
-type View = 'progress' | 'how' | 'prospect' | 'sponsor' | 'thesis' | 'roadmap';
+type View = 'progress' | 'how' | 'prospect' | 'sponsor' | 'thesis' | 'rules' | 'roadmap';
 type Commitment = { identifier: string; amount: number; hard: boolean };
 const TARGET = 2_000_000;
 const DEMO_LABEL = 'Demo only — synthetic data.';
@@ -43,6 +44,7 @@ function getInitialView(hasSharedTotals: boolean): View {
     requestedView === 'progress' ||
     requestedView === 'how' ||
     requestedView === 'thesis' ||
+    requestedView === 'rules' ||
     requestedView === 'roadmap'
   ) {
     return requestedView;
@@ -144,6 +146,7 @@ function AppDesk() {
     { id: 'prospect', label: 'Prospect' },
     { id: 'sponsor', label: 'Sponsor' },
     { id: 'thesis', label: 'Thesis' },
+    { id: 'rules', label: 'Rules Calculator' },
   ];
 
   return (
@@ -447,6 +450,8 @@ function AppDesk() {
             )}
           </section>
         )}
+
+        {view === 'rules' && <RulesCalculator />}
 
         {view === 'roadmap' && (
           <section className="view-content roadmap-panel" key="roadmap">
