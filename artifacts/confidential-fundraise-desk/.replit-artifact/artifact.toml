@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Confidential Fundraise Desk"
+description = "A synthetic-data demo for one sponsor and one prospect to record soft commitments, mark a commitment hard, prepare a NEAR Intents 1Click quote request, and share aggregate-only progress."
+version = "1.0.0"
+id = "artifacts/confidential-fundraise-desk"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23068
+
+[services.development]
+run = "pnpm --filter @workspace/confidential-fundraise-desk run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/confidential-fundraise-desk", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/confidential-fundraise-desk/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23068"
+BASE_PATH = "/"
