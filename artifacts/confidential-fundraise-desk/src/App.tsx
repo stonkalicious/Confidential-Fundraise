@@ -13,7 +13,7 @@ import {
 
 const queryClient = new QueryClient();
 
-type View = 'prospect' | 'sponsor' | 'progress' | 'roadmap';
+type View = 'progress' | 'how' | 'prospect' | 'sponsor' | 'thesis' | 'roadmap';
 type Commitment = { identifier: string; amount: number; hard: boolean };
 const TARGET = 2_000_000;
 const DEMO_LABEL = 'Demo only — synthetic data.';
@@ -41,11 +41,13 @@ function getInitialView(hasSharedTotals: boolean): View {
     requestedView === 'prospect' ||
     requestedView === 'sponsor' ||
     requestedView === 'progress' ||
+    requestedView === 'how' ||
+    requestedView === 'thesis' ||
     requestedView === 'roadmap'
   ) {
     return requestedView;
   }
-  return 'prospect';
+  return 'progress';
 }
 
 function AppDesk() {
@@ -56,6 +58,8 @@ function AppDesk() {
   const [amount, setAmount] = useState('');
   const [formError, setFormError] = useState('');
   const [shareMessage, setShareMessage] = useState('');
+  const [contactSubmitted, setContactSubmitted] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const softTotal = sharedTotals
     ? sharedTotals.soft
@@ -101,6 +105,11 @@ function AppDesk() {
     setView('sponsor');
   }
 
+  function submitContactRequest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setContactSubmitted(true);
+  }
+
   function copyShareUrl() {
     const url = new URL(window.location.href);
     url.search = '';
@@ -129,11 +138,12 @@ function AppDesk() {
       .catch(() => setShareMessage(fallbackCopy() ? 'Share URL copied.' : 'Copy was unavailable.'));
   }
 
-  const views: { id: View; index: string; label: string }[] = [
-    { id: 'prospect', index: '01', label: 'Prospect' },
-    { id: 'sponsor', index: '02', label: 'Sponsor' },
-    { id: 'progress', index: '03', label: 'Progress' },
-    { id: 'roadmap', index: '04', label: 'Roadmap' },
+  const views: { id: View; index?: string; label: string }[] = [
+    { id: 'progress', index: '01', label: 'Progress' },
+    { id: 'how', index: '02', label: 'How this app works' },
+    { id: 'prospect', label: 'Prospect' },
+    { id: 'sponsor', label: 'Sponsor' },
+    { id: 'thesis', label: 'Thesis' },
   ];
 
   return (
@@ -145,7 +155,44 @@ function AppDesk() {
             <div className="brand-name">Confidential Fundraise Desk - Powered by NEAR</div>
           </div>
         </div>
-        <span className="demo-label" data-testid="text-demo-label">{DEMO_LABEL}</span>
+        <div className="topbar-actions">
+          <span className="demo-label" data-testid="text-demo-label">{DEMO_LABEL}</span>
+          <div
+            className="site-menu"
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') setMenuOpen(false);
+            }}
+          >
+            <button
+              className="site-menu-toggle"
+              type="button"
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-haspopup="true"
+              aria-expanded={menuOpen}
+              aria-controls="site-menu-dropdown"
+              data-testid="button-site-menu"
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              <span className="menu-icon" aria-hidden="true"><i /><i /><i /></span>
+            </button>
+            {menuOpen && (
+              <div className="site-menu-dropdown" id="site-menu-dropdown" aria-label="More pages">
+                <button
+                  className="site-menu-item"
+                  type="button"
+                  data-testid="menu-roadmap"
+                  onClick={() => {
+                    setView('roadmap');
+                    setShareMessage('');
+                    setMenuOpen(false);
+                  }}
+                >
+                  Roadmap
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </header>
 
       <main className="frame">
@@ -156,10 +203,10 @@ function AppDesk() {
               key={item.id}
               type="button"
               data-testid={`nav-view-${item.id}`}
-              onClick={() => { setView(item.id); setShareMessage(''); }}
+              onClick={() => { setView(item.id); setShareMessage(''); setMenuOpen(false); }}
               aria-current={view === item.id ? 'page' : undefined}
             >
-              <span className="nav-index">{item.index}</span>{item.label}
+              {item.index && <span className="nav-index">{item.index}</span>}{item.label}
             </button>
           ))}
         </nav>
@@ -314,6 +361,93 @@ function AppDesk() {
           </section>
         )}
 
+        {view === 'how' && (
+          <section className="view-content how-panel" key="how">
+            <article className="how-copy">
+              <h1 className="how-title">How the app works</h1>
+              <p>Confidential Fundraise Desk is a minimal demo of private fundraise coordination.</p>
+              <p>
+                A prospect submits a soft commitment (identifier and amount). The sponsor reviews it privately and can mark it hard. Marking it hard generates a NEAR Intents 1Click quote request with confidential mode enabled, showing how the amount could settle cross-chain under a simple threshold rule without revealing individual details on a public chain.
+              </p>
+              <p>
+                A separate progress view shows only aggregates (total soft, total hard, and progress toward a €2 m example minimum). Individual names and amounts never appear there.
+              </p>
+              <p>
+                The whole flow uses synthetic data and is labeled as a demo. It illustrates that commitments can stay private while settlement, if chosen, can use NEAR’s confidential cross-chain path.
+              </p>
+            </article>
+          </section>
+        )}
+
+        {view === 'thesis' && (
+          <section className="view-content thesis-panel" key="thesis">
+            <article className="thesis-copy">
+              <h1 className="thesis-title">Confidential Fundraise Desk — Example Thesis Summary</h1>
+              <p className="thesis-disclaimer">(Demo context only. Synthetic. Not an offer.)</p>
+
+              <h2>Private money and cross-chain settlement</h2>
+              <p>
+                Tokenized real-world assets are moving onto public blockchains because settlement is faster and cheaper than traditional markets. The same transfer that takes one to three days and multiple intermediaries can settle in minutes with fewer parties. Public chains, however, make every transfer visible by default. Large accumulations, rebalances, and ordinary movements become permanently linkable. AI systems make that linkage easier over time.
+              </p>
+              <p>Two existing systems address different parts of this problem.</p>
+
+              <h3>ZEC</h3>
+              <p>
+                ZEC functions as private money. It has a fixed supply cap and uses zero-knowledge proofs so that shielded transfers do not reveal sender, receiver, or amount on the public chain. It is the most mature implementation of the original private-digital-cash idea. Legitimate uses include accumulating a position without moving the market, moving value between one’s own accounts without creating a permanent public link, and conducting business or treasury activity that does not need to be advertised. Shielded usage has continued to grow as the network has scaled.
+              </p>
+
+              <h3>NEAR Intents</h3>
+              <p>
+                NEAR Intents is a cross-chain settlement layer. A user (or agent) states a desired outcome. Competing solvers fill the order across whatever chains are required, and the result settles on NEAR. The same path already handles large volumes of crypto-to-crypto flow. As tokenized stocks, bonds, and other assets move on-chain, the same intent model can route those trades. Confidential mode keeps the details of a swap or transfer from being linkable on the public chains involved, while still allowing verifiable settlement.
+              </p>
+
+              <p>
+                Together the two pieces cover private store-of-value and private cross-chain execution. A vehicle that holds listed products in both can express the view that financial privacy and chain-abstracted settlement will matter more as traditional assets move on-chain and as AI increases the ease of surveillance.
+              </p>
+
+              <h2>Illustrative structure</h2>
+              <div className="thesis-structure">
+                <p>Minimum target example: €2 million.</p>
+                <p>Maximum example: €5 million.</p>
+                <p>Simple fee and carry terms can be applied.</p>
+                <p>Lock-up and term are contractual.</p>
+                <p>All figures and terms in this document are synthetic examples for the demo.</p>
+              </div>
+
+              <p>
+                This page is context for the Confidential Fundraise Desk prototype only. It demonstrates private commitment tracking and optional confidential settlement via NEAR Intents. It is not a solicitation.
+              </p>
+              <p>
+                Interested parties may submit a contact request through the form below. No commitment is created by doing so.
+              </p>
+            </article>
+
+            {contactSubmitted ? (
+              <p className="thesis-confirmation" data-testid="status-contact-request" role="status">
+                Request received (demo only).
+              </p>
+            ) : (
+              <form className="form-card thesis-contact-form" onSubmit={submitContactRequest} noValidate>
+                <div className="field-wrap">
+                  <label className="field-label" htmlFor="contact-name">Name</label>
+                  <input className="field" id="contact-name" data-testid="input-contact-name" name="name" />
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label" htmlFor="contact-email">Email</label>
+                  <input className="field" id="contact-email" data-testid="input-contact-email" name="email" type="email" />
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label" htmlFor="contact-message">Short message</label>
+                  <textarea className="field thesis-message" id="contact-message" data-testid="input-contact-message" name="message" rows={4} />
+                </div>
+                <button className="primary-button" data-testid="button-submit-contact" type="submit">
+                  Submit
+                </button>
+              </form>
+            )}
+          </section>
+        )}
+
         {view === 'roadmap' && (
           <section className="view-content roadmap-panel" key="roadmap">
             <h1 className="roadmap-title">Roadmap</h1>
@@ -333,6 +467,9 @@ function AppDesk() {
               <li>Per-commitment restrictions or excuse provisions</li>
               <li>Post-close asset allocation or swaps under the same confidential path</li>
             </ul>
+            <p className="roadmap-outro">
+              All of the above can be expressed as mechanical rules on the NEAR Intents confidential settlement layer. None of them are required for the current demo.
+            </p>
           </section>
         )}
       </main>

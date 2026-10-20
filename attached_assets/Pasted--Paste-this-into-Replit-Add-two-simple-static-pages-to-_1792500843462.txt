@@ -1,0 +1,72 @@
+**Paste this into Replit:**
+
+---
+
+Add two simple static pages to the existing Confidential Fundraise Desk demo. Do not change any of the current commitment, Intents payload, or progress logic.
+
+**1. Thesis page**  
+Add a new tab or page labeled “Thesis”.  
+Display the following text exactly (no edits, no extra sections):
+
+Confidential Fundraise Desk — Example Thesis Summary  
+(Demo context only. Synthetic. Not an offer.)
+
+Private money and cross-chain settlement
+
+Tokenized real-world assets are moving onto public blockchains because settlement is faster and cheaper than traditional markets. The same transfer that takes one to three days and multiple intermediaries can settle in minutes with fewer parties. Public chains, however, make every transfer visible by default. Large accumulations, rebalances, and ordinary movements become permanently linkable. AI systems make that linkage easier over time.
+
+Two existing systems address different parts of this problem.
+
+ZEC  
+ZEC functions as private money. It has a fixed supply cap and uses zero-knowledge proofs so that shielded transfers do not reveal sender, receiver, or amount on the public chain. It is the most mature implementation of the original private-digital-cash idea. Legitimate uses include accumulating a position without moving the market, moving value between one’s own accounts without creating a permanent public link, and conducting business or treasury activity that does not need to be advertised. Shielded usage has continued to grow as the network has scaled.
+
+NEAR Intents  
+NEAR Intents is a cross-chain settlement layer. A user (or agent) states a desired outcome. Competing solvers fill the order across whatever chains are required, and the result settles on NEAR. The same path already handles large volumes of crypto-to-crypto flow. As tokenized stocks, bonds, and other assets move on-chain, the same intent model can route those trades. Confidential mode keeps the details of a swap or transfer from being linkable on the public chains involved, while still allowing verifiable settlement.
+
+Together the two pieces cover private store-of-value and private cross-chain execution. A vehicle that holds listed products in both can express the view that financial privacy and chain-abstracted settlement will matter more as traditional assets move on-chain and as AI increases the ease of surveillance.
+
+Illustrative structure  
+Minimum target example: €2 million.  
+Maximum example: €5 million.  
+Simple fee and carry terms can be applied.  
+Lock-up and term are contractual.  
+All figures and terms in this document are synthetic examples for the demo.
+
+This page is context for the Confidential Fundraise Desk prototype only. It demonstrates private commitment tracking and optional confidential settlement via NEAR Intents. It is not a solicitation.
+
+Interested parties may submit a contact request through the form below. No commitment is created by doing so.
+
+Under the text, add a minimal contact form (name, email, short message, submit button). On submit, show only a confirmation message “Request received (demo only).” Do not store, email, or process the data.
+
+**2. Roadmap page**  
+Add a new tab or page labeled “Roadmap”.  
+Display the following text exactly:
+
+Roadmap  
+(Not built — future direction only)
+
+The current demo shows private soft commitments, a confidential NEAR Intents hard-commitment step under a minimum threshold, and an aggregate-only progress view.
+
+Possible extensions:
+
+- Programmable fees taken automatically on commitment or over time  
+- Hard caps on total commitments  
+- Time-locks and minimum holding periods  
+- Preferred-return or hurdle gates before distributions  
+- Automated distribution waterfalls  
+- Capital calls and scheduled drawdowns  
+- Default and reallocation rules  
+- Per-commitment restrictions or excuse provisions  
+- Post-close asset allocation or swaps under the same confidential path  
+
+All of the above can be expressed as mechanical rules on the NEAR Intents confidential settlement layer. None of them are required for the current demo.
+
+**Constraints**  
+- Keep both pages static and simple.  
+- Do not add navigation complexity, databases, authentication, or any new logic to the existing three-step flow.  
+- Do not alter the Intents payload or aggregate progress view.  
+- Label remains “Demo only — synthetic data” on every page.
+
+Stop when the two pages exist and the contact form only shows a local confirmation.
+
+---
