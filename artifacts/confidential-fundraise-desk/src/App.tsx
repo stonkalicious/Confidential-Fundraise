@@ -78,8 +78,8 @@ function AppDesk() {
       setFormError('Enter an identifier.');
       return;
     }
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setFormError('Enter an amount greater than zero.');
+    if (!Number.isSafeInteger(parsedAmount) || parsedAmount <= 0) {
+      setFormError('Enter a whole amount greater than zero.');
       return;
     }
     setCommitment({ identifier: identifier.trim(), amount: parsedAmount, hard: false });
@@ -98,17 +98,20 @@ function AppDesk() {
       const field = document.createElement('textarea');
       field.value = shareUrl;
       field.style.position = 'fixed';
-      field.style.opacity = '0';
+      field.style.left = '-9999px';
       document.body.appendChild(field);
+      field.focus();
       field.select();
       const copied = document.execCommand('copy');
       document.body.removeChild(field);
       return copied;
     };
-    const copy = navigator.clipboard?.writeText
-      ? navigator.clipboard.writeText(shareUrl)
-      : Promise.resolve(fallbackCopy());
-    copy.then(() => setShareMessage('Share URL copied.'))
+    if (!navigator.clipboard?.writeText) {
+      setShareMessage(fallbackCopy() ? 'Share URL copied.' : 'Copy was unavailable.');
+      return;
+    }
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => setShareMessage('Share URL copied.'))
       .catch(() => setShareMessage(fallbackCopy() ? 'Share URL copied.' : 'Copy was unavailable.'));
   }
 
@@ -127,7 +130,7 @@ function AppDesk() {
             <div className="brand-name">Confidential Fundraise Desk</div>
           </div>
         </div>
-        <span className="demo-label">{DEMO_LABEL}</span>
+        <span className="demo-label" data-testid="text-demo-label">{DEMO_LABEL}</span>
       </header>
 
       <main className="frame">
@@ -137,6 +140,7 @@ function AppDesk() {
               className={`nav-button${view === item.id ? ' active' : ''}`}
               key={item.id}
               type="button"
+              data-testid={`nav-view-${item.id}`}
               onClick={() => { setView(item.id); setShareMessage(''); }}
               aria-current={view === item.id ? 'page' : undefined}
             >
@@ -155,6 +159,7 @@ function AppDesk() {
                   <input
                     className="field"
                     id="prospect-identifier"
+                    data-testid="input-prospect-identifier"
                     name="identifier"
                     autoComplete="off"
                     maxLength={80}
@@ -170,16 +175,20 @@ function AppDesk() {
                     <input
                       className="field"
                       id="prospect-amount"
+                      data-testid="input-prospect-amount"
                       name="amount"
-                      inputMode="decimal"
+                      type="number"
+                      min="1"
+                      step="1"
+                      inputMode="numeric"
                       placeholder="0"
                       value={amount}
                       onChange={(event) => setAmount(event.target.value)}
                     />
                   </div>
                 </div>
-                {formError && <p className="inline-error" role="alert">{formError}</p>}
-                <button className="primary-button" type="submit">
+                {formError && <p className="inline-error" data-testid="status-form-error" role="alert">{formError}</p>}
+                <button className="primary-button" data-testid="button-submit-commitment" type="submit">
                   Submit soft commitment <span className="button-arrow" aria-hidden="true">↗</span>
                 </button>
               </form>
@@ -201,15 +210,16 @@ function AppDesk() {
                 {commitment ? (
                   <div className="commitment-card">
                     <div className="commitment-meta">
-                      <div className="record-line">
+                      <div className="record-line" data-testid="status-commitment">
                         <span className={`status-dot${commitment.hard ? ' hard' : ''}`} />
                         {commitment.hard ? 'Hard commitment' : 'Soft commitment'}
                       </div>
-                      <div className="record-name">{commitment.identifier}</div>
-                      <div className="record-amount">{euro(commitment.amount)}</div>
+                      <div className="record-name" data-testid="text-commitment-identifier">{commitment.identifier}</div>
+                      <div className="record-amount" data-testid="text-commitment-amount">{euro(commitment.amount)}</div>
                     </div>
                     <button
                       className={commitment.hard ? 'quiet-button' : 'mark-button'}
+                      data-testid="button-toggle-hard-commitment"
                       type="button"
                       onClick={() => setCommitment({ ...commitment, hard: !commitment.hard })}
                     >
@@ -217,7 +227,7 @@ function AppDesk() {
                     </button>
                   </div>
                 ) : (
-                  <div className="empty-record">No prospect commitment has been submitted.</div>
+                  <div className="empty-record" data-testid="status-empty-commitment">No prospect commitment has been submitted.</div>
                 )}
               </div>
               <aside className="side-card">
@@ -234,11 +244,11 @@ function AppDesk() {
                 </div>
                 <div className="quote-card">
                   <div className="quote-topline">
-                    <span className="quote-url">POST https://1click.chaindefuser.com/v0/quote</span>
+                  <span className="quote-url" data-testid="text-quote-endpoint">POST https://1click.chaindefuser.com/v0/quote</span>
                     <span>application/json</span>
                   </div>
-                  <pre className="quote-json">{JSON.stringify(quoteBody, null, 2)}</pre>
-                  <div className="quote-warning">Synthetic address and asset values. Display only.</div>
+                  <pre className="quote-json" data-testid="text-quote-payload">{JSON.stringify(quoteBody, null, 2)}</pre>
+                  <div className="quote-warning">Synthetic amount and address values. Display only.</div>
                 </div>
               </div>
             )}
@@ -258,6 +268,7 @@ function AppDesk() {
               </div>
               <div
                 className="progress-line"
+                data-testid="progress-hard-total"
                 role="progressbar"
                 aria-label="Progress toward €2,000,000"
                 aria-valuemin={0}
@@ -270,25 +281,25 @@ function AppDesk() {
               <div className="aggregate-grid">
                 <div className="aggregate">
                   <div className="aggregate-label">Soft total</div>
-                  <div className="aggregate-value">{euro(softTotal)}</div>
+                  <div className="aggregate-value" data-testid="text-soft-total">{euro(softTotal)}</div>
                 </div>
                 <div className="aggregate">
                   <div className="aggregate-label">Hard total</div>
-                  <div className="aggregate-value">{euro(hardTotal)}</div>
+                  <div className="aggregate-value" data-testid="text-hard-total">{euro(hardTotal)}</div>
                 </div>
               </div>
               <div className="share-row">
                 <span className="share-note">Settlement occurs only if aggregate hard commitments reach the €2m example threshold.</span>
-                <button className="quiet-button" type="button" onClick={copyShareUrl}>
+                <button className="quiet-button" data-testid="button-copy-share-url" type="button" onClick={copyShareUrl}>
                   Copy share URL <span className="button-arrow" aria-hidden="true">↗</span>
                 </button>
               </div>
-              <div className="toast-message" aria-live="polite">{shareMessage}</div>
+              <div className="toast-message" data-testid="status-share-url" aria-live="polite">{shareMessage}</div>
             </div>
           </section>
         )}
       </main>
-      <footer className="footer">{DEMO_LABEL}</footer>
+      <footer className="footer" data-testid="text-demo-label-footer">{DEMO_LABEL}</footer>
     </div>
   );
 }
