@@ -192,11 +192,21 @@ button:focus-visible, input:focus-visible {
 .toast-message { min-height: 19px; margin-top: 12px; color: #536b59; font-size: 11px; }
 .footer { max-width: 1160px; margin: 0 auto; padding: 17px 32px 27px; border-top: 1px solid #ded9cc; color: #928c7f; font: 10px var(--app-font-mono); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.roadmap-panel { max-width: 860px; margin-top: 35px; padding: clamp(23px, 4vw, 42px); background: #fbfaf6; border: 1px solid #e1dccf; border-radius: 5px; }
+.roadmap-title { margin: 0; font: 400 36px/1.1 var(--app-font-serif); }
+.roadmap-status { margin: 9px 0 26px; color: #9c5945; font: 11px var(--app-font-mono); }
+.roadmap-intro { margin: 0; color: #5f5a68; font-size: 14px; line-height: 1.7; }
+.roadmap-list-title { margin: 30px 0 13px; font: 400 23px/1.2 var(--app-font-serif); }
+.roadmap-list { margin: 0; padding-left: 21px; list-style-type: disc; color: #5f5a68; font-size: 13px; line-height: 1.8; }
+.roadmap-list li { padding-left: 4px; }
 
 @media (max-width: 760px) {
-  .topbar { height: 66px; padding: 0 18px; }
+  .topbar { height: auto; min-height: 66px; padding: 10px 18px; gap: 10px; }
+  .brand { min-width: 0; gap: 8px; }
+  .brand > div { min-width: 0; }
+  .brand-name { max-width: 155px; font-size: 11px; line-height: 1.25; }
   .brand-kicker { display: none; }
-  .demo-label { padding: 7px 8px; font-size: 9px; }
+  .demo-label { flex: 0 0 auto; padding: 7px 8px; font-size: 9px; }
   .frame { padding: 39px 19px 52px; }
   .page-heading { max-width: 480px; font-size: clamp(43px, 11vw, 63px); }
   .nav-row { margin-top: 29px; overflow-x: auto; }

@@ -13,7 +13,7 @@ import {
 
 const queryClient = new QueryClient();
 
-type View = 'prospect' | 'sponsor' | 'progress';
+type View = 'prospect' | 'sponsor' | 'progress' | 'roadmap';
 type Commitment = { identifier: string; amount: number; hard: boolean };
 const TARGET = 2_000_000;
 const DEMO_LABEL = 'Demo only — synthetic data.';
@@ -34,9 +34,23 @@ function euro(value: number) {
   }).format(value);
 }
 
+function getInitialView(hasSharedTotals: boolean): View {
+  if (hasSharedTotals) return 'progress';
+  const requestedView = new URLSearchParams(window.location.search).get('view');
+  if (
+    requestedView === 'prospect' ||
+    requestedView === 'sponsor' ||
+    requestedView === 'progress' ||
+    requestedView === 'roadmap'
+  ) {
+    return requestedView;
+  }
+  return 'prospect';
+}
+
 function AppDesk() {
   const sharedTotals = useMemo(() => readSharedTotals(), []);
-  const [view, setView] = useState<View>(sharedTotals ? 'progress' : 'prospect');
+  const [view, setView] = useState<View>(() => getInitialView(Boolean(sharedTotals)));
   const [commitment, setCommitment] = useState<Commitment | null>(null);
   const [identifier, setIdentifier] = useState('');
   const [amount, setAmount] = useState('');
@@ -119,15 +133,16 @@ function AppDesk() {
     { id: 'prospect', index: '01', label: 'Prospect' },
     { id: 'sponsor', index: '02', label: 'Sponsor' },
     { id: 'progress', index: '03', label: 'Progress' },
+    { id: 'roadmap', index: '04', label: 'Roadmap' },
   ];
 
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div className="brand" aria-label="Confidential Fundraise Desk">
+        <div className="brand" aria-label="Confidential Fundraise Desk - Powered by NEAR">
           <span className="brand-mark" aria-hidden="true">F</span>
           <div>
-            <div className="brand-name">Confidential Fundraise Desk</div>
+            <div className="brand-name">Confidential Fundraise Desk - Powered by NEAR</div>
           </div>
         </div>
         <span className="demo-label" data-testid="text-demo-label">{DEMO_LABEL}</span>
@@ -296,6 +311,28 @@ function AppDesk() {
               </div>
               <div className="toast-message" data-testid="status-share-url" aria-live="polite">{shareMessage}</div>
             </div>
+          </section>
+        )}
+
+        {view === 'roadmap' && (
+          <section className="view-content roadmap-panel" key="roadmap">
+            <h1 className="roadmap-title">Roadmap</h1>
+            <p className="roadmap-status">(Not built — future direction only)</p>
+            <p className="roadmap-intro">
+              The current demo shows private soft commitments, a confidential NEAR Intents hard-commitment step under a minimum threshold, and an aggregate-only progress view.
+            </p>
+            <h2 className="roadmap-list-title">Possible extensions:</h2>
+            <ul className="roadmap-list">
+              <li>Programmable fees taken automatically on commitment or over time</li>
+              <li>Hard caps on total commitments</li>
+              <li>Time-locks and minimum holding periods</li>
+              <li>Preferred-return or hurdle gates before distributions</li>
+              <li>Automated distribution waterfalls</li>
+              <li>Capital calls and scheduled drawdowns</li>
+              <li>Default and reallocation rules</li>
+              <li>Per-commitment restrictions or excuse provisions</li>
+              <li>Post-close asset allocation or swaps under the same confidential path</li>
+            </ul>
           </section>
         )}
       </main>
