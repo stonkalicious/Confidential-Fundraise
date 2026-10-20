@@ -112,6 +112,10 @@ function AppDesk() {
     setContactSubmitted(true);
   }
 
+  function toggleCommitmentHardStatus() {
+    setCommitment((current) => current ? { ...current, hard: !current.hard } : current);
+  }
+
   function copyShareUrl() {
     const url = new URL(window.location.href);
     url.search = '';
@@ -286,7 +290,8 @@ function AppDesk() {
                       className={commitment.hard ? 'quiet-button' : 'mark-button'}
                       data-testid="button-toggle-hard-commitment"
                       type="button"
-                      onClick={() => setCommitment({ ...commitment, hard: !commitment.hard })}
+                      aria-pressed={commitment.hard}
+                      onClick={toggleCommitmentHardStatus}
                     >
                       {commitment.hard ? 'Revert to soft' : 'Mark hard'}
                     </button>
