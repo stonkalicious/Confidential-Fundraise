@@ -1,0 +1,38 @@
+**Paste this into Replit:**
+
+---
+
+Evolve the existing Confidential Fundraise Desk into a practical private fundraise tracker for the sponsor while keeping a clean public status view. Do not rebuild the app from scratch. Keep the current visual style and the “Demo only — synthetic data” framing until real data is added.
+
+**Public view (no login required)**  
+- Accessible via the main URL and via a permanent shareable status link.  
+- Shows only aggregates: total soft, total hard, progress toward the €2 m example minimum, and a short status line.  
+- Never displays individual names, amounts, contact history, or notes.  
+- Include a “Copy share URL” button.
+
+**Sponsor private view (login required)**  
+- Add a simple login (password gate or Replit Auth).  
+- After login the sponsor sees the same aggregate numbers plus a private table of prospects.  
+- Table columns: Identifier, Contacted (yes/no + date), Status (Not contacted / Contacted / Soft / Hard / Declined / On hold), Amount (EUR), Notes.  
+- Ability to add a new prospect and edit any row (status, amount, contacted flag, notes).  
+- Editing a row immediately updates the public aggregates.  
+- Pre-load one synthetic €50 k hard commitment so the public view is not empty.
+
+**Hard commit behavior**  
+- When status is set to Hard, still generate and display the NEAR Intents 1Click quote request payload with `"confidentiality": "basic"` (dry/illustrative if no key). Do not remove this.
+
+**Constraints**  
+- No investor logins.  
+- No email sending, file uploads, or multi-user permissions.  
+- No full database migration; use the simplest storage that works in Replit (Replit DB, JSON, or existing state).  
+- Keep Thesis, Roadmap, and Rules Calculator pages unchanged.  
+- Label private pages “Sponsor only” and public pages “Public status — aggregates only”.
+
+Stop when:  
+1. Public shareable link shows only aggregates.  
+2. Sponsor can log in, see the private table, add/edit prospects, and see aggregates update.  
+3. Setting a row to Hard still shows the confidential Intents payload.
+
+---
+
+This keeps the change small and usable for real tracking while preserving the NEAR demonstration.
