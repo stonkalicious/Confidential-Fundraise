@@ -1,4 +1,9 @@
 import { type FormEvent, type ReactNode, useMemo, useState } from 'react';
+import {
+  getGetRaiseClaimQueryKey,
+  useGetRaiseClaim,
+  useSubmitRaiseClaim,
+} from '@workspace/api-client-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import RulesCalculator from '@/components/rules-calculator';
@@ -35,6 +40,18 @@ function euro(value: number) {
   }).format(value);
 }
 
+function raiseClaimErrorMessage(error: unknown) {
+  if (error && typeof error === 'object') {
+    const apiError = error as { status?: unknown; data?: unknown };
+    if (apiError.data && typeof apiError.data === 'object' && 'error' in apiError.data) {
+      const message = (apiError.data as { error?: unknown }).error;
+      if (typeof message === 'string') return message;
+    }
+    if (apiError.status === 409) return 'This raise has already been claimed.';
+  }
+  return 'Could not submit the claim. Please try again.';
+}
+
 function getInitialView(hasSharedTotals: boolean): View {
   if (hasSharedTotals) return 'progress';
   const requestedView = new URLSearchParams(window.location.search).get('view');
@@ -62,6 +79,16 @@ function AppDesk() {
   const [shareMessage, setShareMessage] = useState('');
   const [contactSubmitted, setContactSubmitted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [claimFormOpen, setClaimFormOpen] = useState(false);
+  const [claimFounderName, setClaimFounderName] = useState('');
+  const [claimEmail, setClaimEmail] = useState('');
+  const [claimVehicleLink, setClaimVehicleLink] = useState('');
+  const [claimError, setClaimError] = useState('');
+  const raiseClaimQuery = useGetRaiseClaim({
+    query: { queryKey: getGetRaiseClaimQueryKey(), refetchInterval: 5000 },
+    request: { cache: 'no-store' },
+  });
+  const raiseClaimMutation = useSubmitRaiseClaim();
 
   const softTotal = sharedTotals
     ? sharedTotals.soft
@@ -110,6 +137,39 @@ function AppDesk() {
   function submitContactRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setContactSubmitted(true);
+  }
+
+  async function submitRaiseClaim(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setClaimError('');
+    try {
+      const status = await raiseClaimMutation.mutateAsync({
+        data: {
+          founderName: claimFounderName.trim(),
+          email: claimEmail.trim(),
+          ...(claimVehicleLink.trim()
+            ? { vehicleLink: claimVehicleLink.trim() }
+            : {}),
+        },
+      });
+      queryClient.setQueryData(getGetRaiseClaimQueryKey(), status);
+      setClaimFormOpen(false);
+      setClaimFounderName('');
+      setClaimEmail('');
+      setClaimVehicleLink('');
+    } catch (error) {
+      const refreshed = await raiseClaimQuery.refetch();
+      if (refreshed.data?.claimed) setClaimFormOpen(false);
+      setClaimError(raiseClaimErrorMessage(error));
+    }
+  }
+
+  function closeRaiseClaimForm() {
+    setClaimFormOpen(false);
+    setClaimFounderName('');
+    setClaimEmail('');
+    setClaimVehicleLink('');
+    setClaimError('');
   }
 
   function toggleCommitmentHardStatus() {
@@ -327,7 +387,105 @@ function AppDesk() {
 
         {view === 'progress' && (
           <section className="view-content" key="progress">
-            <div className="eyebrow">Aggregate view</div>
+            <div className="raise-claim-toolbar">
+              <div
+                className="eyebrow raise-status-banner"
+                data-testid="status-raise-claim"
+                role="status"
+                aria-live="polite"
+              >
+                {raiseClaimQuery.data?.claimed
+                  ? `Claimed by ${raiseClaimQuery.data.founderName ?? ''}`
+                  : 'Public data'}
+              </div>
+              {!raiseClaimQuery.data?.claimed && (
+                <button
+                  className="quiet-button"
+                  data-testid="button-claim-raise"
+                  type="button"
+                  onClick={() => {
+                    setClaimError('');
+                    setClaimFormOpen(true);
+                  }}
+                >
+                  Claim this raise
+                </button>
+              )}
+            </div>
+            {claimFormOpen && !raiseClaimQuery.data?.claimed && (
+              <form
+                className="form-card raise-claim-form"
+                data-testid="form-raise-claim"
+                onSubmit={submitRaiseClaim}
+              >
+                <div className="field-wrap">
+                  <label className="field-label" htmlFor="raise-claim-founder-name">Founder name</label>
+                  <input
+                    className="field"
+                    id="raise-claim-founder-name"
+                    data-testid="input-raise-claim-founder-name"
+                    name="founderName"
+                    autoComplete="name"
+                    maxLength={120}
+                    required
+                    value={claimFounderName}
+                    onChange={(event) => setClaimFounderName(event.target.value)}
+                  />
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label" htmlFor="raise-claim-email">Email</label>
+                  <input
+                    className="field"
+                    id="raise-claim-email"
+                    data-testid="input-raise-claim-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    maxLength={254}
+                    required
+                    value={claimEmail}
+                    onChange={(event) => setClaimEmail(event.target.value)}
+                  />
+                </div>
+                <div className="field-wrap">
+                  <label className="field-label" htmlFor="raise-claim-vehicle-link">Vehicle link (optional)</label>
+                  <input
+                    className="field"
+                    id="raise-claim-vehicle-link"
+                    data-testid="input-raise-claim-vehicle-link"
+                    name="vehicleLink"
+                    type="text"
+                    maxLength={500}
+                    value={claimVehicleLink}
+                    onChange={(event) => setClaimVehicleLink(event.target.value)}
+                  />
+                </div>
+                {claimError && (
+                  <p className="inline-error raise-claim-error" data-testid="status-raise-claim-error" role="alert">
+                    {claimError}
+                  </p>
+                )}
+                <div className="raise-claim-actions">
+                  <button
+                    className="quiet-button"
+                    data-testid="button-cancel-raise-claim"
+                    type="button"
+                    onClick={closeRaiseClaimForm}
+                    disabled={raiseClaimMutation.isPending}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="primary-button"
+                    data-testid="button-submit-raise-claim"
+                    type="submit"
+                    disabled={raiseClaimMutation.isPending}
+                  >
+                    Submit claim
+                  </button>
+                </div>
+              </form>
+            )}
             <div className="progress-panel">
               <div className="progress-top">
                 <div>

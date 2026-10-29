@@ -209,6 +209,13 @@ button:focus-visible, input:focus-visible {
 .share-note { color: #837d70; font-size: 11px; line-height: 1.5; }
 .share-link { display: flex; align-items: center; gap: 9px; min-width: 0; }
 .toast-message { min-height: 19px; margin-top: 12px; color: #536b59; font-size: 11px; }
+.raise-claim-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.raise-status-banner { text-transform: none; letter-spacing: .04em; }
+.raise-claim-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-bottom: 18px; }
+.raise-claim-form .field-wrap { min-width: 0; margin-bottom: 0; }
+.raise-claim-error, .raise-claim-actions { grid-column: 1 / -1; }
+.raise-claim-error { margin: 0; }
+.raise-claim-actions { display: flex; justify-content: flex-end; gap: 10px; }
 .footer { max-width: 1160px; margin: 0 auto; padding: 17px 32px 27px; border-top: 1px solid #ded9cc; color: #928c7f; font: 10px var(--app-font-mono); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .roadmap-panel { max-width: 860px; margin-top: 35px; padding: clamp(23px, 4vw, 42px); background: #fbfaf6; border: 1px solid #e1dccf; border-radius: 5px; }
@@ -271,6 +278,8 @@ button:focus-visible, input:focus-visible {
   .progress-top { flex-direction: column; }
   .progress-target { text-align: left; }
   .share-row { align-items: flex-start; flex-direction: column; }
+  .raise-claim-form { grid-template-columns: 1fr; }
+  .raise-claim-error, .raise-claim-actions { grid-column: auto; }
   .footer { padding: 17px 19px 24px; }
 }
 @media (max-width: 420px) {

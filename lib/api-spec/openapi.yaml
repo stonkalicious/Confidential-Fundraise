@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: raise-claim
+    description: Single demo raise claim
 paths:
   /healthz:
     get:
@@ -24,6 +26,47 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /raise-claim:
+    get:
+      operationId: getRaiseClaim
+      tags: [raise-claim]
+      summary: Get the public claim status
+      responses:
+        "200":
+          description: Public claim state; excludes submitted contact details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RaiseClaimStatus"
+    post:
+      operationId: submitRaiseClaim
+      tags: [raise-claim]
+      summary: Submit the first claim for the demo raise
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RaiseClaimInput"
+      responses:
+        "201":
+          description: Claim accepted; returns only the public claim state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RaiseClaimStatus"
+        "400":
+          description: Invalid claim details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "409":
+          description: The raise has already been claimed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +76,38 @@ components:
           type: string
       required:
         - status
+    RaiseClaimStatus:
+      type: object
+      properties:
+        claimed:
+          type: boolean
+        founderName:
+          type: [string, "null"]
+      required:
+        - claimed
+        - founderName
+    RaiseClaimInput:
+      type: object
+      properties:
+        founderName:
+          type: string
+          minLength: 1
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        vehicleLink:
+          type: string
+          maxLength: 500
+      required:
+        - founderName
+        - email
+    ErrorMessage:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
 
