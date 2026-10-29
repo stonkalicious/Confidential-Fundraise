@@ -1,4 +1,4 @@
-export type Commitment = { identifier: string; amount: number; hard: boolean };
+export type Commitment = { id: string; identifier: string; amount: number; hard: boolean };
 
 export type Raise = {
   id: string;
@@ -8,7 +8,7 @@ export type Raise = {
   roundRange: { min: number; max: number };
   claimed: boolean;
   claim?: { founderName: string; email: string; vehicleLink?: string };
-  commitment?: Commitment;
+  commitments?: Commitment[];
 };
 
 // Fictional demo raises. All changes live only in the browser's local array.

@@ -56,7 +56,10 @@ function getInitialView(hasSharedTotals: boolean): View {
 function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: Partial<Raise>) => void }) {
   const sharedTotals = useMemo(() => readSharedTotals(), []);
   const [view, setView] = useState<View>(() => getInitialView(Boolean(sharedTotals)));
-  const commitment = raise.commitment;
+  const commitments = raise.commitments ?? [];
+  const [quoteCommitmentId, setQuoteCommitmentId] = useState<string | null>(null);
+  const commitment = commitments.find((item) => item.id === quoteCommitmentId && item.hard)
+    ?? commitments.find((item) => item.hard);
   const target = raise.roundRange.min;
   const [identifier, setIdentifier] = useState('');
   const [amount, setAmount] = useState('');
@@ -70,12 +73,12 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
   const [claimVehicleLink, setClaimVehicleLink] = useState('');
   const [claimError, setClaimError] = useState('');
 
-  const softTotal = sharedTotals
+  const softTotal = sharedTotals && commitments.length === 0
     ? sharedTotals.soft
-    : commitment && !commitment.hard ? commitment.amount : 0;
-  const hardTotal = sharedTotals
+    : commitments.reduce((total, item) => total + (item.hard ? 0 : item.amount), 0);
+  const hardTotal = sharedTotals && commitments.length === 0
     ? sharedTotals.hard
-    : commitment?.hard ? commitment.amount : 0;
+    : commitments.reduce((total, item) => total + (item.hard ? item.amount : 0), 0);
   const progress = Math.min(100, (hardTotal / target) * 100);
 
   const quoteBody = useMemo(() => {
@@ -109,7 +112,16 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
       setFormError('Enter a whole amount greater than zero.');
       return;
     }
-    updateRaise({ commitment: { identifier: identifier.trim(), amount: parsedAmount, hard: false } });
+    updateRaise({
+      commitments: [...commitments, {
+        id: crypto.randomUUID(),
+        identifier: identifier.trim(),
+        amount: parsedAmount,
+        hard: false,
+      }],
+    });
+    setIdentifier('');
+    setAmount('');
     setFormError('');
     setView('sponsor');
   }
@@ -146,8 +158,13 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
     setClaimError('');
   }
 
-  function toggleCommitmentHardStatus() {
-    if (commitment) updateRaise({ commitment: { ...commitment, hard: !commitment.hard } });
+  function toggleCommitmentHardStatus(id: string) {
+    updateRaise({
+      commitments: commitments.map((item) =>
+        item.id === id ? { ...item, hard: !item.hard } : item
+      ),
+    });
+    setQuoteCommitmentId(id);
   }
 
   function copyShareUrl() {
@@ -313,26 +330,30 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
             <div className="content-grid">
               <div>
                 <h2 className="section-title">Sponsor review</h2>
-                <p className="section-copy">Review the prospect’s soft commitment and mark it hard.</p>
-                {commitment ? (
-                  <div className="commitment-card">
+                <p className="section-copy">Review prospects’ soft commitments and mark them hard.</p>
+                {commitments.length > 0 ? (
+                  <div data-testid="sponsor-commitment-list">
+                  {commitments.map((item) => (
+                  <div className="commitment-card" key={item.id} data-testid="commitment-row">
                     <div className="commitment-meta">
                       <div className="record-line" data-testid="status-commitment">
-                        <span className={`status-dot${commitment.hard ? ' hard' : ''}`} />
-                        {commitment.hard ? 'Hard commitment' : 'Soft commitment'}
+                        <span className={`status-dot${item.hard ? ' hard' : ''}`} />
+                        {item.hard ? 'Hard commitment' : 'Soft commitment'}
                       </div>
-                      <div className="record-name" data-testid="text-commitment-identifier">{commitment.identifier}</div>
-                      <div className="record-amount" data-testid="text-commitment-amount">{euro(commitment.amount)}</div>
+                      <div className="record-name" data-testid="text-commitment-identifier">{item.identifier}</div>
+                      <div className="record-amount" data-testid="text-commitment-amount">{euro(item.amount)}</div>
                     </div>
                     <button
-                      className={commitment.hard ? 'quiet-button' : 'mark-button'}
+                      className={item.hard ? 'quiet-button' : 'mark-button'}
                       data-testid="button-toggle-hard-commitment"
                       type="button"
-                      aria-pressed={commitment.hard}
-                      onClick={toggleCommitmentHardStatus}
+                      aria-pressed={item.hard}
+                      onClick={() => toggleCommitmentHardStatus(item.id)}
                     >
-                      {commitment.hard ? 'Revert to soft' : 'Mark hard'}
+                      {item.hard ? 'Revert to soft' : 'Mark hard'}
                     </button>
+                  </div>
+                  ))}
                   </div>
                 ) : (
                   <div className="empty-record" data-testid="status-empty-commitment">No prospect commitment has been submitted.</div>
