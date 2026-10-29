@@ -11,7 +11,7 @@ export type Raise = {
   commitments?: Commitment[];
 };
 
-// Fictional demo raises. All changes live only in the browser's local array.
+// Fictional demo raises. Changes are saved only in this browser's localStorage.
 export const INITIAL_RAISES: Raise[] = [
   {
     id: 'cedar-grid',

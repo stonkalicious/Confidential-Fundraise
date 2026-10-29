@@ -1,7 +1,8 @@
 import { type FormEvent, type ReactNode, useMemo, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import RaiseList from '@/components/raise-list';
-import { INITIAL_RAISES, type Raise } from '@/data/raises';
+import { type Raise } from '@/data/raises';
+import { loadRaises, saveRaises } from '@/data/raise-storage';
 import { ErrorBoundary } from '@/components/error-boundary';
 import RulesCalculator from '@/components/rules-calculator';
 import { Toaster } from '@/components/ui/toaster';
@@ -20,14 +21,6 @@ const queryClient = new QueryClient();
 type View = 'progress' | 'how' | 'prospect' | 'sponsor' | 'thesis' | 'rules' | 'roadmap';
 const DEMO_LABEL = 'Demo only — synthetic data.';
 
-function readSharedTotals() {
-  const params = new URLSearchParams(window.location.search);
-  const soft = Number(params.get('soft'));
-  const hard = Number(params.get('hard'));
-  if (!params.has('soft') || !params.has('hard') || !Number.isFinite(soft) || !Number.isFinite(hard)) return null;
-  return { soft: Math.max(0, soft), hard: Math.max(0, hard) };
-}
-
 function euro(value: number) {
   return new Intl.NumberFormat('en-IE', {
     style: 'currency',
@@ -36,8 +29,7 @@ function euro(value: number) {
   }).format(value);
 }
 
-function getInitialView(hasSharedTotals: boolean): View {
-  if (hasSharedTotals) return 'progress';
+function getInitialView(): View {
   const requestedView = new URLSearchParams(window.location.search).get('view');
   if (
     requestedView === 'prospect' ||
@@ -53,9 +45,8 @@ function getInitialView(hasSharedTotals: boolean): View {
   return 'progress';
 }
 
-function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: Partial<Raise>) => void }) {
-  const sharedTotals = useMemo(() => readSharedTotals(), []);
-  const [view, setView] = useState<View>(() => getInitialView(Boolean(sharedTotals)));
+function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: Partial<Raise>) => boolean }) {
+  const [view, setView] = useState<View>(getInitialView);
   const commitments = raise.commitments ?? [];
   const [quoteCommitmentId, setQuoteCommitmentId] = useState<string | null>(null);
   const commitment = commitments.find((item) => item.id === quoteCommitmentId && item.hard)
@@ -73,12 +64,8 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
   const [claimVehicleLink, setClaimVehicleLink] = useState('');
   const [claimError, setClaimError] = useState('');
 
-  const softTotal = sharedTotals && commitments.length === 0
-    ? sharedTotals.soft
-    : commitments.reduce((total, item) => total + (item.hard ? 0 : item.amount), 0);
-  const hardTotal = sharedTotals && commitments.length === 0
-    ? sharedTotals.hard
-    : commitments.reduce((total, item) => total + (item.hard ? item.amount : 0), 0);
+  const softTotal = commitments.reduce((total, item) => total + (item.hard ? 0 : item.amount), 0);
+  const hardTotal = commitments.reduce((total, item) => total + (item.hard ? item.amount : 0), 0);
   const progress = Math.min(100, (hardTotal / target) * 100);
 
   const quoteBody = useMemo(() => {
@@ -112,14 +99,14 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
       setFormError('Enter a whole amount greater than zero.');
       return;
     }
-    updateRaise({
+    if (!updateRaise({
       commitments: [...commitments, {
         id: crypto.randomUUID(),
         identifier: identifier.trim(),
         amount: parsedAmount,
         hard: false,
       }],
-    });
+    })) return;
     setIdentifier('');
     setAmount('');
     setFormError('');
@@ -139,14 +126,14 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
       return;
     }
     if (raise.claimed) return;
-    updateRaise({
+    if (!updateRaise({
       claimed: true,
       claim: {
         founderName: claimFounderName.trim(),
         email: claimEmail.trim(),
         ...(claimVehicleLink.trim() ? { vehicleLink: claimVehicleLink.trim() } : {}),
       },
-    });
+    })) return;
     closeRaiseClaimForm();
   }
 
@@ -177,11 +164,8 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
   }
 
   function copyShareUrl() {
-    const url = new URL(window.location.href);
-    url.search = '';
-    url.searchParams.set('view', 'progress');
-    url.searchParams.set('soft', String(softTotal));
-    url.searchParams.set('hard', String(hardTotal));
+    const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+    const url = new URL(`${base}raises/${encodeURIComponent(raise.id)}`, window.location.origin);
     const shareUrl = url.toString();
     const fallbackCopy = () => {
       const field = document.createElement('textarea');
@@ -668,11 +652,27 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
 }
 
 function Router() {
-  const [raises, setRaises] = useState<Raise[]>(INITIAL_RAISES);
+  const [loaded] = useState(loadRaises);
+  const [raises, setRaises] = useState<Raise[]>(loaded.raises);
+  const [storageError, setStorageError] = useState(loaded.error);
+
+  function updateRaise(id: string, changes: Partial<Raise>): boolean {
+    const next = raises.map((item) => item.id === id ? { ...item, ...changes } : item);
+    try {
+      saveRaises(next);
+      setRaises(next);
+      setStorageError('');
+      return true;
+    } catch {
+      setStorageError('Could not save this change. Check that browser storage is available.');
+      return false;
+    }
+  }
   return (
     // Keep a shared shell (sidebar, navbar) outside the boundary so it
     // survives a page crash.
     <RoutedErrorBoundary>
+      {storageError && <p className="frame" role="alert">{storageError}</p>}
       <Switch>
         <Route path="/"><RaiseList raises={raises} /></Route>
         <Route path="/raises/:id">
@@ -683,9 +683,7 @@ function Router() {
               <AppDesk
                 key={raise.id}
                 raise={raise}
-                updateRaise={(changes) => setRaises((current) => current.map((item) =>
-                  item.id === raise.id ? { ...item, ...changes } : item
-                ))}
+                updateRaise={(changes) => updateRaise(raise.id, changes)}
               />
             );
           }}
