@@ -1,0 +1,1 @@
+- [MVP scope](mvp-scope.md) — Keep the focus very tight; do not add too much.
