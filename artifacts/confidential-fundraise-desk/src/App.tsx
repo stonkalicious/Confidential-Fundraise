@@ -1,10 +1,7 @@
 import { type FormEvent, type ReactNode, useMemo, useState } from 'react';
-import {
-  getGetRaiseClaimQueryKey,
-  useGetRaiseClaim,
-  useSubmitRaiseClaim,
-} from '@workspace/api-client-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import RaiseList from '@/components/raise-list';
+import { INITIAL_RAISES, type Raise } from '@/data/raises';
 import { ErrorBoundary } from '@/components/error-boundary';
 import RulesCalculator from '@/components/rules-calculator';
 import { Toaster } from '@/components/ui/toaster';
@@ -12,6 +9,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
 import {
   Route,
+  Link,
   Switch,
   useLocation,
   Router as WouterRouter,
@@ -20,8 +18,6 @@ import {
 const queryClient = new QueryClient();
 
 type View = 'progress' | 'how' | 'prospect' | 'sponsor' | 'thesis' | 'rules' | 'roadmap';
-type Commitment = { identifier: string; amount: number; hard: boolean };
-const TARGET = 2_000_000;
 const DEMO_LABEL = 'Demo only — synthetic data.';
 
 function readSharedTotals() {
@@ -38,18 +34,6 @@ function euro(value: number) {
     currency: 'EUR',
     maximumFractionDigits: 0,
   }).format(value);
-}
-
-function raiseClaimErrorMessage(error: unknown) {
-  if (error && typeof error === 'object') {
-    const apiError = error as { status?: unknown; data?: unknown };
-    if (apiError.data && typeof apiError.data === 'object' && 'error' in apiError.data) {
-      const message = (apiError.data as { error?: unknown }).error;
-      if (typeof message === 'string') return message;
-    }
-    if (apiError.status === 409) return 'This raise has already been claimed.';
-  }
-  return 'Could not submit the claim. Please try again.';
 }
 
 function getInitialView(hasSharedTotals: boolean): View {
@@ -69,10 +53,11 @@ function getInitialView(hasSharedTotals: boolean): View {
   return 'progress';
 }
 
-function AppDesk() {
+function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: Partial<Raise>) => void }) {
   const sharedTotals = useMemo(() => readSharedTotals(), []);
   const [view, setView] = useState<View>(() => getInitialView(Boolean(sharedTotals)));
-  const [commitment, setCommitment] = useState<Commitment | null>(null);
+  const commitment = raise.commitment;
+  const target = raise.roundRange.min;
   const [identifier, setIdentifier] = useState('');
   const [amount, setAmount] = useState('');
   const [formError, setFormError] = useState('');
@@ -84,19 +69,14 @@ function AppDesk() {
   const [claimEmail, setClaimEmail] = useState('');
   const [claimVehicleLink, setClaimVehicleLink] = useState('');
   const [claimError, setClaimError] = useState('');
-  const raiseClaimQuery = useGetRaiseClaim({
-    query: { queryKey: getGetRaiseClaimQueryKey(), refetchInterval: 5000 },
-    request: { cache: 'no-store' },
-  });
-  const raiseClaimMutation = useSubmitRaiseClaim();
 
   const softTotal = sharedTotals
     ? sharedTotals.soft
     : commitment && !commitment.hard ? commitment.amount : 0;
   const hardTotal = sharedTotals
     ? sharedTotals.hard
-    : 50_000 + (commitment?.hard ? commitment.amount : 0);
-  const progress = Math.min(100, (hardTotal / TARGET) * 100);
+    : commitment?.hard ? commitment.amount : 0;
+  const progress = Math.min(100, (hardTotal / target) * 100);
 
   const quoteBody = useMemo(() => {
     const amountInBaseUnits = String(Math.round((commitment?.amount ?? 0) * 1_000_000));
@@ -129,7 +109,7 @@ function AppDesk() {
       setFormError('Enter a whole amount greater than zero.');
       return;
     }
-    setCommitment({ identifier: identifier.trim(), amount: parsedAmount, hard: false });
+    updateRaise({ commitment: { identifier: identifier.trim(), amount: parsedAmount, hard: false } });
     setFormError('');
     setView('sponsor');
   }
@@ -139,29 +119,23 @@ function AppDesk() {
     setContactSubmitted(true);
   }
 
-  async function submitRaiseClaim(event: FormEvent<HTMLFormElement>) {
+  function submitRaiseClaim(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setClaimError('');
-    try {
-      const status = await raiseClaimMutation.mutateAsync({
-        data: {
-          founderName: claimFounderName.trim(),
-          email: claimEmail.trim(),
-          ...(claimVehicleLink.trim()
-            ? { vehicleLink: claimVehicleLink.trim() }
-            : {}),
-        },
-      });
-      queryClient.setQueryData(getGetRaiseClaimQueryKey(), status);
-      setClaimFormOpen(false);
-      setClaimFounderName('');
-      setClaimEmail('');
-      setClaimVehicleLink('');
-    } catch (error) {
-      const refreshed = await raiseClaimQuery.refetch();
-      if (refreshed.data?.claimed) setClaimFormOpen(false);
-      setClaimError(raiseClaimErrorMessage(error));
+    if (!claimFounderName.trim()) {
+      setClaimError('Enter a founder name.');
+      return;
     }
+    if (raise.claimed) return;
+    updateRaise({
+      claimed: true,
+      claim: {
+        founderName: claimFounderName.trim(),
+        email: claimEmail.trim(),
+        ...(claimVehicleLink.trim() ? { vehicleLink: claimVehicleLink.trim() } : {}),
+      },
+    });
+    closeRaiseClaimForm();
   }
 
   function closeRaiseClaimForm() {
@@ -173,7 +147,7 @@ function AppDesk() {
   }
 
   function toggleCommitmentHardStatus() {
-    setCommitment((current) => current ? { ...current, hard: !current.hard } : current);
+    if (commitment) updateRaise({ commitment: { ...commitment, hard: !commitment.hard } });
   }
 
   function copyShareUrl() {
@@ -263,6 +237,10 @@ function AppDesk() {
       </header>
 
       <main className="frame">
+        <Link className="raise-back-link" href="/">← Raises</Link>
+        <h1 className="raise-heading">{raise.companyName}</h1>
+        <p className="section-copy">{raise.thesis}</p>
+        <div className="raise-details">{raise.stage} · {euro(raise.roundRange.min)} – {euro(raise.roundRange.max)}</div>
         <nav className="nav-row" aria-label="Fundraise views">
           {views.map((item) => (
             <button
@@ -324,8 +302,8 @@ function AppDesk() {
             </div>
             <aside className="side-card">
                   <div className="side-label">Threshold</div>
-              <h3 className="side-title">€2,000,000</h3>
-                  <p className="side-copy">Settlement occurs only if aggregate hard commitments reach the €2m example threshold.</p>
+              <h3 className="side-title">{euro(target)}</h3>
+                  <p className="side-copy">Settlement occurs only if aggregate hard commitments reach the {euro(target)} example threshold.</p>
             </aside>
           </section>
         )}
@@ -362,8 +340,8 @@ function AppDesk() {
               </div>
               <aside className="side-card">
                 <div className="side-label">Threshold</div>
-                <h3 className="side-title">€2,000,000</h3>
-                <p className="side-copy">Settlement occurs only if aggregate hard commitments reach the €2m example threshold.</p>
+                <h3 className="side-title">{euro(target)}</h3>
+                <p className="side-copy">Settlement occurs only if aggregate hard commitments reach the {euro(target)} example threshold.</p>
               </aside>
             </div>
             {commitment?.hard && (
@@ -394,11 +372,11 @@ function AppDesk() {
                 role="status"
                 aria-live="polite"
               >
-                {raiseClaimQuery.data?.claimed
-                  ? `Claimed by ${raiseClaimQuery.data.founderName ?? ''}`
+                {raise.claimed
+                  ? `Claimed by ${raise.claim?.founderName ?? ''}`
                   : 'Public data'}
               </div>
-              {!raiseClaimQuery.data?.claimed && (
+              {!raise.claimed && (
                 <button
                   className="quiet-button"
                   data-testid="button-claim-raise"
@@ -412,7 +390,7 @@ function AppDesk() {
                 </button>
               )}
             </div>
-            {claimFormOpen && !raiseClaimQuery.data?.claimed && (
+            {claimFormOpen && !raise.claimed && (
               <form
                 className="form-card raise-claim-form"
                 data-testid="form-raise-claim"
@@ -471,7 +449,6 @@ function AppDesk() {
                     data-testid="button-cancel-raise-claim"
                     type="button"
                     onClick={closeRaiseClaimForm}
-                    disabled={raiseClaimMutation.isPending}
                   >
                     Cancel
                   </button>
@@ -479,7 +456,6 @@ function AppDesk() {
                     className="primary-button"
                     data-testid="button-submit-raise-claim"
                     type="submit"
-                    disabled={raiseClaimMutation.isPending}
                   >
                     Submit claim
                   </button>
@@ -489,23 +465,23 @@ function AppDesk() {
             <div className="progress-panel">
               <div className="progress-top">
                 <div>
-                  <div className="aggregate-label">Progress toward €2m</div>
+                  <div className="aggregate-label">Progress toward {euro(target)}</div>
                   <div className="progress-total">{euro(hardTotal)}</div>
                 </div>
-                <div className="progress-target"><strong>{progress.toFixed(1)}%</strong><br />of €2,000,000</div>
+                <div className="progress-target"><strong>{progress.toFixed(1)}%</strong><br />of {euro(target)}</div>
               </div>
               <div
                 className="progress-line"
                 data-testid="progress-hard-total"
                 role="progressbar"
-                aria-label="Progress toward €2,000,000"
+                aria-label={`Progress toward ${euro(target)}`}
                 aria-valuemin={0}
-                aria-valuemax={TARGET}
-                aria-valuenow={Math.min(hardTotal, TARGET)}
+                aria-valuemax={target}
+                aria-valuenow={Math.min(hardTotal, target)}
               >
                 <div className="progress-fill" style={{ width: `${progress}%` }} />
               </div>
-              <div className="progress-scale"><span>€0</span><span>€2,000,000</span></div>
+              <div className="progress-scale"><span>€0</span><span>{euro(target)}</span></div>
               <div className="aggregate-grid">
                 <div className="aggregate">
                   <div className="aggregate-label">Soft total</div>
@@ -517,7 +493,7 @@ function AppDesk() {
                 </div>
               </div>
               <div className="share-row">
-                <span className="share-note">Settlement occurs only if aggregate hard commitments reach the €2m example threshold.</span>
+                <span className="share-note">Settlement occurs only if aggregate hard commitments reach the {euro(target)} example threshold.</span>
                 <button className="quiet-button" data-testid="button-copy-share-url" type="button" onClick={copyShareUrl}>
                   Copy share URL <span className="button-arrow" aria-hidden="true">↗</span>
                 </button>
@@ -536,7 +512,7 @@ function AppDesk() {
                 A prospect submits a soft commitment (identifier and amount). The sponsor reviews it privately and can mark it hard. Marking it hard generates a NEAR Intents 1Click quote request with confidential mode enabled, showing how the amount could settle cross-chain under a simple threshold rule without revealing individual details on a public chain.
               </p>
               <p>
-                A separate progress view shows only aggregates (total soft, total hard, and progress toward a €2 m example minimum). Individual names and amounts never appear there.
+                A separate progress view shows only aggregates (total soft, total hard, and progress toward a {euro(target)} example minimum). Individual names and amounts never appear there.
               </p>
               <p>
                 The whole flow uses synthetic data and is labeled as a demo. It illustrates that commitments can stay private while settlement, if chosen, can use NEAR’s confidential cross-chain path.
@@ -647,12 +623,28 @@ function AppDesk() {
 }
 
 function Router() {
+  const [raises, setRaises] = useState<Raise[]>(INITIAL_RAISES);
   return (
     // Keep a shared shell (sidebar, navbar) outside the boundary so it
     // survives a page crash.
     <RoutedErrorBoundary>
       <Switch>
-        <Route path="/" component={AppDesk} />
+        <Route path="/"><RaiseList raises={raises} /></Route>
+        <Route path="/raises/:id">
+          {(params) => {
+            const raise = raises.find((item) => item.id === params.id);
+            if (!raise) return <NotFound />;
+            return (
+              <AppDesk
+                key={raise.id}
+                raise={raise}
+                updateRaise={(changes) => setRaises((current) => current.map((item) =>
+                  item.id === raise.id ? { ...item, ...changes } : item
+                ))}
+              />
+            );
+          }}
+        </Route>
         <Route component={NotFound} />
       </Switch>
     </RoutedErrorBoundary>
