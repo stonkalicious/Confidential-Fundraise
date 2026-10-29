@@ -177,6 +177,8 @@ button:focus-visible, input:focus-visible {
 .threshold strong { color: #302b44; font-weight: 700; }
 .commitment-card { margin-top: 24px; padding: 22px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .commitment-meta { min-width: 0; }
+.commitment-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.verification-label { margin-top: 10px; color: #556f61; font: 10px/1.5 var(--app-font-mono); }
 .record-line { display: flex; align-items: center; gap: 9px; color: #888173; font: 10px var(--app-font-mono); text-transform: uppercase; letter-spacing: .08em; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #cf8a64; }
 .status-dot.hard { background: #556f61; }

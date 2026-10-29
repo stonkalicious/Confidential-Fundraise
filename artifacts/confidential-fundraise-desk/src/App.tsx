@@ -161,7 +161,16 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
   function toggleCommitmentHardStatus(id: string) {
     updateRaise({
       commitments: commitments.map((item) =>
-        item.id === id ? { ...item, hard: !item.hard } : item
+        item.id === id ? { ...item, hard: !item.hard, verified: false } : item
+      ),
+    });
+    setQuoteCommitmentId(id);
+  }
+
+  function verifyCommitment(id: string) {
+    updateRaise({
+      commitments: commitments.map((item) =>
+        item.id === id ? { ...item, hard: true, verified: true } : item
       ),
     });
     setQuoteCommitmentId(id);
@@ -338,11 +347,25 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
                     <div className="commitment-meta">
                       <div className="record-line" data-testid="status-commitment">
                         <span className={`status-dot${item.hard ? ' hard' : ''}`} />
-                        {item.hard ? 'Hard commitment' : 'Soft commitment'}
+                        {item.verified ? 'Verified commitment' : item.hard ? 'Hard commitment' : 'Soft commitment'}
                       </div>
                       <div className="record-name" data-testid="text-commitment-identifier">{item.identifier}</div>
                       <div className="record-amount" data-testid="text-commitment-amount">{euro(item.amount)}</div>
+                      {item.verified && (
+                        <div className="verification-label" data-testid="text-verification-label">NEAR confidential verification (demo)</div>
+                      )}
                     </div>
+                    <div className="commitment-actions">
+                    {!item.hard && (
+                      <button
+                        className="mark-button"
+                        data-testid="button-mark-verified"
+                        type="button"
+                        onClick={() => verifyCommitment(item.id)}
+                      >
+                        Mark verified
+                      </button>
+                    )}
                     <button
                       className={item.hard ? 'quiet-button' : 'mark-button'}
                       data-testid="button-toggle-hard-commitment"
@@ -352,6 +375,7 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
                     >
                       {item.hard ? 'Revert to soft' : 'Mark hard'}
                     </button>
+                    </div>
                   </div>
                   ))}
                   </div>

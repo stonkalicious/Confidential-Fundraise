@@ -1,4 +1,4 @@
-export type Commitment = { id: string; identifier: string; amount: number; hard: boolean };
+export type Commitment = { id: string; identifier: string; amount: number; hard: boolean; verified?: boolean };
 
 export type Raise = {
   id: string;
