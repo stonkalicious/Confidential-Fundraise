@@ -22,7 +22,7 @@ import {
 const queryClient = new QueryClient();
 
 type View = 'progress' | 'how' | 'prospect' | 'sponsor' | 'thesis' | 'rules';
-const DEMO_LABEL = 'Demo only — synthetic data.';
+const DEMO_LABEL = 'Demo only — details local; summary public.';
 
 function euro(value: number) {
   return new Intl.NumberFormat('en-IE', {
@@ -270,7 +270,7 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
             <aside className="side-card">
                   <div className="side-label">Threshold</div>
               <h3 className="side-title">{euro(target)}</h3>
-                  <p className="side-copy">Settlement occurs only if aggregate hard commitments reach the {euro(target)} example threshold.</p>
+                  <p className="side-copy">The demo threshold is met when aggregate hard commitments reach {euro(target)}. Reaching it does not trigger settlement.</p>
             </aside>
           </section>
         )}
@@ -280,7 +280,7 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
             <div className="content-grid">
               <div>
                 <h2 className="section-title">Sponsor review</h2>
-                <p className="section-copy">Review prospects’ soft commitments and mark them hard.</p>
+                <p className="section-copy">Review locally stored commitments. This Sponsor view is not access-restricted.</p>
                 {commitments.length > 0 ? (
                   <div data-testid="sponsor-commitment-list">
                   {commitments.map((item) => (
@@ -293,7 +293,7 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
                       <div className="record-name" data-testid="text-commitment-identifier">{item.identifier}</div>
                       <div className="record-amount" data-testid="text-commitment-amount">{euro(item.amount)}</div>
                       {item.verified && (
-                        <div className="verification-label" data-testid="text-verification-label">NEAR confidential verification (demo)</div>
+                        <div className="verification-label" data-testid="text-verification-label">NEAR confidential verification (demo — no blockchain call)</div>
                       )}
                     </div>
                     <div className="commitment-actions">
@@ -304,7 +304,7 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
                         type="button"
                         onClick={() => verifyCommitment(item.id)}
                       >
-                        Mark verified
+                        Mark verified (demo)
                       </button>
                     )}
                     <button
@@ -327,14 +327,14 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
               <aside className="side-card">
                 <div className="side-label">Threshold</div>
                 <h3 className="side-title">{euro(target)}</h3>
-                <p className="side-copy">Settlement occurs only if aggregate hard commitments reach the {euro(target)} example threshold.</p>
+                <p className="side-copy">The demo threshold is met when aggregate hard commitments reach {euro(target)}. Reaching it does not trigger settlement.</p>
               </aside>
             </div>
             {commitment?.hard && (
               <div className="quote-section">
                 <div className="quote-heading">
-                  <h3>NEAR Intents 1Click quote request</h3>
-                  <p>Illustrative request body · no network request</p>
+                  <h3>Illustrative NEAR Intents 1Click quote</h3>
+                  <p>Displayed only · no network request or settlement</p>
                 </div>
                 <div className="quote-card">
                   <div className="quote-topline">
@@ -479,7 +479,7 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
                 </div>
               </div>
               <div className="share-row">
-                <span className="share-note">Settlement occurs only if aggregate hard commitments reach the {euro(target)} example threshold.</span>
+                <span className="share-note">The demo threshold is met at {euro(target)} in hard commitments. Reaching it does not trigger settlement.</span>
                 <button className="quiet-button" data-testid="button-copy-share-url" type="button" onClick={copyShareUrl}>
                   Copy share URL <span className="button-arrow" aria-hidden="true">↗</span>
                 </button>
@@ -493,15 +493,15 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
           <section className="view-content how-panel" key="how">
             <article className="how-copy">
               <h1 className="how-title">How the app works</h1>
-              <p>Confidential Fundraise Desk is a minimal demo of private fundraise coordination.</p>
+              <p>Confidential Fundraise Desk is a minimal demo of fundraise coordination with locally stored commitment details.</p>
               <p>
-                A prospect submits a soft commitment (identifier and amount). The sponsor reviews it privately and can mark it hard. Marking it hard generates a NEAR Intents 1Click quote request with confidential mode enabled, showing how the amount could settle cross-chain under a simple threshold rule without revealing individual details on a public chain.
+                A prospect submits a soft commitment (identifier and amount). Commitment details and claim contact details are saved in this browser. The Sponsor view is not access-restricted. Marking a commitment hard displays an illustrative NEAR Intents 1Click quote body; no request is sent, no blockchain verification occurs, and no settlement is triggered.
               </p>
               <p>
-                A separate progress view shows only aggregates (total soft, total hard, and progress toward a {euro(target)} example minimum). Individual names and amounts never appear there.
+                The Progress view shows only aggregate soft and hard totals and progress toward a {euro(target)} example minimum. The public /api/raises summary also exposes each raise’s claimed status and aggregate totals, not individual commitment names or amounts.
               </p>
               <p>
-                The whole flow uses synthetic data and is labeled as a demo. It illustrates that commitments can stay private while settlement, if chosen, can use NEAR’s confidential cross-chain path.
+                The pre-seeded raises are fictional. Do not enter sensitive real prospect information. Public aggregate totals and claimed status are sent to a summary API; this demo does not perform NEAR settlement.
               </p>
             </article>
           </section>
@@ -545,10 +545,10 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
               </div>
 
               <p>
-                This page is context for the Confidential Fundraise Desk prototype only. It demonstrates private commitment tracking and optional confidential settlement via NEAR Intents. It is not a solicitation.
+                This page is context for the Confidential Fundraise Desk prototype only. It demonstrates local commitment tracking and an illustrative NEAR Intents quote; it does not execute settlement. It is not a solicitation.
               </p>
               <p>
-                Interested parties may submit a contact request through the form below. No commitment is created by doing so.
+                The form below only displays a local demo confirmation. It does not send a contact request or create a commitment.
               </p>
                 </>
               ) : (
@@ -564,7 +564,7 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
 
             {isFundThesis && (contactSubmitted ? (
               <p className="thesis-confirmation" data-testid="status-contact-request" role="status">
-                Request received (demo only).
+                Demo confirmation shown; no request was sent.
               </p>
             ) : (
               <form className="form-card thesis-contact-form" onSubmit={submitContactRequest} noValidate>

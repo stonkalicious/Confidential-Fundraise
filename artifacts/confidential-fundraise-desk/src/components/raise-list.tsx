@@ -21,13 +21,13 @@ export default function RaiseList({ raises }: { raises: Raise[] }) {
                   <p className="section-copy">{raise.thesis}</p>
                   <div className="raise-details">{raise.stage} · {format(raise.roundRange.min)} – {format(raise.roundRange.max)}</div>
                 </div>
-                <span className="raise-list-status">{raise.claimed ? `Claimed by ${raise.claim?.founderName ?? ''}` : 'Public data'} <span aria-hidden="true">↗</span></span>
+                <span className="raise-list-status">{raise.claimed ? `Claimed by ${raise.claim?.founderName ?? ''}` : 'Public raise overview'} <span aria-hidden="true">↗</span></span>
               </Link>
             </li>
           ))}
         </ul>
       </main>
-      <footer className="footer">Demo only — synthetic data.</footer>
+      <footer className="footer">Demo only — details local; summary public.</footer>
     </div>
   );
 }
