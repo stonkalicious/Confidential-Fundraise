@@ -1,1 +1,2 @@
 - [MVP scope](mvp-scope.md) — Keep the focus very tight; do not add too much.
+- [Raise data privacy](raise-data-privacy.md) — Individual commitments and investor contact details must remain private.
