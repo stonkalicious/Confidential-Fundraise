@@ -18,6 +18,7 @@ import RoadmapPage from '@/components/roadmap-page';
 import SiteHeader from '@/components/site-header';
 import { INITIAL_RAISES, type Raise } from '@/data/raises';
 import { loadRaises, saveRaises } from '@/data/raise-storage';
+import { trackEvent } from '@/lib/analytics';
 import { ErrorBoundary } from '@/components/error-boundary';
 import RulesCalculator from '@/components/rules-calculator';
 import { Toaster } from '@/components/ui/toaster';
@@ -92,6 +93,22 @@ function requestErrorMessage(error: unknown, fallback: string): string {
 
 function isHttpStatus(error: unknown, status: number): boolean {
   return error !== null && typeof error === 'object' && 'status' in error && error.status === status;
+}
+
+function isQuoteAuthenticationRequired(error: unknown): boolean {
+  if (isHttpStatus(error, 401) || isHttpStatus(error, 403)) return true;
+  if (!error || typeof error !== 'object' || !('data' in error)) return false;
+
+  const data = error.data;
+  return Boolean(
+    data &&
+      typeof data === 'object' &&
+      'error' in data &&
+      typeof data.error === 'string' &&
+      data.error.startsWith(
+        'NEAR Intents requires an end-user wallet-authenticated session for confidential quotes.',
+      ),
+  );
 }
 
 function euro(value: number) {
@@ -264,8 +281,12 @@ function AppDesk({
     setQuoteState({ commitmentId, status: 'loading' });
     try {
       const result = await onRequestDemoQuote(commitmentId, approvalCode);
+      trackEvent('quote_outcome', { outcome: 'success' });
       setQuoteState({ commitmentId, status: 'success', result });
     } catch (error) {
+      trackEvent('quote_outcome', {
+        outcome: isQuoteAuthenticationRequired(error) ? 'auth_required' : 'provider_error',
+      });
       setQuoteState({
         commitmentId,
         status: 'error',
