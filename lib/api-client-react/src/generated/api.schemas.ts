@@ -145,6 +145,39 @@ export interface CommitmentStatusInput {
   verified: boolean;
 }
 
+export type DemoIntentsQuoteConfidentialityRequested = typeof DemoIntentsQuoteConfidentialityRequested[keyof typeof DemoIntentsQuoteConfidentialityRequested];
+
+
+export const DemoIntentsQuoteConfidentialityRequested = {
+  basic: 'basic',
+} as const;
+
+export type DemoIntentsQuoteInputSymbol = typeof DemoIntentsQuoteInputSymbol[keyof typeof DemoIntentsQuoteInputSymbol];
+
+
+export const DemoIntentsQuoteInputSymbol = {
+  USDC: 'USDC',
+} as const;
+
+export type DemoIntentsQuoteOutputSymbol = typeof DemoIntentsQuoteOutputSymbol[keyof typeof DemoIntentsQuoteOutputSymbol];
+
+
+export const DemoIntentsQuoteOutputSymbol = {
+  USDC: 'USDC',
+} as const;
+
+export interface DemoIntentsQuote {
+  dry: true;
+  confidentialityRequested: DemoIntentsQuoteConfidentialityRequested;
+  inputSymbol: DemoIntentsQuoteInputSymbol;
+  outputSymbol: DemoIntentsQuoteOutputSymbol;
+  inputAmount: string;
+  outputAmount: string;
+  /** @nullable */
+  quoteId: string | null;
+  quotedAt: string;
+}
+
 export interface ErrorMessage {
   error: string;
 }

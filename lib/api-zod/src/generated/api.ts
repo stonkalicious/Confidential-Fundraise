@@ -362,3 +362,24 @@ export const UpdateRaiseCommitmentResponse = zod.object({
 })
 
 
+/**
+ * Uses fixed synthetic quote values and never executes a swap
+ * @summary Request a synthetic NEAR Intents dry-run quote
+ */
+export const RequestDemoQuoteParams = zod.object({
+  "id": zod.coerce.string(),
+  "commitmentId": zod.coerce.string()
+})
+
+export const RequestDemoQuoteResponse = zod.object({
+  "dry": zod.literal(true),
+  "confidentialityRequested": zod.enum(['basic']),
+  "inputSymbol": zod.enum(['USDC']),
+  "outputSymbol": zod.enum(['USDC']),
+  "inputAmount": zod.string(),
+  "outputAmount": zod.string(),
+  "quoteId": zod.string().nullable(),
+  "quotedAt": zod.coerce.date()
+})
+
+

@@ -197,6 +197,10 @@ button:focus-visible, input:focus-visible {
 .quote-topline { display: flex; align-items: center; justify-content: space-between; padding: 13px 17px; border-bottom: 1px solid #e4dfd3; color: #807a6c; font: 10px var(--app-font-mono); }
 .quote-url { color: #514c5b; overflow-wrap: anywhere; }
 .quote-json { margin: 0; padding: 19px; color: #474256; overflow-x: auto; font: 11px/1.75 var(--app-font-mono); white-space: pre; }
+.quote-result { margin: 0; padding: 19px; color: #474256; font: 13px/1.65 var(--app-font-mono); overflow-wrap: anywhere; }
+.quote-result p { margin: 0 0 6px; }
+.quote-result p:last-child { margin-bottom: 0; }
+.quote-result-error { color: #8d342b; }
 .quote-warning { padding: 12px 17px; border-top: 1px solid #e4dfd3; color: #8d5c4c; font-size: 11px; }
 .progress-panel { margin-top: 35px; padding: clamp(23px, 4vw, 42px); background: #fbfaf6; border: 1px solid #e1dccf; border-radius: 5px; }
 .progress-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }

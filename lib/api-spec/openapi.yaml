@@ -379,6 +379,68 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
+  /raises/{id}/commitments/{commitmentId}/quote:
+    post:
+      operationId: requestDemoQuote
+      tags: [raises]
+      summary: Request a synthetic NEAR Intents dry-run quote
+      description: Uses fixed synthetic quote values and never executes a swap
+      security:
+        - ApprovalCode: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: commitmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Sanitized quote details returned by NEAR Intents
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoIntentsQuote"
+        "401":
+          description: Approval code is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "404":
+          description: Raise or commitment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "409":
+          description: Commitment must be hard before requesting a quote
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "502":
+          description: NEAR Intents did not return a quote
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "503":
+          description: Sponsor access is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "504":
+          description: NEAR Intents quote request timed out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
 components:
   securitySchemes:
     ApprovalCode:
@@ -584,6 +646,39 @@ components:
       required:
         - hard
         - verified
+    DemoIntentsQuote:
+      type: object
+      properties:
+        dry:
+          type: boolean
+          const: true
+        confidentialityRequested:
+          type: string
+          enum: [basic]
+        inputSymbol:
+          type: string
+          enum: [USDC]
+        outputSymbol:
+          type: string
+          enum: [USDC]
+        inputAmount:
+          type: string
+        outputAmount:
+          type: string
+        quoteId:
+          type: ["string", "null"]
+        quotedAt:
+          type: string
+          format: date-time
+      required:
+        - dry
+        - confidentialityRequested
+        - inputSymbol
+        - outputSymbol
+        - inputAmount
+        - outputAmount
+        - quoteId
+        - quotedAt
     RaiseRange:
       type: object
       properties:

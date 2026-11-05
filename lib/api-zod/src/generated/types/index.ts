@@ -8,6 +8,10 @@
 
 export * from './claimRaiseInput';
 export * from './commitmentStatusInput';
+export * from './demoIntentsQuote';
+export * from './demoIntentsQuoteConfidentialityRequested';
+export * from './demoIntentsQuoteInputSymbol';
+export * from './demoIntentsQuoteOutputSymbol';
 export * from './errorMessage';
 export * from './healthStatus';
 export * from './pendingRaise';

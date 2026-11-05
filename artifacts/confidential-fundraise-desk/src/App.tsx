@@ -1,13 +1,15 @@
-import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   claimRaise as claimRaiseApi,
   getPrivateRaise as getPrivateRaiseApi,
   getRaises as getRaisesApi,
+  requestDemoQuote as requestDemoQuoteApi,
   submitSoftCommitment as submitSoftCommitmentApi,
   updateRaiseCommitment as updateRaiseCommitmentApi,
   type ClaimRaiseInput,
   type CommitmentStatusInput,
+  type DemoIntentsQuote,
   type PrivateRaiseDetails,
   type RaiseSummary,
 } from '@workspace/api-client-react';
@@ -100,6 +102,22 @@ function euro(value: number) {
   }).format(value);
 }
 
+function formatUsdcBaseUnits(amount: string): string {
+  try {
+    const units = BigInt(amount);
+    const whole = units / 1_000_000n;
+    const fractional = String(units % 1_000_000n).padStart(6, '0').replace(/0+$/, '');
+    return fractional ? `${whole}.${fractional}` : String(whole);
+  } catch {
+    return `${amount} base units`;
+  }
+}
+
+type DemoQuoteState =
+  | { commitmentId: string; status: 'loading' }
+  | { commitmentId: string; status: 'error'; error: string }
+  | { commitmentId: string; status: 'success'; result: DemoIntentsQuote };
+
 function getInitialView(): View {
   const requestedView = new URLSearchParams(window.location.search).get('view');
   if (
@@ -121,6 +139,7 @@ function AppDesk({
   onSubmitSoftCommitment,
   onGetPrivateRaise,
   onUpdateCommitment,
+  onRequestDemoQuote,
 }: {
   raise: Raise;
   onClaimRaise: (claim: ClaimRaiseInput) => Promise<void>;
@@ -131,6 +150,10 @@ function AppDesk({
     status: CommitmentStatusInput,
     approvalCode: string,
   ) => Promise<void>;
+  onRequestDemoQuote: (
+    commitmentId: string,
+    approvalCode: string,
+  ) => Promise<DemoIntentsQuote>;
 }) {
   const isFundThesis = raise.isFundThesis === true;
   const [view, setView] = useState<View>(getInitialView);
@@ -138,9 +161,10 @@ function AppDesk({
   const [privateRaise, setPrivateRaise] = useState<PrivateRaiseDetails | null>(null);
   const [sponsorLoading, setSponsorLoading] = useState(false);
   const commitments = privateRaise?.commitments ?? [];
-  const [quoteCommitmentId, setQuoteCommitmentId] = useState<string | null>(null);
-  const commitment = commitments.find((item) => item.id === quoteCommitmentId && item.hard)
-    ?? commitments.find((item) => item.hard);
+  const [quoteState, setQuoteState] = useState<DemoQuoteState | null>(null);
+  const quotedCommitment = quoteState
+    ? commitments.find((item) => item.id === quoteState.commitmentId && item.hard)
+    : undefined;
   const target = raise.roundRange.min;
   const [identifier, setIdentifier] = useState('');
   const [amount, setAmount] = useState('');
@@ -170,29 +194,10 @@ function AppDesk({
     if (view !== 'sponsor') {
       setApprovalCode('');
       setPrivateRaise(null);
+      setQuoteState(null);
       setSponsorError('');
     }
   }, [view]);
-
-  const quoteBody = useMemo(() => {
-    const amountInBaseUnits = String(Math.round((commitment?.amount ?? 0) * 1_000_000));
-    const deadline = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-    return {
-      dry: true,
-      swapType: 'EXACT_INPUT',
-      slippageTolerance: 100,
-      originAsset: 'nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near',
-      depositType: 'ORIGIN_CHAIN',
-      destinationAsset: 'nep141:arb-0x912ce59144191c1204e64559fe8253a0e49e6548.omft.near',
-      amount: amountInBaseUnits,
-      recipient: '0x0000000000000000000000000000000000000001',
-      recipientType: 'DESTINATION_CHAIN',
-      refundTo: '0x0000000000000000000000000000000000000002',
-      refundType: 'ORIGIN_CHAIN',
-      confidentiality: 'basic',
-      deadline,
-    };
-  }, [commitment?.amount]);
 
   async function submitCommitment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -255,6 +260,20 @@ function AppDesk({
     });
   }
 
+  async function requestDemoQuote(commitmentId: string) {
+    setQuoteState({ commitmentId, status: 'loading' });
+    try {
+      const result = await onRequestDemoQuote(commitmentId, approvalCode);
+      setQuoteState({ commitmentId, status: 'success', result });
+    } catch (error) {
+      setQuoteState({
+        commitmentId,
+        status: 'error',
+        error: requestErrorMessage(error, 'The NEAR Intents quote request failed. No funds moved.'),
+      });
+    }
+  }
+
   function submitContactRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setContactSubmitted(true);
@@ -302,7 +321,11 @@ function AppDesk({
       const status = { hard: !item.hard, verified: false };
       await onUpdateCommitment(id, status, approvalCode);
       applyPrivateCommitmentStatus(id, status);
-      setQuoteCommitmentId(id);
+      if (status.hard) {
+        await requestDemoQuote(id);
+      } else if (quoteState?.commitmentId === id) {
+        setQuoteState(null);
+      }
     } catch (error) {
       setSponsorError(requestErrorMessage(error, 'The commitment status could not be updated.'));
     }
@@ -314,7 +337,7 @@ function AppDesk({
       const status = { hard: true, verified: true };
       await onUpdateCommitment(id, status, approvalCode);
       applyPrivateCommitmentStatus(id, status);
-      setQuoteCommitmentId(id);
+      await requestDemoQuote(id);
     } catch (error) {
       setSponsorError(requestErrorMessage(error, 'The commitment could not be verified.'));
     }
@@ -523,21 +546,44 @@ function AppDesk({
                 <p className="side-copy">The demo threshold is met when aggregate hard commitments reach {euro(target)}. Reaching it does not trigger settlement.</p>
               </aside>
             </div>
-            {commitment?.hard && (
-              <div className="quote-section">
+            {quoteState && quotedCommitment && (
+              <section className="quote-section" aria-labelledby="near-quote-title">
                 <div className="quote-heading">
-                  <h3>Illustrative NEAR Intents 1Click quote</h3>
-                  <p>Displayed only · no network request or settlement</p>
+                  <h3 id="near-quote-title">NEAR Intents 1Click quote</h3>
+                  <p>Live API request · dry run only · no funds moved</p>
                 </div>
                 <div className="quote-card">
                   <div className="quote-topline">
-                  <span className="quote-url" data-testid="text-quote-endpoint">POST https://1click.chaindefuser.com/v0/quote</span>
-                    <span>application/json</span>
+                    <span className="quote-url" data-testid="text-quote-endpoint">POST https://1click.chaindefuser.com/v0/quote</span>
+                    <span>confidentiality: basic</span>
                   </div>
-                  <pre className="quote-json" data-testid="text-quote-payload">{JSON.stringify(quoteBody, null, 2)}</pre>
-                  <div className="quote-warning">Synthetic amount and address values. Display only.</div>
+                  {quoteState.status === 'loading' && (
+                    <p className="quote-result" role="status" data-testid="status-quote-loading">
+                      Requesting a dry-run quote with fixed synthetic values…
+                    </p>
+                  )}
+                  {quoteState.status === 'error' && (
+                    <p className="quote-result quote-result-error" role="alert" data-testid="status-quote-error">
+                      {quoteState.error}
+                    </p>
+                  )}
+                  {quoteState.status === 'success' && (
+                    <div className="quote-result" role="status" data-testid="status-quote-result">
+                      <p>
+                        Input: {formatUsdcBaseUnits(quoteState.result.inputAmount)} {quoteState.result.inputSymbol}
+                      </p>
+                      <p>
+                        Quoted output: {formatUsdcBaseUnits(quoteState.result.outputAmount)} {quoteState.result.outputSymbol}
+                      </p>
+                      {quoteState.result.quoteId && <p>Quote reference: {quoteState.result.quoteId}</p>}
+                      <p>Confidentiality requested: {quoteState.result.confidentialityRequested}</p>
+                    </div>
+                  )}
+                  <div className="quote-warning">
+                    The request uses a fixed synthetic 1 USDC and placeholder addresses. It does not send this commitment’s identifier or amount. A quote is not a signed swap or settlement.
+                  </div>
                 </div>
-              </div>
+              </section>
             )}
           </section>
         )}
@@ -993,6 +1039,11 @@ function Router() {
                 onGetPrivateRaise={(approvalCode) => getPrivateRaiseForSponsor(raise.id, approvalCode)}
                 onUpdateCommitment={(commitmentId, status, approvalCode) =>
                   updateCommitment(raise.id, commitmentId, status, approvalCode)
+                }
+                onRequestDemoQuote={(commitmentId, approvalCode) =>
+                  requestDemoQuoteApi(raise.id, commitmentId, {
+                    headers: { Authorization: `Bearer ${approvalCode}` },
+                  })
                 }
               />
             );

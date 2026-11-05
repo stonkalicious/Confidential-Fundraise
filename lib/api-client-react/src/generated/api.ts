@@ -22,6 +22,7 @@ import type {
 import type {
   ClaimRaiseInput,
   CommitmentStatusInput,
+  DemoIntentsQuote,
   ErrorMessage,
   HealthStatus,
   PendingRaise,
@@ -1041,5 +1042,82 @@ export const useUpdateRaiseCommitment = <TError = ErrorType<ErrorMessage>,
         TContext
       > => {
       return useMutation(getUpdateRaiseCommitmentMutationOptions(options));
+    }
+
+export const getRequestDemoQuoteUrl = (id: string,
+    commitmentId: string,) => {
+
+
+
+
+  return `/api/raises/${id}/commitments/${commitmentId}/quote`
+}
+
+/**
+ * Uses fixed synthetic quote values and never executes a swap
+ * @summary Request a synthetic NEAR Intents dry-run quote
+ */
+export const requestDemoQuote = async (id: string,
+    commitmentId: string, options?: Parameters<typeof customFetch>[1]): Promise<DemoIntentsQuote> => {
+
+  return customFetch<DemoIntentsQuote>(getRequestDemoQuoteUrl(id,commitmentId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRequestDemoQuoteMutationKey = () => ['requestDemoQuote'] as const;
+
+export const getRequestDemoQuoteMutationOptions = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestDemoQuote>>, TError,RequestDemoQuoteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof requestDemoQuote>>, TError,RequestDemoQuoteMutationVariables, TContext> => {
+
+const mutationKey = getRequestDemoQuoteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof requestDemoQuote>>, RequestDemoQuoteMutationVariables> = (props) => {
+          const {id,commitmentId} = props ?? {};
+
+          return  requestDemoQuote(id,commitmentId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RequestDemoQuoteMutationResult = NonNullable<Awaited<ReturnType<typeof requestDemoQuote>>>
+
+    export type RequestDemoQuoteMutationError = ErrorType<ErrorMessage>
+    export type RequestDemoQuoteMutationVariables = {id: string;commitmentId: string}
+
+    /**
+ * @summary Request a synthetic NEAR Intents dry-run quote
+ */
+export const useRequestDemoQuote = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestDemoQuote>>, TError,RequestDemoQuoteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof requestDemoQuote>>,
+        TError,
+        RequestDemoQuoteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRequestDemoQuoteMutationOptions(options));
     }
 
