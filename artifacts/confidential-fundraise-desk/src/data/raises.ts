@@ -31,7 +31,7 @@ export const INITIAL_RAISES: Raise[] = [
   },
   {
     id: 'lumen-labs',
-    companyName: 'Universal Checkout',
+    companyName: 'Universal Checkout Widget',
     thesis: 'A checkout widget lets any merchant or app accept Intents payments from the wallet and blockchain a user already has.',
     stage: 'Series A',
     roundRange: { min: 3_000_000, max: 5_000_000 },
