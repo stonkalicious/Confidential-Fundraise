@@ -17,7 +17,7 @@ router.get("/raise-claim", (_req, res) => {
   res.set("Cache-Control", "no-store").json(
     GetRaiseClaimResponse.parse({
       claimed: raise?.claimed ?? false,
-      founderName: raise?.claim?.founderName ?? null,
+      founderName: raise?.claimantName ?? null,
     }),
   );
 });
@@ -80,7 +80,7 @@ router.post("/raise-claim", (req, res): void => {
     .json(
       SubmitRaiseClaimResponse.parse({
         claimed: true,
-        founderName: result.raise.claim?.founderName ?? null,
+        founderName: result.raise.claimantName ?? null,
       }),
     );
 });

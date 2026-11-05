@@ -30,7 +30,7 @@ export default function RoadmapPage() {
           </p>
         </section>
       </main>
-      <footer className="footer">Demo only — API exposes claims and commitments.</footer>
+      <footer className="footer">Demo only — public data shows approved raises and aggregates.</footer>
     </div>
   );
 }

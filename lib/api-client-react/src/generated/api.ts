@@ -24,8 +24,12 @@ import type {
   CommitmentStatusInput,
   ErrorMessage,
   HealthStatus,
+  PendingRaise,
+  PrivateRaiseDetails,
   RaiseClaimInput,
   RaiseClaimStatus,
+  RaiseSubmissionInput,
+  RaiseSubmissionReceipt,
   RaiseSummary,
   SoftCommitmentInput
 } from './api.schemas';
@@ -300,6 +304,94 @@ export const useSubmitRaiseClaim = <TError = ErrorType<ErrorMessage>,
       return useMutation(getSubmitRaiseClaimMutationOptions(options));
     }
 
+export const getSubmitRaiseUrl = () => {
+
+
+
+
+  return `/api/raises`
+}
+
+/**
+ * @summary Submit a raise for manual approval
+ */
+export const submitRaise = async (raiseSubmissionInput: RaiseSubmissionInput, options?: Parameters<typeof customFetch>[1]): Promise<RaiseSubmissionReceipt> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<RaiseSubmissionReceipt>(getSubmitRaiseUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(raiseSubmissionInput)
+  }
+);}
+
+
+
+
+
+export const getSubmitRaiseMutationKey = () => ['submitRaise'] as const;
+
+export const getSubmitRaiseMutationOptions = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitRaise>>, TError,SubmitRaiseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitRaise>>, TError,SubmitRaiseMutationVariables, TContext> => {
+
+const mutationKey = getSubmitRaiseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitRaise>>, SubmitRaiseMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  submitRaise(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitRaiseMutationResult = NonNullable<Awaited<ReturnType<typeof submitRaise>>>
+    export type SubmitRaiseMutationBody = BodyType<RaiseSubmissionInput>
+    export type SubmitRaiseMutationError = ErrorType<ErrorMessage>
+    export type SubmitRaiseMutationVariables = {data: BodyType<RaiseSubmissionInput>}
+
+    /**
+ * @summary Submit a raise for manual approval
+ */
+export const useSubmitRaise = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitRaise>>, TError,SubmitRaiseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitRaise>>,
+        TError,
+        SubmitRaiseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSubmitRaiseMutationOptions(options));
+    }
+
 export const getGetRaisesUrl = () => {
 
 
@@ -309,7 +401,7 @@ export const getGetRaisesUrl = () => {
 }
 
 /**
- * @summary Get public raises with claim and commitment details
+ * @summary Get approved public raises and aggregate totals
  */
 export const getRaises = async ( options?: Parameters<typeof customFetch>[1]): Promise<RaiseSummary[]> => {
 
@@ -356,7 +448,7 @@ export type GetRaisesQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Get public raises with claim and commitment details
+ * @summary Get approved public raises and aggregate totals
  */
 
 export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<unknown>>(
@@ -365,6 +457,83 @@ export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TErr
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetRaisesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetPendingRaisesUrl = () => {
+
+
+
+
+  return `/api/raises/pending`
+}
+
+/**
+ * @summary Get pending raises for sponsor review
+ */
+export const getPendingRaises = async ( options?: Parameters<typeof customFetch>[1]): Promise<PendingRaise[]> => {
+
+  return customFetch<PendingRaise[]>(getGetPendingRaisesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPendingRaisesQueryKey = () => {
+    return [
+    `/api/raises/pending`
+    ] as const;
+    }
+
+
+export const getGetPendingRaisesQueryOptions = <TData = Awaited<ReturnType<typeof getPendingRaises>>, TError = ErrorType<ErrorMessage>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPendingRaises>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPendingRaisesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPendingRaises>>> = ({ signal }) => getPendingRaises({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPendingRaises>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPendingRaisesQueryResult = NonNullable<Awaited<ReturnType<typeof getPendingRaises>>>
+export type GetPendingRaisesQueryError = ErrorType<ErrorMessage>
+
+
+/**
+ * @summary Get pending raises for sponsor review
+ */
+
+export function useGetPendingRaises<TData = Awaited<ReturnType<typeof getPendingRaises>>, TError = ErrorType<ErrorMessage>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPendingRaises>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPendingRaisesQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -386,7 +555,7 @@ export const getGetRaiseByIdUrl = (id: string,) => {
 }
 
 /**
- * @summary Get one public raise with claim and commitment details
+ * @summary Get one approved public raise and its aggregate totals
  */
 export const getRaiseById = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<RaiseSummary> => {
 
@@ -433,7 +602,7 @@ export type GetRaiseByIdQueryError = ErrorType<ErrorMessage>
 
 
 /**
- * @summary Get one public raise with claim and commitment details
+ * @summary Get one approved public raise and its aggregate totals
  */
 
 export function useGetRaiseById<TData = Awaited<ReturnType<typeof getRaiseById>>, TError = ErrorType<ErrorMessage>>(
@@ -453,6 +622,157 @@ export function useGetRaiseById<TData = Awaited<ReturnType<typeof getRaiseById>>
 
 
 
+
+export const getGetPrivateRaiseUrl = (id: string,) => {
+
+
+
+
+  return `/api/raises/${id}/private`
+}
+
+/**
+ * @summary Get private sponsor details for one raise
+ */
+export const getPrivateRaise = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<PrivateRaiseDetails> => {
+
+  return customFetch<PrivateRaiseDetails>(getGetPrivateRaiseUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPrivateRaiseQueryKey = (id: string,) => {
+    return [
+    `/api/raises/${id}/private`
+    ] as const;
+    }
+
+
+export const getGetPrivateRaiseQueryOptions = <TData = Awaited<ReturnType<typeof getPrivateRaise>>, TError = ErrorType<ErrorMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPrivateRaise>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPrivateRaiseQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPrivateRaise>>> = ({ signal }) => getPrivateRaise(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPrivateRaise>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPrivateRaiseQueryResult = NonNullable<Awaited<ReturnType<typeof getPrivateRaise>>>
+export type GetPrivateRaiseQueryError = ErrorType<ErrorMessage>
+
+
+/**
+ * @summary Get private sponsor details for one raise
+ */
+
+export function useGetPrivateRaise<TData = Awaited<ReturnType<typeof getPrivateRaise>>, TError = ErrorType<ErrorMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPrivateRaise>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPrivateRaiseQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getApproveRaiseUrl = (id: string,) => {
+
+
+
+
+  return `/api/raises/${id}/approve`
+}
+
+/**
+ * @summary Approve a pending raise
+ */
+export const approveRaise = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<RaiseSummary> => {
+
+  return customFetch<RaiseSummary>(getApproveRaiseUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getApproveRaiseMutationKey = () => ['approveRaise'] as const;
+
+export const getApproveRaiseMutationOptions = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveRaise>>, TError,ApproveRaiseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveRaise>>, TError,ApproveRaiseMutationVariables, TContext> => {
+
+const mutationKey = getApproveRaiseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveRaise>>, ApproveRaiseMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  approveRaise(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveRaiseMutationResult = NonNullable<Awaited<ReturnType<typeof approveRaise>>>
+
+    export type ApproveRaiseMutationError = ErrorType<ErrorMessage>
+    export type ApproveRaiseMutationVariables = {id: string}
+
+    /**
+ * @summary Approve a pending raise
+ */
+export const useApproveRaise = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveRaise>>, TError,ApproveRaiseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof approveRaise>>,
+        TError,
+        ApproveRaiseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApproveRaiseMutationOptions(options));
+    }
 
 export const getClaimRaiseUrl = (id: string,) => {
 
@@ -642,7 +962,7 @@ export const getUpdateRaiseCommitmentUrl = (id: string,
 }
 
 /**
- * @summary Update a commitment status
+ * @summary Update a private commitment status
  */
 export const updateRaiseCommitment = async (id: string,
     commitmentId: string,
@@ -710,7 +1030,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateRaiseCommitmentMutationVariables = {id: string;commitmentId: string;data: BodyType<CommitmentStatusInput>}
 
     /**
- * @summary Update a commitment status
+ * @summary Update a private commitment status
  */
 export const useUpdateRaiseCommitment = <TError = ErrorType<ErrorMessage>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRaiseCommitment>>, TError,UpdateRaiseCommitmentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}

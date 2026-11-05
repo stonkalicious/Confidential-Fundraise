@@ -9,6 +9,9 @@ export type Raise = {
   roundRange: { min: number; max: number };
   isFundThesis?: boolean;
   claimed: boolean;
+  claimantName?: string | null;
+  softTotal?: number;
+  hardTotal?: number;
   claim?: {
     founderName: string;
     email: string;

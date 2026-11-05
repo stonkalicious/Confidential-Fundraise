@@ -2,11 +2,13 @@ import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   claimRaise as claimRaiseApi,
+  getPrivateRaise as getPrivateRaiseApi,
   getRaises as getRaisesApi,
   submitSoftCommitment as submitSoftCommitmentApi,
   updateRaiseCommitment as updateRaiseCommitmentApi,
   type ClaimRaiseInput,
   type CommitmentStatusInput,
+  type PrivateRaiseDetails,
   type RaiseSummary,
 } from '@workspace/api-client-react';
 import RaiseList from '@/components/raise-list';
@@ -30,32 +32,50 @@ import {
 const queryClient = new QueryClient();
 
 type View = 'progress' | 'how' | 'prospect' | 'sponsor' | 'thesis' | 'rules';
-const DEMO_LABEL = 'Demo only — API exposes claims and commitments.';
+const DEMO_LABEL = 'Demo only — public data shows approved raises and aggregates.';
 
 function mergeApiRaise(summary: RaiseSummary, base: Raise): Raise {
+  const localCommitments = base.commitments ?? [];
+  const localSoftTotal = localCommitments.reduce(
+    (total, item) => total + (item.hard ? 0 : item.amount),
+    0,
+  );
+  const localHardTotal = localCommitments.reduce(
+    (total, item) => total + (item.hard ? item.amount : 0),
+    0,
+  );
+  const useLocalTotals =
+    summary.softTotal === 0 &&
+    summary.hardTotal === 0 &&
+    (localSoftTotal > 0 || localHardTotal > 0);
   return {
     ...base,
     companyName: summary.name,
     thesis: summary.thesis,
     stage: summary.stage,
     roundRange: summary.range,
-    claimed: summary.claimed,
-    claim: summary.claim,
-    commitments: summary.commitments,
+    claimed: summary.claimed || Boolean(base.claim),
+    claimantName: summary.claimantName ?? base.claimantName ?? base.claim?.founderName ?? null,
+    softTotal: useLocalTotals ? localSoftTotal : summary.softTotal,
+    hardTotal: useLocalTotals ? localHardTotal : summary.hardTotal,
   };
 }
 
 function mergeApiRaises(summaries: RaiseSummary[], current: Raise[]): Raise[] {
-  return INITIAL_RAISES.map((base) => {
-    const summary = summaries.find((item) => item.id === base.id);
-    return summary
-      ? mergeApiRaise(summary, base)
-      : current.find((item) => item.id === base.id) ?? base;
+  return summaries.map((summary) => {
+    const base =
+      current.find((item) => item.id === summary.id) ??
+      INITIAL_RAISES.find((item) => item.id === summary.id) ?? {
+        id: summary.id,
+        companyName: summary.name,
+        thesis: summary.thesis,
+        investmentThesis: summary.thesis,
+        stage: summary.stage,
+        roundRange: summary.range,
+        claimed: summary.claimed,
+      };
+    return mergeApiRaise(summary, base);
   });
-}
-
-function replaceApiRaise(raises: RaiseSummary[], updated: RaiseSummary): RaiseSummary[] {
-  return raises.map((raise) => raise.id === updated.id ? updated : raise);
 }
 
 function requestErrorMessage(error: unknown, fallback: string): string {
@@ -70,55 +90,6 @@ function requestErrorMessage(error: unknown, fallback: string): string {
 
 function isHttpStatus(error: unknown, status: number): boolean {
   return error !== null && typeof error === 'object' && 'status' in error && error.status === status;
-}
-
-async function migrateLocalRaiseData(
-  localRaises: Raise[],
-  serverRaises: RaiseSummary[],
-): Promise<RaiseSummary[]> {
-  let current = serverRaises;
-
-  for (const localRaise of localRaises) {
-    let serverRaise = current.find((item) => item.id === localRaise.id);
-    if (!serverRaise) continue;
-
-    if (localRaise.claimed && localRaise.claim && !serverRaise.claimed) {
-      const signatureOrAccount = localRaise.claim.signatureOrAccount ?? localRaise.claim.vehicleLink;
-      try {
-        const updated = await claimRaiseApi(localRaise.id, {
-          founderName: localRaise.claim.founderName,
-          email: localRaise.claim.email,
-          ...(signatureOrAccount ? { signatureOrAccount } : {}),
-        });
-        current = replaceApiRaise(current, updated);
-        serverRaise = updated;
-      } catch (error) {
-        if (!isHttpStatus(error, 409)) throw error;
-      }
-    }
-
-    for (const localCommitment of localRaise.commitments ?? []) {
-      serverRaise = current.find((item) => item.id === localRaise.id);
-      if (!serverRaise) break;
-      if (serverRaise.commitments.some((item) => item.id === localCommitment.id)) continue;
-
-      const created = await submitSoftCommitmentApi(localRaise.id, {
-        id: localCommitment.id,
-        identifier: localCommitment.identifier,
-        amount: localCommitment.amount,
-      });
-      current = replaceApiRaise(current, created);
-      if (localCommitment.hard || localCommitment.verified) {
-        const updated = await updateRaiseCommitmentApi(localRaise.id, localCommitment.id, {
-          hard: true,
-          verified: Boolean(localCommitment.verified),
-        });
-        current = replaceApiRaise(current, updated);
-      }
-    }
-  }
-
-  return getRaisesApi();
 }
 
 function euro(value: number) {
@@ -148,16 +119,25 @@ function AppDesk({
   raise,
   onClaimRaise,
   onSubmitSoftCommitment,
+  onGetPrivateRaise,
   onUpdateCommitment,
 }: {
   raise: Raise;
   onClaimRaise: (claim: ClaimRaiseInput) => Promise<void>;
   onSubmitSoftCommitment: (identifier: string, amount: number) => Promise<void>;
-  onUpdateCommitment: (id: string, status: CommitmentStatusInput) => Promise<void>;
+  onGetPrivateRaise: (approvalCode: string) => Promise<PrivateRaiseDetails>;
+  onUpdateCommitment: (
+    id: string,
+    status: CommitmentStatusInput,
+    approvalCode: string,
+  ) => Promise<void>;
 }) {
   const isFundThesis = raise.isFundThesis === true;
   const [view, setView] = useState<View>(getInitialView);
-  const commitments = raise.commitments ?? [];
+  const [approvalCode, setApprovalCode] = useState('');
+  const [privateRaise, setPrivateRaise] = useState<PrivateRaiseDetails | null>(null);
+  const [sponsorLoading, setSponsorLoading] = useState(false);
+  const commitments = privateRaise?.commitments ?? [];
   const [quoteCommitmentId, setQuoteCommitmentId] = useState<string | null>(null);
   const commitment = commitments.find((item) => item.id === quoteCommitmentId && item.hard)
     ?? commitments.find((item) => item.hard);
@@ -174,9 +154,25 @@ function AppDesk({
   const [claimError, setClaimError] = useState('');
   const [sponsorError, setSponsorError] = useState('');
 
-  const softTotal = commitments.reduce((total, item) => total + (item.hard ? 0 : item.amount), 0);
-  const hardTotal = commitments.reduce((total, item) => total + (item.hard ? item.amount : 0), 0);
+  const localSoftTotal = (raise.commitments ?? []).reduce(
+    (total, item) => total + (item.hard ? 0 : item.amount),
+    0,
+  );
+  const localHardTotal = (raise.commitments ?? []).reduce(
+    (total, item) => total + (item.hard ? item.amount : 0),
+    0,
+  );
+  const softTotal = raise.softTotal ?? localSoftTotal;
+  const hardTotal = raise.hardTotal ?? localHardTotal;
   const progress = Math.min(100, (hardTotal / target) * 100);
+
+  useEffect(() => {
+    if (view !== 'sponsor') {
+      setApprovalCode('');
+      setPrivateRaise(null);
+      setSponsorError('');
+    }
+  }, [view]);
 
   const quoteBody = useMemo(() => {
     const amountInBaseUnits = String(Math.round((commitment?.amount ?? 0) * 1_000_000));
@@ -218,6 +214,45 @@ function AppDesk({
     } catch (error) {
       setFormError(requestErrorMessage(error, 'The commitment could not be submitted.'));
     }
+  }
+
+  async function unlockSponsor(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSponsorError('');
+    if (!approvalCode) {
+      setSponsorError('Enter the sponsor approval code.');
+      return;
+    }
+    setSponsorLoading(true);
+    try {
+      setPrivateRaise(await onGetPrivateRaise(approvalCode));
+    } catch (error) {
+      setPrivateRaise(null);
+      setSponsorError(requestErrorMessage(error, 'Private sponsor details could not be loaded.'));
+    } finally {
+      setSponsorLoading(false);
+    }
+  }
+
+  function applyPrivateCommitmentStatus(id: string, status: CommitmentStatusInput) {
+    setPrivateRaise((current) => {
+      if (!current) return current;
+      const updatedCommitments = current.commitments.map((item) =>
+        item.id === id ? { ...item, ...status } : item
+      );
+      return {
+        ...current,
+        commitments: updatedCommitments,
+        softTotal: updatedCommitments.reduce(
+          (total, item) => total + (item.hard ? 0 : item.amount),
+          0,
+        ),
+        hardTotal: updatedCommitments.reduce(
+          (total, item) => total + (item.hard ? item.amount : 0),
+          0,
+        ),
+      };
+    });
   }
 
   function submitContactRequest(event: FormEvent<HTMLFormElement>) {
@@ -264,7 +299,9 @@ function AppDesk({
     if (!item) return;
     setSponsorError('');
     try {
-      await onUpdateCommitment(id, { hard: !item.hard, verified: false });
+      const status = { hard: !item.hard, verified: false };
+      await onUpdateCommitment(id, status, approvalCode);
+      applyPrivateCommitmentStatus(id, status);
       setQuoteCommitmentId(id);
     } catch (error) {
       setSponsorError(requestErrorMessage(error, 'The commitment status could not be updated.'));
@@ -274,7 +311,9 @@ function AppDesk({
   async function verifyCommitment(id: string) {
     setSponsorError('');
     try {
-      await onUpdateCommitment(id, { hard: true, verified: true });
+      const status = { hard: true, verified: true };
+      await onUpdateCommitment(id, status, approvalCode);
+      applyPrivateCommitmentStatus(id, status);
       setQuoteCommitmentId(id);
     } catch (error) {
       setSponsorError(requestErrorMessage(error, 'The commitment could not be verified.'));
@@ -396,53 +435,86 @@ function AppDesk({
             <div className="content-grid">
               <div>
                 <h2 className="section-title">Sponsor review</h2>
-                <p className="section-copy">Review shared commitments. This Sponsor view is not access-restricted.</p>
                 {sponsorError && (
                   <p className="inline-error" data-testid="status-sponsor-error" role="alert">
                     {sponsorError}
                   </p>
                 )}
-                {commitments.length > 0 ? (
-                  <div data-testid="sponsor-commitment-list">
-                  {commitments.map((item) => (
-                  <div className="commitment-card" key={item.id} data-testid="commitment-row">
-                    <div className="commitment-meta">
-                      <div className="record-line" data-testid="status-commitment">
-                        <span className={`status-dot${item.hard ? ' hard' : ''}`} />
-                        {item.verified ? 'Verified commitment' : item.hard ? 'Hard commitment' : 'Soft commitment'}
-                      </div>
-                      <div className="record-name" data-testid="text-commitment-identifier">{item.identifier}</div>
-                      <div className="record-amount" data-testid="text-commitment-amount">{euro(item.amount)}</div>
-                      {item.verified && (
-                        <div className="verification-label" data-testid="text-verification-label">NEAR confidential verification (demo — no blockchain call)</div>
-                      )}
+                {!privateRaise ? (
+                  <form className="sponsor-unlock-form" onSubmit={unlockSponsor}>
+                    <div className="field-wrap">
+                      <label className="field-label" htmlFor="sponsor-approval-code">Sponsor approval code</label>
+                      <input
+                        className="field"
+                        id="sponsor-approval-code"
+                        data-testid="input-sponsor-approval-code"
+                        type="password"
+                        autoComplete="current-password"
+                        value={approvalCode}
+                        onChange={(event) => setApprovalCode(event.target.value)}
+                      />
                     </div>
-                    <div className="commitment-actions">
-                    {!item.hard && (
-                      <button
-                        className="mark-button"
-                        data-testid="button-mark-verified"
-                        type="button"
-                        onClick={() => verifyCommitment(item.id)}
-                      >
-                        Mark verified (demo)
-                      </button>
-                    )}
-                    <button
-                      className={item.hard ? 'quiet-button' : 'mark-button'}
-                      data-testid="button-toggle-hard-commitment"
-                      type="button"
-                      aria-pressed={item.hard}
-                      onClick={() => toggleCommitmentHardStatus(item.id)}
-                    >
-                      {item.hard ? 'Revert to soft' : 'Mark hard'}
+                    <button className="primary-button" type="submit" disabled={sponsorLoading}>
+                      {sponsorLoading ? 'Loading…' : 'Unlock sponsor view'}
                     </button>
-                    </div>
-                  </div>
-                  ))}
-                  </div>
+                  </form>
                 ) : (
-                  <div className="empty-record" data-testid="status-empty-commitment">No prospect commitment has been submitted.</div>
+                  <>
+                    {privateRaise.claim && (
+                      <section className="claim-contact-card" data-testid="sponsor-claim-contact">
+                        <div className="side-label">Claim contact</div>
+                        <div className="record-name">{privateRaise.claim.founderName}</div>
+                        <div className="record-amount">{privateRaise.claim.email}</div>
+                        {privateRaise.claim.signatureOrAccount && (
+                          <div className="record-amount">{privateRaise.claim.signatureOrAccount}</div>
+                        )}
+                      </section>
+                    )}
+                    {commitments.length > 0 ? (
+                      <div data-testid="sponsor-commitment-list">
+                        {commitments.map((item) => (
+                          <div className="commitment-card" key={item.id} data-testid="commitment-row">
+                            <div className="commitment-meta">
+                              <div className="record-line" data-testid="status-commitment">
+                                <span className={`status-dot${item.hard ? ' hard' : ''}`} />
+                                {item.verified ? 'Verified commitment' : item.hard ? 'Hard commitment' : 'Soft commitment'}
+                              </div>
+                              <div className="record-name" data-testid="text-commitment-identifier">{item.identifier}</div>
+                              <div className="record-amount" data-testid="text-commitment-amount">{euro(item.amount)}</div>
+                              {item.verified && (
+                                <div className="verification-label" data-testid="text-verification-label">NEAR confidential verification (demo — no blockchain call)</div>
+                              )}
+                            </div>
+                            <div className="commitment-actions">
+                              {!item.hard && (
+                                <button
+                                  className="mark-button"
+                                  data-testid="button-mark-verified"
+                                  type="button"
+                                  onClick={() => verifyCommitment(item.id)}
+                                >
+                                  Mark verified (demo)
+                                </button>
+                              )}
+                              <button
+                                className={item.hard ? 'quiet-button' : 'mark-button'}
+                                data-testid="button-toggle-hard-commitment"
+                                type="button"
+                                aria-pressed={item.hard}
+                                onClick={() => toggleCommitmentHardStatus(item.id)}
+                              >
+                                {item.hard ? 'Revert to soft' : 'Mark hard'}
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="empty-record" data-testid="status-empty-commitment">
+                        No prospect commitment has been submitted.
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
               <aside className="side-card">
@@ -480,7 +552,7 @@ function AppDesk({
                 aria-live="polite"
               >
                 {raise.claimed
-                  ? `Claimed by ${raise.claim?.founderName ?? ''}`
+                  ? `Claimed by ${raise.claimantName ?? raise.claim?.founderName ?? ''}`
                   : 'Public aggregate view'}
               </div>
               {!raise.claimed && (
@@ -616,10 +688,10 @@ function AppDesk({
               <h1 className="how-title">How the app works</h1>
               <p>Confidential Fundraise Desk is a minimal demo of fundraise coordination with shared server-held records.</p>
               <p>
-                A prospect submits a soft commitment (identifier and amount), and a founder can claim a raise with a name, email, and optional signature or account. These details are kept in the shared in-memory demo API and are available through its public endpoints. The Sponsor view is not access-restricted. Marking a commitment hard displays an illustrative NEAR Intents 1Click quote body; no request is sent, no blockchain verification occurs, and no settlement is triggered.
+                A prospect submits a soft commitment, and a founder can claim a raise with contact details. New raises stay out of the public list until a sponsor approves them. The Sponsor view uses a shared approval code to access individual commitments and claim contact details. Marking a commitment hard displays an illustrative NEAR Intents 1Click quote body; no request is sent, no blockchain verification occurs, and no settlement is triggered.
               </p>
               <p>
-                The Progress view shows only aggregate soft and hard totals and progress toward a {euro(target)} example minimum. API responses include individual commitment identifiers and amounts, plus claim founder names and email addresses.
+                Public pages and API responses show approved raise information and aggregate soft and hard totals only. Individual commitment identifiers, amounts, and claim contact details are not included in public responses.
               </p>
               <p>
                 The pre-seeded raises are fictional. Do not enter sensitive real prospect information. The server keeps this data only in memory, so it resets when the API restarts. This demo does not perform NEAR settlement.
@@ -724,48 +796,7 @@ function Router() {
   const [storageError, setStorageError] = useState(loaded.error);
   const [syncError, setSyncError] = useState('');
 
-  useEffect(() => {
-    let active = true;
-    const applyApiList = (summaries: RaiseSummary[]) => {
-      const next = mergeApiRaises(summaries, raisesRef.current);
-      raisesRef.current = next;
-      setRaises(next);
-      try {
-        saveRaises(next);
-        setStorageError('');
-      } catch {
-        setStorageError('Could not cache raise data in this browser.');
-      }
-    };
-
-    async function refresh(includeLocalMigration = false) {
-      try {
-        let summaries = await getRaisesApi();
-        if (includeLocalMigration) {
-          summaries = await migrateLocalRaiseData(loaded.raises, summaries);
-        }
-        if (!active) return;
-        applyApiList(summaries);
-        setSyncError('');
-      } catch (error) {
-        if (active) {
-          setSyncError(requestErrorMessage(error, 'Shared raise data could not be loaded.'));
-        }
-      }
-    }
-
-    void refresh(true);
-    const interval = window.setInterval(() => { void refresh(); }, 5000);
-    return () => {
-      active = false;
-      window.clearInterval(interval);
-    };
-  }, [loaded.raises]);
-
-  function applyApiRaise(summary: RaiseSummary) {
-    const next = raisesRef.current.map((raise) =>
-      raise.id === summary.id ? mergeApiRaise(summary, raise) : raise
-    );
+  function saveRaiseState(next: Raise[]) {
     raisesRef.current = next;
     setRaises(next);
     try {
@@ -776,16 +807,166 @@ function Router() {
     }
   }
 
+  function applyApiList(summaries: RaiseSummary[]) {
+    saveRaiseState(mergeApiRaises(summaries, raisesRef.current));
+  }
+
+  useEffect(() => {
+    let active = true;
+    async function refresh() {
+      try {
+        const summaries = await getRaisesApi();
+        if (!active) return;
+        applyApiList(summaries);
+        setSyncError('');
+      } catch (error) {
+        if (active) {
+          setSyncError(requestErrorMessage(error, 'Shared raise data could not be loaded.'));
+        }
+      }
+    }
+
+    void refresh();
+    const interval = window.setInterval(() => { void refresh(); }, 5000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  function applyApiRaise(summary: RaiseSummary) {
+    const current = raisesRef.current;
+    const existing = current.find((raise) => raise.id === summary.id);
+    const base =
+      existing ??
+      INITIAL_RAISES.find((raise) => raise.id === summary.id) ?? {
+        id: summary.id,
+        companyName: summary.name,
+        thesis: summary.thesis,
+        investmentThesis: summary.thesis,
+        stage: summary.stage,
+        roundRange: summary.range,
+        claimed: summary.claimed,
+      };
+    const updated = mergeApiRaise(summary, base);
+    const next = existing
+      ? current.map((raise) => raise.id === summary.id ? updated : raise)
+      : [...current, updated];
+    saveRaiseState(next);
+  }
+
+  function updateLocalRaise(id: string, update: (raise: Raise) => Raise) {
+    saveRaiseState(raisesRef.current.map((raise) =>
+      raise.id === id ? update(raise) : raise
+    ));
+  }
+
+  async function refreshPublicRaises() {
+    applyApiList(await getRaisesApi());
+    setSyncError('');
+  }
+
   async function submitClaim(id: string, claim: ClaimRaiseInput) {
     applyApiRaise(await claimRaiseApi(id, claim));
+    updateLocalRaise(id, (raise) => ({
+      ...raise,
+      claimed: true,
+      claimantName: claim.founderName,
+      claim: {
+        founderName: claim.founderName,
+        email: claim.email,
+        ...(claim.signatureOrAccount ? { signatureOrAccount: claim.signatureOrAccount } : {}),
+      },
+    }));
   }
 
   async function submitCommitment(id: string, identifier: string, amount: number) {
-    applyApiRaise(await submitSoftCommitmentApi(id, { identifier, amount }));
+    const commitmentId = crypto.randomUUID();
+    applyApiRaise(await submitSoftCommitmentApi(id, { id: commitmentId, identifier, amount }));
+    updateLocalRaise(id, (raise) => ({
+      ...raise,
+      commitments: [
+        ...(raise.commitments ?? []),
+        { id: commitmentId, identifier, amount, hard: false, verified: false },
+      ],
+    }));
   }
 
-  async function updateCommitment(id: string, commitmentId: string, status: CommitmentStatusInput) {
-    applyApiRaise(await updateRaiseCommitmentApi(id, commitmentId, status));
+  async function getPrivateRaiseForSponsor(id: string, approvalCode: string) {
+    const options = { headers: { Authorization: `Bearer ${approvalCode}` } };
+    let details = await getPrivateRaiseApi(id, options);
+    const localRaise = raisesRef.current.find((raise) => raise.id === id);
+    if (!localRaise) return details;
+
+    if (localRaise.claim && !details.claim) {
+      try {
+        applyApiRaise(await claimRaiseApi(id, {
+          founderName: localRaise.claim.founderName,
+          email: localRaise.claim.email,
+          ...(localRaise.claim.signatureOrAccount
+            ? { signatureOrAccount: localRaise.claim.signatureOrAccount }
+            : {}),
+        }));
+      } catch (error) {
+        if (!isHttpStatus(error, 409)) throw error;
+      }
+    }
+
+    for (const localCommitment of localRaise.commitments ?? []) {
+      let existing = details.commitments.find((item) => item.id === localCommitment.id);
+      if (!existing) {
+        const summary = await submitSoftCommitmentApi(id, {
+          id: localCommitment.id,
+          identifier: localCommitment.identifier,
+          amount: localCommitment.amount,
+        });
+        applyApiRaise(summary);
+        existing = {
+          id: localCommitment.id,
+          identifier: localCommitment.identifier,
+          amount: localCommitment.amount,
+          hard: false,
+          verified: false,
+        };
+      }
+      if (
+        (localCommitment.hard && !existing.hard) ||
+        (localCommitment.verified && !existing.verified)
+      ) {
+        applyApiRaise(await updateRaiseCommitmentApi(
+          id,
+          localCommitment.id,
+          {
+            hard: true,
+            verified: Boolean(localCommitment.verified),
+          },
+          options,
+        ));
+      }
+    }
+
+    details = await getPrivateRaiseApi(id, options);
+    return details;
+  }
+
+  async function updateCommitment(
+    id: string,
+    commitmentId: string,
+    status: CommitmentStatusInput,
+    approvalCode: string,
+  ) {
+    const summary = await updateRaiseCommitmentApi(id, commitmentId, status, {
+      headers: { Authorization: `Bearer ${approvalCode}` },
+    });
+    applyApiRaise(summary);
+    updateLocalRaise(id, (raise) => ({
+      ...raise,
+      commitments: (raise.commitments ?? []).map((item) =>
+        item.id === commitmentId ? { ...item, ...status } : item
+      ),
+      softTotal: summary.softTotal,
+      hardTotal: summary.hardTotal,
+    }));
   }
 
   return (
@@ -796,7 +977,9 @@ function Router() {
       {syncError && <p className="frame" role="alert">{syncError}</p>}
       <Switch>
         <Route path="/roadmap"><RoadmapPage /></Route>
-        <Route path="/"><RaiseList raises={raises} /></Route>
+        <Route path="/">
+          <RaiseList raises={raises} onApproved={refreshPublicRaises} />
+        </Route>
         <Route path="/raises/:id">
           {(params) => {
             const raise = raises.find((item) => item.id === params.id);
@@ -807,7 +990,10 @@ function Router() {
                 raise={raise}
                 onClaimRaise={(claim) => submitClaim(raise.id, claim)}
                 onSubmitSoftCommitment={(identifier, amount) => submitCommitment(raise.id, identifier, amount)}
-                onUpdateCommitment={(commitmentId, status) => updateCommitment(raise.id, commitmentId, status)}
+                onGetPrivateRaise={(approvalCode) => getPrivateRaiseForSponsor(raise.id, approvalCode)}
+                onUpdateCommitment={(commitmentId, status, approvalCode) =>
+                  updateCommitment(raise.id, commitmentId, status, approvalCode)
+                }
               />
             );
           }}

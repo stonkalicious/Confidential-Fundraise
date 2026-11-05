@@ -50,16 +50,44 @@ export const SubmitRaiseClaimResponse = zod.object({
 
 
 /**
- * @summary Get public raises with claim and commitment details
+ * @summary Submit a raise for manual approval
  */
-export const getRaisesResponseRangeMinMin = 0;
+export const submitRaiseBodyNameMin = 2;
+export const submitRaiseBodyNameMax = 120;
 
-export const getRaisesResponseRangeMaxMin = 0;
+export const submitRaiseBodyThesisMin = 10;
+export const submitRaiseBodyThesisMax = 280;
+
+export const submitRaiseBodyStageMax = 60;
+
+
+
+
+
+export const SubmitRaiseBody = zod.object({
+  "name": zod.string().min(submitRaiseBodyNameMin).max(submitRaiseBodyNameMax),
+  "thesis": zod.string().min(submitRaiseBodyThesisMin).max(submitRaiseBodyThesisMax),
+  "stage": zod.string().min(1).max(submitRaiseBodyStageMax),
+  "range": zod.object({
+  "min": zod.number().int().min(1),
+  "max": zod.number().int().min(1)
+})
+})
+
+export const SubmitRaiseResponse = zod.object({
+  "id": zod.string(),
+  "status": zod.enum(['pending'])
+})
+
+
+/**
+ * @summary Get approved public raises and aggregate totals
+ */
+
 
 export const getRaisesResponseSoftTotalMin = 0;
 
 export const getRaisesResponseHardTotalMin = 0;
-
 
 
 
@@ -69,43 +97,50 @@ export const GetRaisesResponseItem = zod.object({
   "thesis": zod.string(),
   "stage": zod.string(),
   "range": zod.object({
-  "min": zod.number().int().min(getRaisesResponseRangeMinMin),
-  "max": zod.number().int().min(getRaisesResponseRangeMaxMin)
+  "min": zod.number().int().min(1),
+  "max": zod.number().int().min(1)
 }),
   "claimed": zod.boolean(),
+  "claimantName": zod.string().nullish(),
   "softTotal": zod.number().int().min(getRaisesResponseSoftTotalMin),
-  "hardTotal": zod.number().int().min(getRaisesResponseHardTotalMin),
-  "claim": zod.object({
-  "founderName": zod.string(),
-  "email": zod.string().email(),
-  "signatureOrAccount": zod.string().optional()
-}).optional(),
-  "commitments": zod.array(zod.object({
-  "id": zod.string(),
-  "identifier": zod.string(),
-  "amount": zod.number().int().min(1),
-  "hard": zod.boolean(),
-  "verified": zod.boolean()
-}))
+  "hardTotal": zod.number().int().min(getRaisesResponseHardTotalMin)
 })
 export const GetRaisesResponse = zod.array(GetRaisesResponseItem)
 
 
 /**
- * @summary Get one public raise with claim and commitment details
+ * @summary Get pending raises for sponsor review
+ */
+
+
+
+
+export const GetPendingRaisesResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "thesis": zod.string(),
+  "stage": zod.string(),
+  "range": zod.object({
+  "min": zod.number().int().min(1),
+  "max": zod.number().int().min(1)
+}),
+  "status": zod.enum(['pending'])
+})
+export const GetPendingRaisesResponse = zod.array(GetPendingRaisesResponseItem)
+
+
+/**
+ * @summary Get one approved public raise and its aggregate totals
  */
 export const GetRaiseByIdParams = zod.object({
   "id": zod.coerce.string()
 })
 
-export const getRaiseByIdResponseRangeMinMin = 0;
 
-export const getRaiseByIdResponseRangeMaxMin = 0;
 
 export const getRaiseByIdResponseSoftTotalMin = 0;
 
 export const getRaiseByIdResponseHardTotalMin = 0;
-
 
 
 
@@ -115,12 +150,46 @@ export const GetRaiseByIdResponse = zod.object({
   "thesis": zod.string(),
   "stage": zod.string(),
   "range": zod.object({
-  "min": zod.number().int().min(getRaiseByIdResponseRangeMinMin),
-  "max": zod.number().int().min(getRaiseByIdResponseRangeMaxMin)
+  "min": zod.number().int().min(1),
+  "max": zod.number().int().min(1)
 }),
   "claimed": zod.boolean(),
+  "claimantName": zod.string().nullish(),
   "softTotal": zod.number().int().min(getRaiseByIdResponseSoftTotalMin),
-  "hardTotal": zod.number().int().min(getRaiseByIdResponseHardTotalMin),
+  "hardTotal": zod.number().int().min(getRaiseByIdResponseHardTotalMin)
+})
+
+
+/**
+ * @summary Get private sponsor details for one raise
+ */
+export const GetPrivateRaiseParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+export const getPrivateRaiseResponseOneSoftTotalMin = 0;
+
+export const getPrivateRaiseResponseOneHardTotalMin = 0;
+
+
+
+
+export const GetPrivateRaiseResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "thesis": zod.string(),
+  "stage": zod.string(),
+  "range": zod.object({
+  "min": zod.number().int().min(1),
+  "max": zod.number().int().min(1)
+}),
+  "claimed": zod.boolean(),
+  "claimantName": zod.string().nullish(),
+  "softTotal": zod.number().int().min(getPrivateRaiseResponseOneSoftTotalMin),
+  "hardTotal": zod.number().int().min(getPrivateRaiseResponseOneHardTotalMin)
+}).and(zod.object({
   "claim": zod.object({
   "founderName": zod.string(),
   "email": zod.string().email(),
@@ -133,6 +202,37 @@ export const GetRaiseByIdResponse = zod.object({
   "hard": zod.boolean(),
   "verified": zod.boolean()
 }))
+}))
+
+
+/**
+ * @summary Approve a pending raise
+ */
+export const ApproveRaiseParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+export const approveRaiseResponseSoftTotalMin = 0;
+
+export const approveRaiseResponseHardTotalMin = 0;
+
+
+
+export const ApproveRaiseResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "thesis": zod.string(),
+  "stage": zod.string(),
+  "range": zod.object({
+  "min": zod.number().int().min(1),
+  "max": zod.number().int().min(1)
+}),
+  "claimed": zod.boolean(),
+  "claimantName": zod.string().nullish(),
+  "softTotal": zod.number().int().min(approveRaiseResponseSoftTotalMin),
+  "hardTotal": zod.number().int().min(approveRaiseResponseHardTotalMin)
 })
 
 
@@ -157,14 +257,11 @@ export const ClaimRaiseBody = zod.object({
   "signatureOrAccount": zod.string().max(claimRaiseBodySignatureOrAccountMax).optional()
 })
 
-export const claimRaiseResponseRangeMinMin = 0;
 
-export const claimRaiseResponseRangeMaxMin = 0;
 
 export const claimRaiseResponseSoftTotalMin = 0;
 
 export const claimRaiseResponseHardTotalMin = 0;
-
 
 
 
@@ -174,24 +271,13 @@ export const ClaimRaiseResponse = zod.object({
   "thesis": zod.string(),
   "stage": zod.string(),
   "range": zod.object({
-  "min": zod.number().int().min(claimRaiseResponseRangeMinMin),
-  "max": zod.number().int().min(claimRaiseResponseRangeMaxMin)
+  "min": zod.number().int().min(1),
+  "max": zod.number().int().min(1)
 }),
   "claimed": zod.boolean(),
+  "claimantName": zod.string().nullish(),
   "softTotal": zod.number().int().min(claimRaiseResponseSoftTotalMin),
-  "hardTotal": zod.number().int().min(claimRaiseResponseHardTotalMin),
-  "claim": zod.object({
-  "founderName": zod.string(),
-  "email": zod.string().email(),
-  "signatureOrAccount": zod.string().optional()
-}).optional(),
-  "commitments": zod.array(zod.object({
-  "id": zod.string(),
-  "identifier": zod.string(),
-  "amount": zod.number().int().min(1),
-  "hard": zod.boolean(),
-  "verified": zod.boolean()
-}))
+  "hardTotal": zod.number().int().min(claimRaiseResponseHardTotalMin)
 })
 
 
@@ -215,14 +301,11 @@ export const SubmitSoftCommitmentBody = zod.object({
   "amount": zod.number().int().min(1)
 })
 
-export const submitSoftCommitmentResponseRangeMinMin = 0;
 
-export const submitSoftCommitmentResponseRangeMaxMin = 0;
 
 export const submitSoftCommitmentResponseSoftTotalMin = 0;
 
 export const submitSoftCommitmentResponseHardTotalMin = 0;
-
 
 
 
@@ -232,29 +315,18 @@ export const SubmitSoftCommitmentResponse = zod.object({
   "thesis": zod.string(),
   "stage": zod.string(),
   "range": zod.object({
-  "min": zod.number().int().min(submitSoftCommitmentResponseRangeMinMin),
-  "max": zod.number().int().min(submitSoftCommitmentResponseRangeMaxMin)
+  "min": zod.number().int().min(1),
+  "max": zod.number().int().min(1)
 }),
   "claimed": zod.boolean(),
+  "claimantName": zod.string().nullish(),
   "softTotal": zod.number().int().min(submitSoftCommitmentResponseSoftTotalMin),
-  "hardTotal": zod.number().int().min(submitSoftCommitmentResponseHardTotalMin),
-  "claim": zod.object({
-  "founderName": zod.string(),
-  "email": zod.string().email(),
-  "signatureOrAccount": zod.string().optional()
-}).optional(),
-  "commitments": zod.array(zod.object({
-  "id": zod.string(),
-  "identifier": zod.string(),
-  "amount": zod.number().int().min(1),
-  "hard": zod.boolean(),
-  "verified": zod.boolean()
-}))
+  "hardTotal": zod.number().int().min(submitSoftCommitmentResponseHardTotalMin)
 })
 
 
 /**
- * @summary Update a commitment status
+ * @summary Update a private commitment status
  */
 export const UpdateRaiseCommitmentParams = zod.object({
   "id": zod.coerce.string(),
@@ -266,14 +338,11 @@ export const UpdateRaiseCommitmentBody = zod.object({
   "verified": zod.boolean()
 })
 
-export const updateRaiseCommitmentResponseRangeMinMin = 0;
 
-export const updateRaiseCommitmentResponseRangeMaxMin = 0;
 
 export const updateRaiseCommitmentResponseSoftTotalMin = 0;
 
 export const updateRaiseCommitmentResponseHardTotalMin = 0;
-
 
 
 
@@ -283,24 +352,13 @@ export const UpdateRaiseCommitmentResponse = zod.object({
   "thesis": zod.string(),
   "stage": zod.string(),
   "range": zod.object({
-  "min": zod.number().int().min(updateRaiseCommitmentResponseRangeMinMin),
-  "max": zod.number().int().min(updateRaiseCommitmentResponseRangeMaxMin)
+  "min": zod.number().int().min(1),
+  "max": zod.number().int().min(1)
 }),
   "claimed": zod.boolean(),
+  "claimantName": zod.string().nullish(),
   "softTotal": zod.number().int().min(updateRaiseCommitmentResponseSoftTotalMin),
-  "hardTotal": zod.number().int().min(updateRaiseCommitmentResponseHardTotalMin),
-  "claim": zod.object({
-  "founderName": zod.string(),
-  "email": zod.string().email(),
-  "signatureOrAccount": zod.string().optional()
-}).optional(),
-  "commitments": zod.array(zod.object({
-  "id": zod.string(),
-  "identifier": zod.string(),
-  "amount": zod.number().int().min(1),
-  "hard": zod.boolean(),
-  "verified": zod.boolean()
-}))
+  "hardTotal": zod.number().int().min(updateRaiseCommitmentResponseHardTotalMin)
 })
 
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'wouter';
 
-const DEFAULT_DEMO_LABEL = 'Demo only — API exposes claims and commitments.';
+const DEFAULT_DEMO_LABEL = 'Demo only — public data shows approved raises and aggregates.';
 
 export default function SiteHeader({ demoLabel = DEFAULT_DEMO_LABEL }: { demoLabel?: string }) {
   const [menuOpen, setMenuOpen] = useState(false);

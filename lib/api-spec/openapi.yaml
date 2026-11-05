@@ -70,24 +70,81 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
   /raises:
+    post:
+      operationId: submitRaise
+      tags: [raises]
+      summary: Submit a raise for manual approval
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RaiseSubmissionInput"
+      responses:
+        "201":
+          description: Raise accepted into the private approval queue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RaiseSubmissionReceipt"
+        "400":
+          description: Invalid raise details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "429":
+          description: Submission rate limit reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
     get:
       operationId: getRaises
       tags: [raises]
-      summary: Get public raises with claim and commitment details
+      summary: Get approved public raises and aggregate totals
       responses:
         "200":
-          description: Raises with public claim details, commitments, and totals
+          description: Approved raises with aggregate totals only
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/RaiseSummary"
+  /raises/pending:
+    get:
+      operationId: getPendingRaises
+      tags: [raises]
+      summary: Get pending raises for sponsor review
+      security:
+        - ApprovalCode: []
+      responses:
+        "200":
+          description: Raises awaiting approval
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PendingRaise"
+        "401":
+          description: Approval code is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "503":
+          description: Sponsor access is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
   /raises/{id}:
     get:
       operationId: getRaiseById
       tags: [raises]
-      summary: Get one public raise with claim and commitment details
+      summary: Get one approved public raise and its aggregate totals
       parameters:
         - name: id
           in: path
@@ -96,13 +153,89 @@ paths:
             type: string
       responses:
         "200":
-          description: Raise with public claim details, commitments, and totals
+          description: Approved raise with aggregate totals only
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/RaiseSummary"
         "404":
           description: Raise not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+  /raises/{id}/private:
+    get:
+      operationId: getPrivateRaise
+      tags: [raises]
+      summary: Get private sponsor details for one raise
+      security:
+        - ApprovalCode: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Private commitments and claim contact details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrivateRaiseDetails"
+        "401":
+          description: Approval code is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "404":
+          description: Raise not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "503":
+          description: Sponsor access is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+  /raises/{id}/approve:
+    post:
+      operationId: approveRaise
+      tags: [raises]
+      summary: Approve a pending raise
+      security:
+        - ApprovalCode: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Approved raise
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RaiseSummary"
+        "401":
+          description: Approval code is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "404":
+          description: Pending raise not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "503":
+          description: Sponsor access is not configured
           content:
             application/json:
               schema:
@@ -195,7 +328,9 @@ paths:
     patch:
       operationId: updateRaiseCommitment
       tags: [raises]
-      summary: Update a commitment status
+      summary: Update a private commitment status
+      security:
+        - ApprovalCode: []
       parameters:
         - name: id
           in: path
@@ -232,7 +367,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
+        "401":
+          description: Approval code is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "503":
+          description: Sponsor access is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
 components:
+  securitySchemes:
+    ApprovalCode:
+      type: http
+      scheme: bearer
   schemas:
     HealthStatus:
       type: object
@@ -300,18 +451,14 @@ components:
           $ref: "#/components/schemas/RaiseRange"
         claimed:
           type: boolean
+        claimantName:
+          type: [string, "null"]
         softTotal:
           type: integer
           minimum: 0
         hardTotal:
           type: integer
           minimum: 0
-        claim:
-          $ref: "#/components/schemas/RaiseClaim"
-        commitments:
-          type: array
-          items:
-            $ref: "#/components/schemas/RaiseCommitment"
       required:
         - id
         - name
@@ -321,7 +468,63 @@ components:
         - claimed
         - softTotal
         - hardTotal
-        - commitments
+    PrivateRaiseDetails:
+      allOf:
+        - $ref: "#/components/schemas/RaiseSummary"
+        - type: object
+          properties:
+            claim:
+              $ref: "#/components/schemas/RaiseClaim"
+            commitments:
+              type: array
+              items:
+                $ref: "#/components/schemas/RaiseCommitment"
+          required:
+            - commitments
+    PendingRaise:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        thesis:
+          type: string
+        stage:
+          type: string
+        range:
+          $ref: "#/components/schemas/RaiseRange"
+        status:
+          type: string
+          enum: [pending]
+      required: [id, name, thesis, stage, range, status]
+    RaiseSubmissionReceipt:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [pending]
+      required: [id, status]
+    RaiseSubmissionInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        thesis:
+          type: string
+          minLength: 10
+          maxLength: 280
+        stage:
+          type: string
+          minLength: 1
+          maxLength: 60
+        range:
+          $ref: "#/components/schemas/RaiseRange"
+      required: [name, thesis, stage, range]
     RaiseClaim:
       type: object
       properties:
@@ -386,10 +589,10 @@ components:
       properties:
         min:
           type: integer
-          minimum: 0
+          minimum: 1
         max:
           type: integer
-          minimum: 0
+          minimum: 1
       required:
         - min
         - max

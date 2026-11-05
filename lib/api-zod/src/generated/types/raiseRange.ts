@@ -7,8 +7,8 @@
  */
 
 export interface RaiseRange {
-  /** @minimum 0 */
+  /** @minimum 1 */
   min: number;
-  /** @minimum 0 */
+  /** @minimum 1 */
   max: number;
 }

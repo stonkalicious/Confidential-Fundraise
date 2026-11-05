@@ -40,10 +40,25 @@ export interface ClaimRaiseInput {
 }
 
 export interface RaiseRange {
-  /** @minimum 0 */
+  /** @minimum 1 */
   min: number;
-  /** @minimum 0 */
+  /** @minimum 1 */
   max: number;
+}
+
+export interface RaiseSummary {
+  id: string;
+  name: string;
+  thesis: string;
+  stage: string;
+  range: RaiseRange;
+  claimed: boolean;
+  /** @nullable */
+  claimantName?: string | null;
+  /** @minimum 0 */
+  softTotal: number;
+  /** @minimum 0 */
+  hardTotal: number;
 }
 
 export interface RaiseClaim {
@@ -61,19 +76,56 @@ export interface RaiseCommitment {
   verified: boolean;
 }
 
-export interface RaiseSummary {
+export type PrivateRaiseDetails = RaiseSummary & {
+  claim?: RaiseClaim;
+  commitments: RaiseCommitment[];
+};
+
+export type PendingRaiseStatus = typeof PendingRaiseStatus[keyof typeof PendingRaiseStatus];
+
+
+export const PendingRaiseStatus = {
+  pending: 'pending',
+} as const;
+
+export interface PendingRaise {
   id: string;
   name: string;
   thesis: string;
   stage: string;
   range: RaiseRange;
-  claimed: boolean;
-  /** @minimum 0 */
-  softTotal: number;
-  /** @minimum 0 */
-  hardTotal: number;
-  claim?: RaiseClaim;
-  commitments: RaiseCommitment[];
+  status: PendingRaiseStatus;
+}
+
+export type RaiseSubmissionReceiptStatus = typeof RaiseSubmissionReceiptStatus[keyof typeof RaiseSubmissionReceiptStatus];
+
+
+export const RaiseSubmissionReceiptStatus = {
+  pending: 'pending',
+} as const;
+
+export interface RaiseSubmissionReceipt {
+  id: string;
+  status: RaiseSubmissionReceiptStatus;
+}
+
+export interface RaiseSubmissionInput {
+  /**
+     * @minLength 2
+     * @maxLength 120
+     */
+  name: string;
+  /**
+     * @minLength 10
+     * @maxLength 280
+     */
+  thesis: string;
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  stage: string;
+  range: RaiseRange;
 }
 
 export interface SoftCommitmentInput {
