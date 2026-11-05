@@ -24,13 +24,9 @@ export default function RaiseList({ raises }: { raises: Raise[] }) {
                 <div>
                   <h2 className="section-title">{raise.companyName}</h2>
                   <p className="section-copy">{raise.thesis}</p>
-                  {raise.isFundThesis ? (
-                    <div className="raise-details">Fund-wide thesis · informational</div>
-                  ) : (
-                    <div className="raise-details">{raise.stage} · {format(raise.roundRange!.min)} – {format(raise.roundRange!.max)}</div>
-                  )}
+                  <div className="raise-details">{raise.stage} · {format(raise.roundRange.min)} – {format(raise.roundRange.max)}</div>
                 </div>
-                <span className="raise-list-status">{raise.isFundThesis ? 'Read thesis' : raise.claimed ? `Claimed by ${raise.claim?.founderName ?? ''}` : 'Public data'} <span aria-hidden="true">↗</span></span>
+                <span className="raise-list-status">{raise.claimed ? `Claimed by ${raise.claim?.founderName ?? ''}` : 'Public data'} <span aria-hidden="true">↗</span></span>
               </Link>
             </li>
           ))}

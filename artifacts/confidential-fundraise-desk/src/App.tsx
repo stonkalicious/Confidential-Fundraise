@@ -48,12 +48,12 @@ function getInitialView(): View {
 
 function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: Partial<Raise>) => boolean }) {
   const isFundThesis = raise.isFundThesis === true;
-  const [view, setView] = useState<View>(() => isFundThesis ? 'thesis' : getInitialView());
+  const [view, setView] = useState<View>(getInitialView);
   const commitments = raise.commitments ?? [];
   const [quoteCommitmentId, setQuoteCommitmentId] = useState<string | null>(null);
   const commitment = commitments.find((item) => item.id === quoteCommitmentId && item.hard)
     ?? commitments.find((item) => item.hard);
-  const target = raise.roundRange?.min ?? 0;
+  const target = raise.roundRange.min;
   const [identifier, setIdentifier] = useState('');
   const [amount, setAmount] = useState('');
   const [formError, setFormError] = useState('');
@@ -68,7 +68,7 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
 
   const softTotal = commitments.reduce((total, item) => total + (item.hard ? 0 : item.amount), 0);
   const hardTotal = commitments.reduce((total, item) => total + (item.hard ? item.amount : 0), 0);
-  const progress = target > 0 ? Math.min(100, (hardTotal / target) * 100) : 0;
+  const progress = Math.min(100, (hardTotal / target) * 100);
 
   const quoteBody = useMemo(() => {
     const amountInBaseUnits = String(Math.round((commitment?.amount ?? 0) * 1_000_000));
@@ -252,25 +252,21 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
         <Link className="raise-back-link" href="/">← Raises</Link>
         <h1 className="raise-heading">{raise.companyName}</h1>
         <p className="section-copy">{raise.thesis}</p>
-        {!isFundThesis && raise.roundRange && (
-          <div className="raise-details">{raise.stage} · {euro(raise.roundRange.min)} – {euro(raise.roundRange.max)}</div>
-        )}
-        {!isFundThesis && (
-          <nav className="nav-row" aria-label="Fundraise views">
-            {views.map((item) => (
-              <button
-                className={`nav-button${view === item.id ? ' active' : ''}`}
-                key={item.id}
-                type="button"
-                data-testid={`nav-view-${item.id}`}
-                onClick={() => { setView(item.id); setShareMessage(''); setMenuOpen(false); }}
-                aria-current={view === item.id ? 'page' : undefined}
-              >
-                {item.index && <span className="nav-index">{item.index}</span>}{item.label}
-              </button>
-            ))}
-          </nav>
-        )}
+        <div className="raise-details">{raise.stage} · {euro(raise.roundRange.min)} – {euro(raise.roundRange.max)}</div>
+        <nav className="nav-row" aria-label="Fundraise views">
+          {views.map((item) => (
+            <button
+              className={`nav-button${view === item.id ? ' active' : ''}`}
+              key={item.id}
+              type="button"
+              data-testid={`nav-view-${item.id}`}
+              onClick={() => { setView(item.id); setShareMessage(''); setMenuOpen(false); }}
+              aria-current={view === item.id ? 'page' : undefined}
+            >
+              {item.index && <span className="nav-index">{item.index}</span>}{item.label}
+            </button>
+          ))}
+        </nav>
 
         {view === 'prospect' && (
           <section className="view-content content-grid" key="prospect">

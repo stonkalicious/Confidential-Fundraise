@@ -39,7 +39,7 @@ export interface RaiseSummary {
   name: string;
   thesis: string;
   stage: string;
-  range: RaiseRange | null;
+  range: RaiseRange;
   claimed: boolean;
   /** @minimum 0 */
   softTotal: number;

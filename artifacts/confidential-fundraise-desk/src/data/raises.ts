@@ -6,7 +6,7 @@ export type Raise = {
   thesis: string;
   investmentThesis: string;
   stage: string;
-  roundRange: { min: number; max: number } | null;
+  roundRange: { min: number; max: number };
   isFundThesis?: boolean;
   claimed: boolean;
   claim?: { founderName: string; email: string; vehicleLink?: string };
@@ -20,8 +20,8 @@ export const INITIAL_RAISES: Raise[] = [
     companyName: 'Confidential Fundraise Thesis',
     thesis: 'Fund-wide thesis for private money and confidential cross-chain settlement.',
     investmentThesis: '',
-    stage: 'Informational',
-    roundRange: null,
+    stage: 'Fundraise',
+    roundRange: { min: 2_000_000, max: 5_000_000 },
     isFundThesis: true,
     claimed: false,
   },

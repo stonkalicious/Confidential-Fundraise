@@ -52,9 +52,9 @@ export const SubmitRaiseClaimResponse = zod.object({
 /**
  * @summary Get public raise summaries
  */
-export const getRaisesResponseRangeOneMinMin = 0;
+export const getRaisesResponseRangeMinMin = 0;
 
-export const getRaisesResponseRangeOneMaxMin = 0;
+export const getRaisesResponseRangeMaxMin = 0;
 
 export const getRaisesResponseSoftTotalMin = 0;
 
@@ -67,10 +67,10 @@ export const GetRaisesResponseItem = zod.object({
   "name": zod.string(),
   "thesis": zod.string(),
   "stage": zod.string(),
-  "range": zod.union([zod.object({
-  "min": zod.number().int().min(getRaisesResponseRangeOneMinMin),
-  "max": zod.number().int().min(getRaisesResponseRangeOneMaxMin)
-}),zod.null()]),
+  "range": zod.object({
+  "min": zod.number().int().min(getRaisesResponseRangeMinMin),
+  "max": zod.number().int().min(getRaisesResponseRangeMaxMin)
+}),
   "claimed": zod.boolean(),
   "softTotal": zod.number().int().min(getRaisesResponseSoftTotalMin),
   "hardTotal": zod.number().int().min(getRaisesResponseHardTotalMin)
@@ -96,9 +96,9 @@ export const SyncRaiseSummariesBody = zod.object({
 }))
 })
 
-export const syncRaiseSummariesResponseRangeOneMinMin = 0;
+export const syncRaiseSummariesResponseRangeMinMin = 0;
 
-export const syncRaiseSummariesResponseRangeOneMaxMin = 0;
+export const syncRaiseSummariesResponseRangeMaxMin = 0;
 
 export const syncRaiseSummariesResponseSoftTotalMin = 0;
 
@@ -111,10 +111,10 @@ export const SyncRaiseSummariesResponseItem = zod.object({
   "name": zod.string(),
   "thesis": zod.string(),
   "stage": zod.string(),
-  "range": zod.union([zod.object({
-  "min": zod.number().int().min(syncRaiseSummariesResponseRangeOneMinMin),
-  "max": zod.number().int().min(syncRaiseSummariesResponseRangeOneMaxMin)
-}),zod.null()]),
+  "range": zod.object({
+  "min": zod.number().int().min(syncRaiseSummariesResponseRangeMinMin),
+  "max": zod.number().int().min(syncRaiseSummariesResponseRangeMaxMin)
+}),
   "claimed": zod.boolean(),
   "softTotal": zod.number().int().min(syncRaiseSummariesResponseSoftTotalMin),
   "hardTotal": zod.number().int().min(syncRaiseSummariesResponseHardTotalMin)
