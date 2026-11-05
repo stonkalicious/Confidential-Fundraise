@@ -557,6 +557,11 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
               <h1 className="thesis-title">Confidential Fundraise Desk — Example Thesis Summary</h1>
               <p className="thesis-disclaimer">(Demo context only. Synthetic. Not an offer.)</p>
 
+              <section className="raise-thesis-block" data-testid="raise-specific-thesis">
+                <h2>{raise.companyName} — Investment thesis</h2>
+                <p>{raise.investmentThesis}</p>
+              </section>
+
               <h2>Private money and cross-chain settlement</h2>
               <p>
                 Tokenized real-world assets are moving onto public blockchains because settlement is faster and cheaper than traditional markets. The same transfer that takes one to three days and multiple intermediaries can settle in minutes with fewer parties. Public chains, however, make every transfer visible by default. Large accumulations, rebalances, and ordinary movements become permanently linkable. AI systems make that linkage easier over time.
