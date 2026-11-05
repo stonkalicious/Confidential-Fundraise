@@ -27,11 +27,38 @@ export interface RaiseClaimInput {
   vehicleLink?: string;
 }
 
+export interface ClaimRaiseInput {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  founderName: string;
+  /** @maxLength 254 */
+  email: string;
+  /** @maxLength 500 */
+  signatureOrAccount?: string;
+}
+
 export interface RaiseRange {
   /** @minimum 0 */
   min: number;
   /** @minimum 0 */
   max: number;
+}
+
+export interface RaiseClaim {
+  founderName: string;
+  email: string;
+  signatureOrAccount?: string;
+}
+
+export interface RaiseCommitment {
+  id: string;
+  identifier: string;
+  /** @minimum 1 */
+  amount: number;
+  hard: boolean;
+  verified: boolean;
 }
 
 export interface RaiseSummary {
@@ -45,19 +72,25 @@ export interface RaiseSummary {
   softTotal: number;
   /** @minimum 0 */
   hardTotal: number;
+  claim?: RaiseClaim;
+  commitments: RaiseCommitment[];
 }
 
-export interface RaiseStatusUpdate {
-  id: string;
-  claimed: boolean;
-  /** @minimum 0 */
-  softTotal: number;
-  /** @minimum 0 */
-  hardTotal: number;
+export interface SoftCommitmentInput {
+  /** @maxLength 80 */
+  id?: string;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  identifier: string;
+  /** @minimum 1 */
+  amount: number;
 }
 
-export interface RaiseSummarySyncInput {
-  raises: RaiseStatusUpdate[];
+export interface CommitmentStatusInput {
+  hard: boolean;
+  verified: boolean;
 }
 
 export interface ErrorMessage {

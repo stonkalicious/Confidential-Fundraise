@@ -11,7 +11,7 @@ export default function RoadmapPage() {
           <h1 className="roadmap-title">Roadmap</h1>
           <p className="roadmap-status">(Not built — future direction only)</p>
           <p className="roadmap-intro">
-            The current demo shows locally stored soft commitments, a demo-only hard-commitment status with an illustrative NEAR Intents quote, and an aggregate-only progress view.
+            The current demo stores soft commitments in a shared API, with a demo-only hard-commitment status, an illustrative NEAR Intents quote, and an aggregate-only progress view.
           </p>
           <h2 className="roadmap-list-title">Possible extensions:</h2>
           <ul className="roadmap-list">
@@ -30,7 +30,7 @@ export default function RoadmapPage() {
           </p>
         </section>
       </main>
-      <footer className="footer">Demo only — details local; summary public.</footer>
+      <footer className="footer">Demo only — API exposes claims and commitments.</footer>
     </div>
   );
 }

@@ -13,7 +13,7 @@ tags:
   - name: raise-claim
     description: Single demo raise claim
   - name: raises
-    description: Public raise summaries
+    description: Public raise records and actions
 paths:
   /healthz:
     get:
@@ -73,46 +73,21 @@ paths:
     get:
       operationId: getRaises
       tags: [raises]
-      summary: Get public raise summaries
+      summary: Get public raises with claim and commitment details
       responses:
         "200":
-          description: Raises with public status and aggregate totals only
+          description: Raises with public claim details, commitments, and totals
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/RaiseSummary"
-    put:
-      operationId: syncRaiseSummaries
-      tags: [raises]
-      summary: Sync public claim status and aggregate totals
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RaiseSummarySyncInput"
-      responses:
-        "200":
-          description: Updated public raise summaries
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/RaiseSummary"
-        "400":
-          description: Invalid raise summary update
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorMessage"
   /raises/{id}:
     get:
       operationId: getRaiseById
       tags: [raises]
-      summary: Get one public raise summary
+      summary: Get one public raise with claim and commitment details
       parameters:
         - name: id
           in: path
@@ -121,13 +96,138 @@ paths:
             type: string
       responses:
         "200":
-          description: Raise with public status and aggregate totals only
+          description: Raise with public claim details, commitments, and totals
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/RaiseSummary"
         "404":
           description: Raise not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+  /raises/{id}/claim:
+    post:
+      operationId: claimRaise
+      tags: [raises]
+      summary: Claim a raise
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimRaiseInput"
+      responses:
+        "201":
+          description: Updated raise after claim
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RaiseSummary"
+        "400":
+          description: Invalid claim details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "404":
+          description: Raise not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "409":
+          description: Raise already claimed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+  /raises/{id}/commitments:
+    post:
+      operationId: submitSoftCommitment
+      tags: [raises]
+      summary: Submit a soft commitment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SoftCommitmentInput"
+      responses:
+        "200":
+          description: Existing raise returned for an idempotent commitment submission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RaiseSummary"
+        "201":
+          description: Updated raise after commitment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RaiseSummary"
+        "400":
+          description: Invalid soft commitment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "404":
+          description: Raise not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+  /raises/{id}/commitments/{commitmentId}:
+    patch:
+      operationId: updateRaiseCommitment
+      tags: [raises]
+      summary: Update a commitment status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: commitmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommitmentStatusInput"
+      responses:
+        "200":
+          description: Updated raise after commitment status change
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RaiseSummary"
+        "400":
+          description: Invalid commitment status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "404":
+          description: Raise or commitment not found
           content:
             application/json:
               schema:
@@ -168,6 +268,23 @@ components:
       required:
         - founderName
         - email
+    ClaimRaiseInput:
+      type: object
+      properties:
+        founderName:
+          type: string
+          minLength: 1
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        signatureOrAccount:
+          type: string
+          maxLength: 500
+      required:
+        - founderName
+        - email
     RaiseSummary:
       type: object
       properties:
@@ -189,6 +306,12 @@ components:
         hardTotal:
           type: integer
           minimum: 0
+        claim:
+          $ref: "#/components/schemas/RaiseClaim"
+        commitments:
+          type: array
+          items:
+            $ref: "#/components/schemas/RaiseCommitment"
       required:
         - id
         - name
@@ -198,6 +321,66 @@ components:
         - claimed
         - softTotal
         - hardTotal
+        - commitments
+    RaiseClaim:
+      type: object
+      properties:
+        founderName:
+          type: string
+        email:
+          type: string
+          format: email
+        signatureOrAccount:
+          type: string
+      required:
+        - founderName
+        - email
+    RaiseCommitment:
+      type: object
+      properties:
+        id:
+          type: string
+        identifier:
+          type: string
+        amount:
+          type: integer
+          minimum: 1
+        hard:
+          type: boolean
+        verified:
+          type: boolean
+      required:
+        - id
+        - identifier
+        - amount
+        - hard
+        - verified
+    SoftCommitmentInput:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 80
+        identifier:
+          type: string
+          minLength: 1
+          maxLength: 80
+        amount:
+          type: integer
+          minimum: 1
+      required:
+        - identifier
+        - amount
+    CommitmentStatusInput:
+      type: object
+      properties:
+        hard:
+          type: boolean
+        verified:
+          type: boolean
+      required:
+        - hard
+        - verified
     RaiseRange:
       type: object
       properties:
@@ -210,33 +393,6 @@ components:
       required:
         - min
         - max
-    RaiseStatusUpdate:
-      type: object
-      properties:
-        id:
-          type: string
-        claimed:
-          type: boolean
-        softTotal:
-          type: integer
-          minimum: 0
-        hardTotal:
-          type: integer
-          minimum: 0
-      required:
-        - id
-        - claimed
-        - softTotal
-        - hardTotal
-    RaiseSummarySyncInput:
-      type: object
-      properties:
-        raises:
-          type: array
-          items:
-            $ref: "#/components/schemas/RaiseStatusUpdate"
-      required:
-        - raises
     ErrorMessage:
       type: object
       properties:

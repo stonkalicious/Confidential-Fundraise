@@ -4,34 +4,25 @@ import {
   SubmitRaiseClaimResponse,
 } from "@workspace/api-zod";
 import { Router, type IRouter } from "express";
-
-type StoredRaiseClaim = {
-  founderName: string;
-  email: string;
-  vehicleLink?: string;
-};
+import {
+  claimRaiseRecord,
+  DEFAULT_RAISE_ID,
+  getRaise,
+} from "../lib/raise-store";
 
 const router: IRouter = Router();
-let storedClaim: StoredRaiseClaim | null = null;
 
 router.get("/raise-claim", (_req, res) => {
+  const raise = getRaise(DEFAULT_RAISE_ID);
   res.set("Cache-Control", "no-store").json(
     GetRaiseClaimResponse.parse({
-      claimed: storedClaim !== null,
-      founderName: storedClaim?.founderName ?? null,
+      claimed: raise?.claimed ?? false,
+      founderName: raise?.claim?.founderName ?? null,
     }),
   );
 });
 
 router.post("/raise-claim", (req, res): void => {
-  if (storedClaim) {
-    res
-      .set("Cache-Control", "no-store")
-      .status(409)
-      .json({ error: "This raise has already been claimed." });
-    return;
-  }
-
   const body =
     req.body && typeof req.body === "object"
       ? (req.body as Record<string, unknown>)
@@ -58,13 +49,30 @@ router.post("/raise-claim", (req, res): void => {
     return;
   }
 
-  storedClaim = {
+  const result = claimRaiseRecord(DEFAULT_RAISE_ID, {
     founderName: parsed.data.founderName,
     email: parsed.data.email,
-    ...(parsed.data.vehicleLink
-      ? { vehicleLink: parsed.data.vehicleLink }
-      : {}),
-  };
+    ...(parsed.data.vehicleLink ? { signatureOrAccount: parsed.data.vehicleLink } : {}),
+  });
+
+  if (result.kind === "alreadyClaimed") {
+    res
+      .set("Cache-Control", "no-store")
+      .status(409)
+      .json({ error: "This raise has already been claimed." });
+    return;
+  }
+  if (result.kind === "notFound") {
+    res
+      .set("Cache-Control", "no-store")
+      .status(404)
+      .json({ error: `Raise '${DEFAULT_RAISE_ID}' not found.` });
+    return;
+  }
+  if (result.kind !== "success") {
+    res.set("Cache-Control", "no-store").status(500).json({ error: "Claim could not be saved." });
+    return;
+  }
 
   res
     .set("Cache-Control", "no-store")
@@ -72,7 +80,7 @@ router.post("/raise-claim", (req, res): void => {
     .json(
       SubmitRaiseClaimResponse.parse({
         claimed: true,
-        founderName: storedClaim.founderName,
+        founderName: result.raise.claim?.founderName ?? null,
       }),
     );
 });

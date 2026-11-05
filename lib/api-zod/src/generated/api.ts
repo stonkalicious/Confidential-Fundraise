@@ -50,7 +50,7 @@ export const SubmitRaiseClaimResponse = zod.object({
 
 
 /**
- * @summary Get public raise summaries
+ * @summary Get public raises with claim and commitment details
  */
 export const getRaisesResponseRangeMinMin = 0;
 
@@ -59,6 +59,7 @@ export const getRaisesResponseRangeMaxMin = 0;
 export const getRaisesResponseSoftTotalMin = 0;
 
 export const getRaisesResponseHardTotalMin = 0;
+
 
 
 
@@ -73,57 +74,25 @@ export const GetRaisesResponseItem = zod.object({
 }),
   "claimed": zod.boolean(),
   "softTotal": zod.number().int().min(getRaisesResponseSoftTotalMin),
-  "hardTotal": zod.number().int().min(getRaisesResponseHardTotalMin)
+  "hardTotal": zod.number().int().min(getRaisesResponseHardTotalMin),
+  "claim": zod.object({
+  "founderName": zod.string(),
+  "email": zod.string().email(),
+  "signatureOrAccount": zod.string().optional()
+}).optional(),
+  "commitments": zod.array(zod.object({
+  "id": zod.string(),
+  "identifier": zod.string(),
+  "amount": zod.number().int().min(1),
+  "hard": zod.boolean(),
+  "verified": zod.boolean()
+}))
 })
 export const GetRaisesResponse = zod.array(GetRaisesResponseItem)
 
 
 /**
- * @summary Sync public claim status and aggregate totals
- */
-export const syncRaiseSummariesBodyRaisesItemSoftTotalMin = 0;
-
-export const syncRaiseSummariesBodyRaisesItemHardTotalMin = 0;
-
-
-
-export const SyncRaiseSummariesBody = zod.object({
-  "raises": zod.array(zod.object({
-  "id": zod.string(),
-  "claimed": zod.boolean(),
-  "softTotal": zod.number().int().min(syncRaiseSummariesBodyRaisesItemSoftTotalMin),
-  "hardTotal": zod.number().int().min(syncRaiseSummariesBodyRaisesItemHardTotalMin)
-}))
-})
-
-export const syncRaiseSummariesResponseRangeMinMin = 0;
-
-export const syncRaiseSummariesResponseRangeMaxMin = 0;
-
-export const syncRaiseSummariesResponseSoftTotalMin = 0;
-
-export const syncRaiseSummariesResponseHardTotalMin = 0;
-
-
-
-export const SyncRaiseSummariesResponseItem = zod.object({
-  "id": zod.string(),
-  "name": zod.string(),
-  "thesis": zod.string(),
-  "stage": zod.string(),
-  "range": zod.object({
-  "min": zod.number().int().min(syncRaiseSummariesResponseRangeMinMin),
-  "max": zod.number().int().min(syncRaiseSummariesResponseRangeMaxMin)
-}),
-  "claimed": zod.boolean(),
-  "softTotal": zod.number().int().min(syncRaiseSummariesResponseSoftTotalMin),
-  "hardTotal": zod.number().int().min(syncRaiseSummariesResponseHardTotalMin)
-})
-export const SyncRaiseSummariesResponse = zod.array(SyncRaiseSummariesResponseItem)
-
-
-/**
- * @summary Get one public raise summary
+ * @summary Get one public raise with claim and commitment details
  */
 export const GetRaiseByIdParams = zod.object({
   "id": zod.coerce.string()
@@ -139,6 +108,7 @@ export const getRaiseByIdResponseHardTotalMin = 0;
 
 
 
+
 export const GetRaiseByIdResponse = zod.object({
   "id": zod.string(),
   "name": zod.string(),
@@ -150,7 +120,187 @@ export const GetRaiseByIdResponse = zod.object({
 }),
   "claimed": zod.boolean(),
   "softTotal": zod.number().int().min(getRaiseByIdResponseSoftTotalMin),
-  "hardTotal": zod.number().int().min(getRaiseByIdResponseHardTotalMin)
+  "hardTotal": zod.number().int().min(getRaiseByIdResponseHardTotalMin),
+  "claim": zod.object({
+  "founderName": zod.string(),
+  "email": zod.string().email(),
+  "signatureOrAccount": zod.string().optional()
+}).optional(),
+  "commitments": zod.array(zod.object({
+  "id": zod.string(),
+  "identifier": zod.string(),
+  "amount": zod.number().int().min(1),
+  "hard": zod.boolean(),
+  "verified": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary Claim a raise
+ */
+export const ClaimRaiseParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const claimRaiseBodyFounderNameMax = 120;
+
+export const claimRaiseBodyEmailMax = 254;
+
+export const claimRaiseBodySignatureOrAccountMax = 500;
+
+
+
+export const ClaimRaiseBody = zod.object({
+  "founderName": zod.string().min(1).max(claimRaiseBodyFounderNameMax),
+  "email": zod.string().email().max(claimRaiseBodyEmailMax),
+  "signatureOrAccount": zod.string().max(claimRaiseBodySignatureOrAccountMax).optional()
+})
+
+export const claimRaiseResponseRangeMinMin = 0;
+
+export const claimRaiseResponseRangeMaxMin = 0;
+
+export const claimRaiseResponseSoftTotalMin = 0;
+
+export const claimRaiseResponseHardTotalMin = 0;
+
+
+
+
+export const ClaimRaiseResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "thesis": zod.string(),
+  "stage": zod.string(),
+  "range": zod.object({
+  "min": zod.number().int().min(claimRaiseResponseRangeMinMin),
+  "max": zod.number().int().min(claimRaiseResponseRangeMaxMin)
+}),
+  "claimed": zod.boolean(),
+  "softTotal": zod.number().int().min(claimRaiseResponseSoftTotalMin),
+  "hardTotal": zod.number().int().min(claimRaiseResponseHardTotalMin),
+  "claim": zod.object({
+  "founderName": zod.string(),
+  "email": zod.string().email(),
+  "signatureOrAccount": zod.string().optional()
+}).optional(),
+  "commitments": zod.array(zod.object({
+  "id": zod.string(),
+  "identifier": zod.string(),
+  "amount": zod.number().int().min(1),
+  "hard": zod.boolean(),
+  "verified": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary Submit a soft commitment
+ */
+export const SubmitSoftCommitmentParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const submitSoftCommitmentBodyIdMax = 80;
+
+export const submitSoftCommitmentBodyIdentifierMax = 80;
+
+
+
+
+export const SubmitSoftCommitmentBody = zod.object({
+  "id": zod.string().max(submitSoftCommitmentBodyIdMax).optional(),
+  "identifier": zod.string().min(1).max(submitSoftCommitmentBodyIdentifierMax),
+  "amount": zod.number().int().min(1)
+})
+
+export const submitSoftCommitmentResponseRangeMinMin = 0;
+
+export const submitSoftCommitmentResponseRangeMaxMin = 0;
+
+export const submitSoftCommitmentResponseSoftTotalMin = 0;
+
+export const submitSoftCommitmentResponseHardTotalMin = 0;
+
+
+
+
+export const SubmitSoftCommitmentResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "thesis": zod.string(),
+  "stage": zod.string(),
+  "range": zod.object({
+  "min": zod.number().int().min(submitSoftCommitmentResponseRangeMinMin),
+  "max": zod.number().int().min(submitSoftCommitmentResponseRangeMaxMin)
+}),
+  "claimed": zod.boolean(),
+  "softTotal": zod.number().int().min(submitSoftCommitmentResponseSoftTotalMin),
+  "hardTotal": zod.number().int().min(submitSoftCommitmentResponseHardTotalMin),
+  "claim": zod.object({
+  "founderName": zod.string(),
+  "email": zod.string().email(),
+  "signatureOrAccount": zod.string().optional()
+}).optional(),
+  "commitments": zod.array(zod.object({
+  "id": zod.string(),
+  "identifier": zod.string(),
+  "amount": zod.number().int().min(1),
+  "hard": zod.boolean(),
+  "verified": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary Update a commitment status
+ */
+export const UpdateRaiseCommitmentParams = zod.object({
+  "id": zod.coerce.string(),
+  "commitmentId": zod.coerce.string()
+})
+
+export const UpdateRaiseCommitmentBody = zod.object({
+  "hard": zod.boolean(),
+  "verified": zod.boolean()
+})
+
+export const updateRaiseCommitmentResponseRangeMinMin = 0;
+
+export const updateRaiseCommitmentResponseRangeMaxMin = 0;
+
+export const updateRaiseCommitmentResponseSoftTotalMin = 0;
+
+export const updateRaiseCommitmentResponseHardTotalMin = 0;
+
+
+
+
+export const UpdateRaiseCommitmentResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "thesis": zod.string(),
+  "stage": zod.string(),
+  "range": zod.object({
+  "min": zod.number().int().min(updateRaiseCommitmentResponseRangeMinMin),
+  "max": zod.number().int().min(updateRaiseCommitmentResponseRangeMaxMin)
+}),
+  "claimed": zod.boolean(),
+  "softTotal": zod.number().int().min(updateRaiseCommitmentResponseSoftTotalMin),
+  "hardTotal": zod.number().int().min(updateRaiseCommitmentResponseHardTotalMin),
+  "claim": zod.object({
+  "founderName": zod.string(),
+  "email": zod.string().email(),
+  "signatureOrAccount": zod.string().optional()
+}).optional(),
+  "commitments": zod.array(zod.object({
+  "id": zod.string(),
+  "identifier": zod.string(),
+  "amount": zod.number().int().min(1),
+  "hard": zod.boolean(),
+  "verified": zod.boolean()
+}))
 })
 
 

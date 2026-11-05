@@ -13,6 +13,7 @@ function isSavedRaise(value: unknown): value is SavedRaise {
     !isRecord(value.claim) ||
     typeof value.claim.founderName !== 'string' ||
     typeof value.claim.email !== 'string' ||
+    (value.claim.signatureOrAccount !== undefined && typeof value.claim.signatureOrAccount !== 'string') ||
     (value.claim.vehicleLink !== undefined && typeof value.claim.vehicleLink !== 'string')
   )) return false;
   if (value.claimed && !value.claim) return false;

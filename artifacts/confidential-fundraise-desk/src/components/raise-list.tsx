@@ -27,7 +27,7 @@ export default function RaiseList({ raises }: { raises: Raise[] }) {
           ))}
         </ul>
       </main>
-      <footer className="footer">Demo only — details local; summary public.</footer>
+      <footer className="footer">Demo only — API exposes claims and commitments.</footer>
     </div>
   );
 }

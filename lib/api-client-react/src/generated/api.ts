@@ -20,12 +20,14 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ClaimRaiseInput,
+  CommitmentStatusInput,
   ErrorMessage,
   HealthStatus,
   RaiseClaimInput,
   RaiseClaimStatus,
   RaiseSummary,
-  RaiseSummarySyncInput
+  SoftCommitmentInput
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -307,7 +309,7 @@ export const getGetRaisesUrl = () => {
 }
 
 /**
- * @summary Get public raise summaries
+ * @summary Get public raises with claim and commitment details
  */
 export const getRaises = async ( options?: Parameters<typeof customFetch>[1]): Promise<RaiseSummary[]> => {
 
@@ -354,7 +356,7 @@ export type GetRaisesQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Get public raise summaries
+ * @summary Get public raises with claim and commitment details
  */
 
 export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<unknown>>(
@@ -375,94 +377,6 @@ export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TErr
 
 
 
-export const getSyncRaiseSummariesUrl = () => {
-
-
-
-
-  return `/api/raises`
-}
-
-/**
- * @summary Sync public claim status and aggregate totals
- */
-export const syncRaiseSummaries = async (raiseSummarySyncInput: RaiseSummarySyncInput, options?: Parameters<typeof customFetch>[1]): Promise<RaiseSummary[]> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<RaiseSummary[]>(getSyncRaiseSummariesUrl(),
-  {
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(raiseSummarySyncInput)
-  }
-);}
-
-
-
-
-
-export const getSyncRaiseSummariesMutationKey = () => ['syncRaiseSummaries'] as const;
-
-export const getSyncRaiseSummariesMutationOptions = <TError = ErrorType<ErrorMessage>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncRaiseSummaries>>, TError,SyncRaiseSummariesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof syncRaiseSummaries>>, TError,SyncRaiseSummariesMutationVariables, TContext> => {
-
-const mutationKey = getSyncRaiseSummariesMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof syncRaiseSummaries>>, SyncRaiseSummariesMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  syncRaiseSummaries(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SyncRaiseSummariesMutationResult = NonNullable<Awaited<ReturnType<typeof syncRaiseSummaries>>>
-    export type SyncRaiseSummariesMutationBody = BodyType<RaiseSummarySyncInput>
-    export type SyncRaiseSummariesMutationError = ErrorType<ErrorMessage>
-    export type SyncRaiseSummariesMutationVariables = {data: BodyType<RaiseSummarySyncInput>}
-
-    /**
- * @summary Sync public claim status and aggregate totals
- */
-export const useSyncRaiseSummaries = <TError = ErrorType<ErrorMessage>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncRaiseSummaries>>, TError,SyncRaiseSummariesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof syncRaiseSummaries>>,
-        TError,
-        SyncRaiseSummariesMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSyncRaiseSummariesMutationOptions(options));
-    }
-
 export const getGetRaiseByIdUrl = (id: string,) => {
 
 
@@ -472,7 +386,7 @@ export const getGetRaiseByIdUrl = (id: string,) => {
 }
 
 /**
- * @summary Get one public raise summary
+ * @summary Get one public raise with claim and commitment details
  */
 export const getRaiseById = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<RaiseSummary> => {
 
@@ -519,7 +433,7 @@ export type GetRaiseByIdQueryError = ErrorType<ErrorMessage>
 
 
 /**
- * @summary Get one public raise summary
+ * @summary Get one public raise with claim and commitment details
  */
 
 export function useGetRaiseById<TData = Awaited<ReturnType<typeof getRaiseById>>, TError = ErrorType<ErrorMessage>>(
@@ -539,4 +453,273 @@ export function useGetRaiseById<TData = Awaited<ReturnType<typeof getRaiseById>>
 
 
 
+
+export const getClaimRaiseUrl = (id: string,) => {
+
+
+
+
+  return `/api/raises/${id}/claim`
+}
+
+/**
+ * @summary Claim a raise
+ */
+export const claimRaise = async (id: string,
+    claimRaiseInput: ClaimRaiseInput, options?: Parameters<typeof customFetch>[1]): Promise<RaiseSummary> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<RaiseSummary>(getClaimRaiseUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(claimRaiseInput)
+  }
+);}
+
+
+
+
+
+export const getClaimRaiseMutationKey = () => ['claimRaise'] as const;
+
+export const getClaimRaiseMutationOptions = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimRaise>>, TError,ClaimRaiseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof claimRaise>>, TError,ClaimRaiseMutationVariables, TContext> => {
+
+const mutationKey = getClaimRaiseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof claimRaise>>, ClaimRaiseMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  claimRaise(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClaimRaiseMutationResult = NonNullable<Awaited<ReturnType<typeof claimRaise>>>
+    export type ClaimRaiseMutationBody = BodyType<ClaimRaiseInput>
+    export type ClaimRaiseMutationError = ErrorType<ErrorMessage>
+    export type ClaimRaiseMutationVariables = {id: string;data: BodyType<ClaimRaiseInput>}
+
+    /**
+ * @summary Claim a raise
+ */
+export const useClaimRaise = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimRaise>>, TError,ClaimRaiseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof claimRaise>>,
+        TError,
+        ClaimRaiseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getClaimRaiseMutationOptions(options));
+    }
+
+export const getSubmitSoftCommitmentUrl = (id: string,) => {
+
+
+
+
+  return `/api/raises/${id}/commitments`
+}
+
+/**
+ * @summary Submit a soft commitment
+ */
+export const submitSoftCommitment = async (id: string,
+    softCommitmentInput: SoftCommitmentInput, options?: Parameters<typeof customFetch>[1]): Promise<RaiseSummary> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<RaiseSummary>(getSubmitSoftCommitmentUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(softCommitmentInput)
+  }
+);}
+
+
+
+
+
+export const getSubmitSoftCommitmentMutationKey = () => ['submitSoftCommitment'] as const;
+
+export const getSubmitSoftCommitmentMutationOptions = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitSoftCommitment>>, TError,SubmitSoftCommitmentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitSoftCommitment>>, TError,SubmitSoftCommitmentMutationVariables, TContext> => {
+
+const mutationKey = getSubmitSoftCommitmentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitSoftCommitment>>, SubmitSoftCommitmentMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  submitSoftCommitment(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitSoftCommitmentMutationResult = NonNullable<Awaited<ReturnType<typeof submitSoftCommitment>>>
+    export type SubmitSoftCommitmentMutationBody = BodyType<SoftCommitmentInput>
+    export type SubmitSoftCommitmentMutationError = ErrorType<ErrorMessage>
+    export type SubmitSoftCommitmentMutationVariables = {id: string;data: BodyType<SoftCommitmentInput>}
+
+    /**
+ * @summary Submit a soft commitment
+ */
+export const useSubmitSoftCommitment = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitSoftCommitment>>, TError,SubmitSoftCommitmentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitSoftCommitment>>,
+        TError,
+        SubmitSoftCommitmentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSubmitSoftCommitmentMutationOptions(options));
+    }
+
+export const getUpdateRaiseCommitmentUrl = (id: string,
+    commitmentId: string,) => {
+
+
+
+
+  return `/api/raises/${id}/commitments/${commitmentId}`
+}
+
+/**
+ * @summary Update a commitment status
+ */
+export const updateRaiseCommitment = async (id: string,
+    commitmentId: string,
+    commitmentStatusInput: CommitmentStatusInput, options?: Parameters<typeof customFetch>[1]): Promise<RaiseSummary> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<RaiseSummary>(getUpdateRaiseCommitmentUrl(id,commitmentId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(commitmentStatusInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateRaiseCommitmentMutationKey = () => ['updateRaiseCommitment'] as const;
+
+export const getUpdateRaiseCommitmentMutationOptions = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRaiseCommitment>>, TError,UpdateRaiseCommitmentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateRaiseCommitment>>, TError,UpdateRaiseCommitmentMutationVariables, TContext> => {
+
+const mutationKey = getUpdateRaiseCommitmentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRaiseCommitment>>, UpdateRaiseCommitmentMutationVariables> = (props) => {
+          const {id,commitmentId,data} = props ?? {};
+
+          return  updateRaiseCommitment(id,commitmentId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateRaiseCommitmentMutationResult = NonNullable<Awaited<ReturnType<typeof updateRaiseCommitment>>>
+    export type UpdateRaiseCommitmentMutationBody = BodyType<CommitmentStatusInput>
+    export type UpdateRaiseCommitmentMutationError = ErrorType<ErrorMessage>
+    export type UpdateRaiseCommitmentMutationVariables = {id: string;commitmentId: string;data: BodyType<CommitmentStatusInput>}
+
+    /**
+ * @summary Update a commitment status
+ */
+export const useUpdateRaiseCommitment = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRaiseCommitment>>, TError,UpdateRaiseCommitmentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateRaiseCommitment>>,
+        TError,
+        UpdateRaiseCommitmentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateRaiseCommitmentMutationOptions(options));
+    }
 

@@ -9,11 +9,16 @@ export type Raise = {
   roundRange: { min: number; max: number };
   isFundThesis?: boolean;
   claimed: boolean;
-  claim?: { founderName: string; email: string; vehicleLink?: string };
+  claim?: {
+    founderName: string;
+    email: string;
+    signatureOrAccount?: string;
+    vehicleLink?: string;
+  };
   commitments?: Commitment[];
 };
 
-// Fictional demo raises. Changes are saved only in this browser's localStorage.
+// Fictional raise details; claim and commitment state is mirrored to the shared API.
 export const INITIAL_RAISES: Raise[] = [
   {
     id: 'confidential-fundraise-thesis',

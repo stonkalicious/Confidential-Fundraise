@@ -5,6 +5,8 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { RaiseClaim } from './raiseClaim';
+import type { RaiseCommitment } from './raiseCommitment';
 import type { RaiseRange } from './raiseRange';
 
 export interface RaiseSummary {
@@ -18,4 +20,6 @@ export interface RaiseSummary {
   softTotal: number;
   /** @minimum 0 */
   hardTotal: number;
+  claim?: RaiseClaim;
+  commitments: RaiseCommitment[];
 }
