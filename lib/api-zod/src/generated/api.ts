@@ -122,3 +122,35 @@ export const SyncRaiseSummariesResponseItem = zod.object({
 export const SyncRaiseSummariesResponse = zod.array(SyncRaiseSummariesResponseItem)
 
 
+/**
+ * @summary Get one public raise summary
+ */
+export const GetRaiseByIdParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const getRaiseByIdResponseRangeMinMin = 0;
+
+export const getRaiseByIdResponseRangeMaxMin = 0;
+
+export const getRaiseByIdResponseSoftTotalMin = 0;
+
+export const getRaiseByIdResponseHardTotalMin = 0;
+
+
+
+export const GetRaiseByIdResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "thesis": zod.string(),
+  "stage": zod.string(),
+  "range": zod.object({
+  "min": zod.number().int().min(getRaiseByIdResponseRangeMinMin),
+  "max": zod.number().int().min(getRaiseByIdResponseRangeMaxMin)
+}),
+  "claimed": zod.boolean(),
+  "softTotal": zod.number().int().min(getRaiseByIdResponseSoftTotalMin),
+  "hardTotal": zod.number().int().min(getRaiseByIdResponseHardTotalMin)
+})
+
+

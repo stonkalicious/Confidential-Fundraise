@@ -108,6 +108,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
+  /raises/{id}:
+    get:
+      operationId: getRaiseById
+      tags: [raises]
+      summary: Get one public raise summary
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Raise with public status and aggregate totals only
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RaiseSummary"
+        "404":
+          description: Raise not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
 components:
   schemas:
     HealthStatus:

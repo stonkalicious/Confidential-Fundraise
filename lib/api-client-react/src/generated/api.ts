@@ -463,3 +463,80 @@ export const useSyncRaiseSummaries = <TError = ErrorType<ErrorMessage>,
       return useMutation(getSyncRaiseSummariesMutationOptions(options));
     }
 
+export const getGetRaiseByIdUrl = (id: string,) => {
+
+
+
+
+  return `/api/raises/${id}`
+}
+
+/**
+ * @summary Get one public raise summary
+ */
+export const getRaiseById = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<RaiseSummary> => {
+
+  return customFetch<RaiseSummary>(getGetRaiseByIdUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRaiseByIdQueryKey = (id: string,) => {
+    return [
+    `/api/raises/${id}`
+    ] as const;
+    }
+
+
+export const getGetRaiseByIdQueryOptions = <TData = Awaited<ReturnType<typeof getRaiseById>>, TError = ErrorType<ErrorMessage>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRaiseById>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRaiseByIdQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRaiseById>>> = ({ signal }) => getRaiseById(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRaiseById>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetRaiseByIdQueryResult = NonNullable<Awaited<ReturnType<typeof getRaiseById>>>
+export type GetRaiseByIdQueryError = ErrorType<ErrorMessage>
+
+
+/**
+ * @summary Get one public raise summary
+ */
+
+export function useGetRaiseById<TData = Awaited<ReturnType<typeof getRaiseById>>, TError = ErrorType<ErrorMessage>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRaiseById>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetRaiseByIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+

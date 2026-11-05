@@ -1,4 +1,6 @@
 import {
+  GetRaiseByIdParams,
+  GetRaiseByIdResponse,
   GetRaisesResponse,
   SyncRaiseSummariesBody,
   SyncRaiseSummariesResponse,
@@ -65,6 +67,24 @@ const raiseIds = new Set(raises.map((raise) => raise.id));
 
 router.get("/raises", (_req, res) => {
   res.set("Cache-Control", "no-store").json(GetRaisesResponse.parse(raises));
+});
+
+router.get("/raises/:id", (req, res): void => {
+  const params = GetRaiseByIdParams.safeParse(req.params);
+  if (!params.success) {
+    res.set("Cache-Control", "no-store").status(400).json({ error: "Invalid raise ID." });
+    return;
+  }
+
+  const raise = raises.find((item) => item.id === params.data.id);
+  if (!raise) {
+    res.set("Cache-Control", "no-store").status(404).json({
+      error: `Raise '${params.data.id}' not found.`,
+    });
+    return;
+  }
+
+  res.set("Cache-Control", "no-store").json(GetRaiseByIdResponse.parse(raise));
 });
 
 router.put("/raises", (req, res): void => {
