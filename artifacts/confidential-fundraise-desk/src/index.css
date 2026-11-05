@@ -111,8 +111,9 @@ button:focus-visible, input:focus-visible {
   box-shadow: 0 8px 22px rgb(41 37 61 / 12%);
 }
 .site-menu-item {
-  width: 100%; padding: 10px 12px; border: 0; border-radius: 2px;
+  display: block; width: 100%; padding: 10px 12px; border: 0; border-radius: 2px;
   color: #302c42; background: transparent; text-align: left; font-size: 12px;
+  text-decoration: none;
 }
 .site-menu-item:hover { background: #f0ede4; }
 .frame { max-width: 1160px; margin: 0 auto; padding: 53px 32px 72px; }
@@ -179,7 +180,7 @@ button:focus-visible, input:focus-visible {
 .commitment-meta { min-width: 0; }
 .raise-thesis-block { margin: 22px 0 30px; padding: 22px; background: #fbfaf6; border: 1px solid #e1dccf; border-radius: 5px; }
 .raise-thesis-block h2 { margin: 0 0 10px; font: 400 22px/1.2 var(--app-font-serif); }
-.raise-thesis-block p { margin: 0; color: #514d44; font-size: 13px; line-height: 1.7; }
+.raise-thesis-block p { margin: 0; color: #514d44; font-size: 13px; line-height: 1.7; white-space: pre-line; }
 .commitment-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .verification-label { margin-top: 10px; color: #556f61; font: 10px/1.5 var(--app-font-mono); }
 .record-line { display: flex; align-items: center; gap: 9px; color: #888173; font: 10px var(--app-font-mono); text-transform: uppercase; letter-spacing: .08em; }

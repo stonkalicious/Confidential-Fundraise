@@ -1,5 +1,6 @@
 import { Link } from 'wouter';
 import type { Raise } from '@/data/raises';
+import SiteHeader from '@/components/site-header';
 
 export default function RaiseList({ raises }: { raises: Raise[] }) {
   const format = (amount: number) => new Intl.NumberFormat('en-IE', {
@@ -8,13 +9,7 @@ export default function RaiseList({ raises }: { raises: Raise[] }) {
 
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <div className="brand">
-          <span className="brand-mark" aria-hidden="true">F</span>
-          <div className="brand-name">Confidential Fundraise Desk - Powered by NEAR</div>
-        </div>
-        <span className="demo-label">Demo only — synthetic data.</span>
-      </header>
+      <SiteHeader />
       <main className="frame">
         <h1 className="section-title">Raises</h1>
         <ul className="raise-list" data-testid="raise-list">

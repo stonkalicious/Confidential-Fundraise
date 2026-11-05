@@ -28,8 +28,12 @@ export const INITIAL_RAISES: Raise[] = [
   {
     id: 'cedar-grid',
     companyName: 'AI Encyclopedia',
-    thesis: 'Perpetual truth-seeking markets let facts compete; AI generates official pages from current market understanding.',
-    investmentThesis: 'Perpetual prediction markets can continuously challenge individual facts, while AI-generated pages reflect current market understanding. The privacy-fund case depends on whether positions and participation can remain confidential; this concept does not specify that privacy mechanism.',
+    thesis: 'Each disputed fact becomes an ongoing market; AI writes a public page from the market’s current view.',
+    investmentThesis: `Most encyclopedias still rely on people arguing in talk pages or a small group of editors deciding what a page says. Disputed facts can remain unresolved.
+
+Each fact becomes a small, ongoing market: people put money behind the version they believe is correct. AI writes a public page from the market’s current view, and the page updates as the market moves.
+
+NEAR can let participants take positions without showing their whole book and let capital come from other chains. Agents can read the latest page instead of relying on the last editor.`,
     stage: 'Seed',
     roundRange: { min: 1_000_000, max: 2_000_000 },
     claimed: false,
@@ -37,8 +41,12 @@ export const INITIAL_RAISES: Raise[] = [
   {
     id: 'harbor-materials',
     companyName: 'Private Social Trading',
-    thesis: 'Traders can sell viewing keys to selected people who want to follow or copy confidential NEAR Intents trades, with public PnL to help them evaluate performance.',
-    investmentThesis: 'Selective viewing keys let traders share positions with chosen followers for copy trading. This directly maps to the fund’s privacy focus, while public PnL gives followers a way to assess performance without broad access to private activity.',
+    thesis: 'Traders keep NEAR Intents positions private by default and share temporary viewing keys with selected followers; everyone else sees public PnL.',
+    investmentThesis: `Copy trading today either reveals full positions or hides enough that followers cannot verify performance.
+
+With NEAR Intents, the trader keeps positions private by default and sells a temporary viewing key to specific people who want to follow or copy. Everyone else sees public PnL; the trader chooses who gets a key.
+
+An agent can receive a key and act on trades without the trader opening the whole book.`,
     stage: 'Pre-seed',
     roundRange: { min: 500_000, max: 1_000_000 },
     claimed: false,
@@ -46,8 +54,10 @@ export const INITIAL_RAISES: Raise[] = [
   {
     id: 'lumen-labs',
     companyName: 'Universal Checkout Widget',
-    thesis: 'A checkout widget lets any merchant or app accept Intents payments from the wallet and blockchain a user already has.',
-    investmentThesis: 'A universal checkout can let users pay via Intents from their existing wallet and chain. This idea is about payment access; its fit in a privacy fund depends on confidential settlement, which the current description does not specify.',
+    thesis: 'A single checkout button lets users pay with an existing wallet and chain through NEAR Intents.',
+    investmentThesis: `Accepting crypto payments often sends users to one chain or wallet, and some leave rather than switch.
+
+A merchant adds a single checkout button. The user pays with an existing wallet and chain; NEAR Intents routes the payment to the merchant. Agents can call the same button, removing the chain-selection step for both sides.`,
     stage: 'Series A',
     roundRange: { min: 3_000_000, max: 5_000_000 },
     claimed: false,
@@ -55,8 +65,12 @@ export const INITIAL_RAISES: Raise[] = [
   {
     id: 'swarm-for-hire',
     companyName: 'Swarm-for-Hire',
-    thesis: 'Onchain work bids fund agents with NEAR for inference, with guardrails and governance AI review.',
-    investmentThesis: 'The idea funds agents with NEAR for inference and lets them accept work across a swarm, with governance or AI review as proposed guardrails. To fit the privacy fund, prompts, data, and outputs would need protection; the current description does not specify it.',
+    thesis: 'Job posters set a NEAR budget; others fund agent inference, and accepted work is paid from the budget.',
+    investmentThesis: `Today, agents are either run by one company or prompted individually; there is no open way to post a job and let others fund agents to join.
+
+A job poster sets a budget in NEAR. Others can fund an agent’s inference, and agents take work; accepted work is paid from the budget. Simple guardrails or review are proposed to reduce spam.
+
+NEAR handles payment and inference costs, making agents directly fundable and payable participants.`,
     stage: 'Pre-seed',
     roundRange: { min: 500_000, max: 1_000_000 },
     claimed: false,

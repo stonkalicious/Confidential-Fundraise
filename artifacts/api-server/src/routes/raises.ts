@@ -21,7 +21,7 @@ const seededRaises = [
   {
     id: "cedar-grid",
     name: "AI Encyclopedia",
-    thesis: "Perpetual truth-seeking markets let facts compete; AI generates official pages from current market understanding.",
+    thesis: "Each disputed fact becomes an ongoing market; AI writes a public page from the market’s current view.",
     stage: "Seed",
     range: { min: 1_000_000, max: 2_000_000 },
     claimed: false,
@@ -31,7 +31,7 @@ const seededRaises = [
   {
     id: "harbor-materials",
     name: "Private Social Trading",
-    thesis: "Traders can sell viewing keys to selected people who want to follow or copy confidential NEAR Intents trades, with public PnL to help them evaluate performance.",
+    thesis: "Traders keep NEAR Intents positions private by default and share temporary viewing keys with selected followers; everyone else sees public PnL.",
     stage: "Pre-seed",
     range: { min: 500_000, max: 1_000_000 },
     claimed: false,
@@ -41,7 +41,7 @@ const seededRaises = [
   {
     id: "lumen-labs",
     name: "Universal Checkout Widget",
-    thesis: "A checkout widget lets any merchant or app accept Intents payments from the wallet and blockchain a user already has.",
+    thesis: "A single checkout button lets users pay with an existing wallet and chain through NEAR Intents.",
     stage: "Series A",
     range: { min: 3_000_000, max: 5_000_000 },
     claimed: false,
@@ -51,7 +51,7 @@ const seededRaises = [
   {
     id: "swarm-for-hire",
     name: "Swarm-for-Hire",
-    thesis: "Onchain work bids fund agents with NEAR for inference, with guardrails and governance AI review.",
+    thesis: "Job posters set a NEAR budget; others fund agent inference, and accepted work is paid from the budget.",
     stage: "Pre-seed",
     range: { min: 500_000, max: 1_000_000 },
     claimed: false,

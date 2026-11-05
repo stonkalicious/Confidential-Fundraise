@@ -2,6 +2,8 @@ import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from 're
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { syncRaiseSummaries } from '@workspace/api-client-react';
 import RaiseList from '@/components/raise-list';
+import RoadmapPage from '@/components/roadmap-page';
+import SiteHeader from '@/components/site-header';
 import { type Raise } from '@/data/raises';
 import { loadRaises, saveRaises } from '@/data/raise-storage';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -19,7 +21,7 @@ import {
 
 const queryClient = new QueryClient();
 
-type View = 'progress' | 'how' | 'prospect' | 'sponsor' | 'thesis' | 'rules' | 'roadmap';
+type View = 'progress' | 'how' | 'prospect' | 'sponsor' | 'thesis' | 'rules';
 const DEMO_LABEL = 'Demo only — synthetic data.';
 
 function euro(value: number) {
@@ -38,8 +40,7 @@ function getInitialView(): View {
     requestedView === 'progress' ||
     requestedView === 'how' ||
     requestedView === 'thesis' ||
-    requestedView === 'rules' ||
-    requestedView === 'roadmap'
+    requestedView === 'rules'
   ) {
     return requestedView;
   }
@@ -59,7 +60,6 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
   const [formError, setFormError] = useState('');
   const [shareMessage, setShareMessage] = useState('');
   const [contactSubmitted, setContactSubmitted] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [claimFormOpen, setClaimFormOpen] = useState(false);
   const [claimFounderName, setClaimFounderName] = useState('');
   const [claimEmail, setClaimEmail] = useState('');
@@ -201,52 +201,7 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
 
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <div className="brand" aria-label="Confidential Fundraise Desk - Powered by NEAR">
-          <span className="brand-mark" aria-hidden="true">F</span>
-          <div>
-            <div className="brand-name">Confidential Fundraise Desk - Powered by NEAR</div>
-          </div>
-        </div>
-        <div className="topbar-actions">
-          <span className="demo-label" data-testid="text-demo-label">{DEMO_LABEL}</span>
-          <div
-            className="site-menu"
-            onKeyDown={(event) => {
-              if (event.key === 'Escape') setMenuOpen(false);
-            }}
-          >
-            <button
-              className="site-menu-toggle"
-              type="button"
-              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-              aria-haspopup="true"
-              aria-expanded={menuOpen}
-              aria-controls="site-menu-dropdown"
-              data-testid="button-site-menu"
-              onClick={() => setMenuOpen((open) => !open)}
-            >
-              <span className="menu-icon" aria-hidden="true"><i /><i /><i /></span>
-            </button>
-            {menuOpen && (
-              <div className="site-menu-dropdown" id="site-menu-dropdown" aria-label="More pages">
-                <button
-                  className="site-menu-item"
-                  type="button"
-                  data-testid="menu-roadmap"
-                  onClick={() => {
-                    setView('roadmap');
-                    setShareMessage('');
-                    setMenuOpen(false);
-                  }}
-                >
-                  Roadmap
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
+      <SiteHeader demoLabel={DEMO_LABEL} />
 
       <main className="frame">
         <Link className="raise-back-link" href="/">← Raises</Link>
@@ -260,7 +215,7 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
               key={item.id}
               type="button"
               data-testid={`nav-view-${item.id}`}
-              onClick={() => { setView(item.id); setShareMessage(''); setMenuOpen(false); }}
+              onClick={() => { setView(item.id); setShareMessage(''); }}
               aria-current={view === item.id ? 'page' : undefined}
             >
               {item.index && <span className="nav-index">{item.index}</span>}{item.label}
@@ -635,30 +590,6 @@ function AppDesk({ raise, updateRaise }: { raise: Raise; updateRaise: (changes: 
 
         {view === 'rules' && <RulesCalculator />}
 
-        {view === 'roadmap' && (
-          <section className="view-content roadmap-panel" key="roadmap">
-            <h1 className="roadmap-title">Roadmap</h1>
-            <p className="roadmap-status">(Not built — future direction only)</p>
-            <p className="roadmap-intro">
-              The current demo shows private soft commitments, a confidential NEAR Intents hard-commitment step under a minimum threshold, and an aggregate-only progress view.
-            </p>
-            <h2 className="roadmap-list-title">Possible extensions:</h2>
-            <ul className="roadmap-list">
-              <li>Programmable fees taken automatically on commitment or over time</li>
-              <li>Hard caps on total commitments</li>
-              <li>Time-locks and minimum holding periods</li>
-              <li>Preferred-return or hurdle gates before distributions</li>
-              <li>Automated distribution waterfalls</li>
-              <li>Capital calls and scheduled drawdowns</li>
-              <li>Default and reallocation rules</li>
-              <li>Per-commitment restrictions or excuse provisions</li>
-              <li>Post-close asset allocation or swaps under the same confidential path</li>
-            </ul>
-            <p className="roadmap-outro">
-              All of the above can be expressed as mechanical rules on the NEAR Intents confidential settlement layer. None of them are required for the current demo.
-            </p>
-          </section>
-        )}
       </main>
       <footer className="footer" data-testid="text-demo-label-footer">{DEMO_LABEL}</footer>
     </div>
@@ -702,6 +633,7 @@ function Router() {
       {storageError && <p className="frame" role="alert">{storageError}</p>}
       {syncError && <p className="frame" role="alert">{syncError}</p>}
       <Switch>
+        <Route path="/roadmap"><RoadmapPage /></Route>
         <Route path="/"><RaiseList raises={raises} /></Route>
         <Route path="/raises/:id">
           {(params) => {
