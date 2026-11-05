@@ -102,6 +102,7 @@ export type RaiseStoreResult =
   | { kind: "alreadyClaimed" }
   | { kind: "commitmentNotFound" }
   | { kind: "conflict" }
+  | { kind: "amountOutOfRange" }
   | { kind: "invalidStatus" };
 
 function publicSnapshot(raise: RaiseRecord): RaiseSummary {
@@ -126,15 +127,22 @@ function privateSnapshot(raise: RaiseRecord): PrivateRaiseDetails {
   });
 }
 
-function updateTotals(raise: RaiseRecord): void {
-  raise.softTotal = raise.commitments.reduce(
-    (total, commitment) => total + (commitment.hard ? 0 : commitment.amount),
-    0,
-  );
-  raise.hardTotal = raise.commitments.reduce(
-    (total, commitment) => total + (commitment.hard ? commitment.amount : 0),
-    0,
-  );
+function calculateTotals(
+  commitments: RaiseCommitment[],
+): { softTotal: number; hardTotal: number } | undefined {
+  let softTotal = 0;
+  let hardTotal = 0;
+  for (const commitment of commitments) {
+    if (!Number.isSafeInteger(commitment.amount) || commitment.amount <= 0) {
+      return undefined;
+    }
+    const total = commitment.hard ? hardTotal : softTotal;
+    // Check before adding, so no intermediate sum loses integer precision.
+    if (commitment.amount > Number.MAX_SAFE_INTEGER - total) return undefined;
+    if (commitment.hard) hardTotal += commitment.amount;
+    else softTotal += commitment.amount;
+  }
+  return { softTotal, hardTotal };
 }
 
 function findApprovedRaise(id: string): RaiseRecord | undefined {
@@ -237,14 +245,18 @@ export function submitSoftCommitmentRecord(
     return { kind: "success", raise: publicSnapshot(raise), created: false };
   }
 
-  raise.commitments.push({
+  const commitments = [...raise.commitments, {
     id: input.id || randomUUID(),
     identifier,
     amount: input.amount,
     hard: false,
     verified: false,
-  });
-  updateTotals(raise);
+  }];
+  const totals = calculateTotals(commitments);
+  if (!totals) return { kind: "amountOutOfRange" };
+  // Commit only after both aggregates have been validated.
+  raise.commitments = commitments;
+  Object.assign(raise, totals);
   return { kind: "success", raise: publicSnapshot(raise), created: true };
 }
 
@@ -260,8 +272,12 @@ export function updateRaiseCommitmentRecord(
   const commitment = raise.commitments.find((item) => item.id === commitmentId);
   if (!commitment) return { kind: "commitmentNotFound" };
 
-  commitment.hard = input.hard;
-  commitment.verified = input.verified;
-  updateTotals(raise);
+  const commitments = raise.commitments.map((item) =>
+    item.id === commitmentId ? { ...item, ...input } : item,
+  );
+  const totals = calculateTotals(commitments);
+  if (!totals) return { kind: "amountOutOfRange" };
+  raise.commitments = commitments;
+  Object.assign(raise, totals);
   return { kind: "success", raise: publicSnapshot(raise) };
 }

@@ -39,7 +39,7 @@ export const submitRaiseClaimBodyVehicleLinkMax = 500;
 
 export const SubmitRaiseClaimBody = zod.object({
   "founderName": zod.string().min(1).max(submitRaiseClaimBodyFounderNameMax),
-  "email": zod.string().email().max(submitRaiseClaimBodyEmailMax),
+  "email": zod.email().max(submitRaiseClaimBodyEmailMax),
   "vehicleLink": zod.string().max(submitRaiseClaimBodyVehicleLinkMax).optional()
 })
 
@@ -69,8 +69,8 @@ export const SubmitRaiseBody = zod.object({
   "thesis": zod.string().min(submitRaiseBodyThesisMin).max(submitRaiseBodyThesisMax),
   "stage": zod.string().min(1).max(submitRaiseBodyStageMax),
   "range": zod.object({
-  "min": zod.number().int().min(1),
-  "max": zod.number().int().min(1)
+  "min": zod.int().min(1),
+  "max": zod.int().min(1)
 })
 })
 
@@ -97,13 +97,13 @@ export const GetRaisesResponseItem = zod.object({
   "thesis": zod.string(),
   "stage": zod.string(),
   "range": zod.object({
-  "min": zod.number().int().min(1),
-  "max": zod.number().int().min(1)
+  "min": zod.int().min(1),
+  "max": zod.int().min(1)
 }),
   "claimed": zod.boolean(),
   "claimantName": zod.string().nullish(),
-  "softTotal": zod.number().int().min(getRaisesResponseSoftTotalMin),
-  "hardTotal": zod.number().int().min(getRaisesResponseHardTotalMin)
+  "softTotal": zod.int().min(getRaisesResponseSoftTotalMin),
+  "hardTotal": zod.int().min(getRaisesResponseHardTotalMin)
 })
 export const GetRaisesResponse = zod.array(GetRaisesResponseItem)
 
@@ -121,8 +121,8 @@ export const GetPendingRaisesResponseItem = zod.object({
   "thesis": zod.string(),
   "stage": zod.string(),
   "range": zod.object({
-  "min": zod.number().int().min(1),
-  "max": zod.number().int().min(1)
+  "min": zod.int().min(1),
+  "max": zod.int().min(1)
 }),
   "status": zod.enum(['pending'])
 })
@@ -150,13 +150,13 @@ export const GetRaiseByIdResponse = zod.object({
   "thesis": zod.string(),
   "stage": zod.string(),
   "range": zod.object({
-  "min": zod.number().int().min(1),
-  "max": zod.number().int().min(1)
+  "min": zod.int().min(1),
+  "max": zod.int().min(1)
 }),
   "claimed": zod.boolean(),
   "claimantName": zod.string().nullish(),
-  "softTotal": zod.number().int().min(getRaiseByIdResponseSoftTotalMin),
-  "hardTotal": zod.number().int().min(getRaiseByIdResponseHardTotalMin)
+  "softTotal": zod.int().min(getRaiseByIdResponseSoftTotalMin),
+  "hardTotal": zod.int().min(getRaiseByIdResponseHardTotalMin)
 })
 
 
@@ -182,23 +182,23 @@ export const GetPrivateRaiseResponse = zod.object({
   "thesis": zod.string(),
   "stage": zod.string(),
   "range": zod.object({
-  "min": zod.number().int().min(1),
-  "max": zod.number().int().min(1)
+  "min": zod.int().min(1),
+  "max": zod.int().min(1)
 }),
   "claimed": zod.boolean(),
   "claimantName": zod.string().nullish(),
-  "softTotal": zod.number().int().min(getPrivateRaiseResponseOneSoftTotalMin),
-  "hardTotal": zod.number().int().min(getPrivateRaiseResponseOneHardTotalMin)
+  "softTotal": zod.int().min(getPrivateRaiseResponseOneSoftTotalMin),
+  "hardTotal": zod.int().min(getPrivateRaiseResponseOneHardTotalMin)
 }).and(zod.object({
   "claim": zod.object({
   "founderName": zod.string(),
-  "email": zod.string().email(),
+  "email": zod.email(),
   "signatureOrAccount": zod.string().optional()
 }).optional(),
   "commitments": zod.array(zod.object({
   "id": zod.string(),
   "identifier": zod.string(),
-  "amount": zod.number().int().min(1),
+  "amount": zod.int().min(1),
   "hard": zod.boolean(),
   "verified": zod.boolean()
 }))
@@ -226,13 +226,13 @@ export const ApproveRaiseResponse = zod.object({
   "thesis": zod.string(),
   "stage": zod.string(),
   "range": zod.object({
-  "min": zod.number().int().min(1),
-  "max": zod.number().int().min(1)
+  "min": zod.int().min(1),
+  "max": zod.int().min(1)
 }),
   "claimed": zod.boolean(),
   "claimantName": zod.string().nullish(),
-  "softTotal": zod.number().int().min(approveRaiseResponseSoftTotalMin),
-  "hardTotal": zod.number().int().min(approveRaiseResponseHardTotalMin)
+  "softTotal": zod.int().min(approveRaiseResponseSoftTotalMin),
+  "hardTotal": zod.int().min(approveRaiseResponseHardTotalMin)
 })
 
 
@@ -253,7 +253,7 @@ export const claimRaiseBodySignatureOrAccountMax = 500;
 
 export const ClaimRaiseBody = zod.object({
   "founderName": zod.string().min(1).max(claimRaiseBodyFounderNameMax),
-  "email": zod.string().email().max(claimRaiseBodyEmailMax),
+  "email": zod.email().max(claimRaiseBodyEmailMax),
   "signatureOrAccount": zod.string().max(claimRaiseBodySignatureOrAccountMax).optional()
 })
 
@@ -271,13 +271,13 @@ export const ClaimRaiseResponse = zod.object({
   "thesis": zod.string(),
   "stage": zod.string(),
   "range": zod.object({
-  "min": zod.number().int().min(1),
-  "max": zod.number().int().min(1)
+  "min": zod.int().min(1),
+  "max": zod.int().min(1)
 }),
   "claimed": zod.boolean(),
   "claimantName": zod.string().nullish(),
-  "softTotal": zod.number().int().min(claimRaiseResponseSoftTotalMin),
-  "hardTotal": zod.number().int().min(claimRaiseResponseHardTotalMin)
+  "softTotal": zod.int().min(claimRaiseResponseSoftTotalMin),
+  "hardTotal": zod.int().min(claimRaiseResponseHardTotalMin)
 })
 
 
@@ -298,7 +298,7 @@ export const submitSoftCommitmentBodyIdentifierMax = 80;
 export const SubmitSoftCommitmentBody = zod.object({
   "id": zod.string().max(submitSoftCommitmentBodyIdMax).optional(),
   "identifier": zod.string().min(1).max(submitSoftCommitmentBodyIdentifierMax),
-  "amount": zod.number().int().min(1)
+  "amount": zod.int().min(1)
 })
 
 
@@ -315,13 +315,13 @@ export const SubmitSoftCommitmentResponse = zod.object({
   "thesis": zod.string(),
   "stage": zod.string(),
   "range": zod.object({
-  "min": zod.number().int().min(1),
-  "max": zod.number().int().min(1)
+  "min": zod.int().min(1),
+  "max": zod.int().min(1)
 }),
   "claimed": zod.boolean(),
   "claimantName": zod.string().nullish(),
-  "softTotal": zod.number().int().min(submitSoftCommitmentResponseSoftTotalMin),
-  "hardTotal": zod.number().int().min(submitSoftCommitmentResponseHardTotalMin)
+  "softTotal": zod.int().min(submitSoftCommitmentResponseSoftTotalMin),
+  "hardTotal": zod.int().min(submitSoftCommitmentResponseHardTotalMin)
 })
 
 
@@ -352,13 +352,13 @@ export const UpdateRaiseCommitmentResponse = zod.object({
   "thesis": zod.string(),
   "stage": zod.string(),
   "range": zod.object({
-  "min": zod.number().int().min(1),
-  "max": zod.number().int().min(1)
+  "min": zod.int().min(1),
+  "max": zod.int().min(1)
 }),
   "claimed": zod.boolean(),
   "claimantName": zod.string().nullish(),
-  "softTotal": zod.number().int().min(updateRaiseCommitmentResponseSoftTotalMin),
-  "hardTotal": zod.number().int().min(updateRaiseCommitmentResponseHardTotalMin)
+  "softTotal": zod.int().min(updateRaiseCommitmentResponseSoftTotalMin),
+  "hardTotal": zod.int().min(updateRaiseCommitmentResponseHardTotalMin)
 })
 
 

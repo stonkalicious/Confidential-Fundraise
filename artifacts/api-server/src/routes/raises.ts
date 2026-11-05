@@ -259,6 +259,10 @@ router.post("/raises/:id/commitments", (req, res): void => {
   }
 
   const result = submitSoftCommitmentRecord(params.data.id, parsed.data);
+  if (result.kind === "amountOutOfRange") {
+    noStore(res).status(400).json({ error: "The commitment would exceed the supported total." });
+    return;
+  }
   if (result.kind === "notFound") {
     noStore(res).status(404).json({ error: `Raise '${params.data.id}' not found.` });
     return;
@@ -298,6 +302,10 @@ router.patch("/raises/:id/commitments/:commitmentId", (req, res): void => {
     params.data.commitmentId,
     parsed.data,
   );
+  if (result.kind === "amountOutOfRange") {
+    noStore(res).status(400).json({ error: "The commitment would exceed the supported total." });
+    return;
+  }
   if (result.kind === "notFound") {
     noStore(res).status(404).json({ error: `Raise '${params.data.id}' not found.` });
     return;
