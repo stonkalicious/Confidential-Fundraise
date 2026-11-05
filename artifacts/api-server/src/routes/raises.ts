@@ -9,6 +9,16 @@ const router: IRouter = Router();
 
 const seededRaises = [
   {
+    id: "confidential-fundraise-thesis",
+    name: "Confidential Fundraise Thesis",
+    thesis: "Fund-wide thesis for private money and confidential cross-chain settlement.",
+    stage: "Informational",
+    range: null,
+    claimed: false,
+    softTotal: 0,
+    hardTotal: 0,
+  },
+  {
     id: "cedar-grid",
     name: "AI Encyclopedia",
     thesis: "Perpetual truth-seeking markets let facts compete; AI generates official pages from current market understanding.",

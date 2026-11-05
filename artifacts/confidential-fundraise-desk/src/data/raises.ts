@@ -6,7 +6,8 @@ export type Raise = {
   thesis: string;
   investmentThesis: string;
   stage: string;
-  roundRange: { min: number; max: number };
+  roundRange: { min: number; max: number } | null;
+  isFundThesis?: boolean;
   claimed: boolean;
   claim?: { founderName: string; email: string; vehicleLink?: string };
   commitments?: Commitment[];
@@ -14,6 +15,16 @@ export type Raise = {
 
 // Fictional demo raises. Changes are saved only in this browser's localStorage.
 export const INITIAL_RAISES: Raise[] = [
+  {
+    id: 'confidential-fundraise-thesis',
+    companyName: 'Confidential Fundraise Thesis',
+    thesis: 'Fund-wide thesis for private money and confidential cross-chain settlement.',
+    investmentThesis: '',
+    stage: 'Informational',
+    roundRange: null,
+    isFundThesis: true,
+    claimed: false,
+  },
   {
     id: 'cedar-grid',
     companyName: 'AI Encyclopedia',

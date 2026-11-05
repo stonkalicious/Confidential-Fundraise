@@ -156,7 +156,9 @@ components:
         stage:
           type: string
         range:
-          $ref: "#/components/schemas/RaiseRange"
+          anyOf:
+            - $ref: "#/components/schemas/RaiseRange"
+            - type: "null"
         claimed:
           type: boolean
         softTotal:
