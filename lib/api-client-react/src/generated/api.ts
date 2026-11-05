@@ -23,7 +23,9 @@ import type {
   ErrorMessage,
   HealthStatus,
   RaiseClaimInput,
-  RaiseClaimStatus
+  RaiseClaimStatus,
+  RaiseSummary,
+  RaiseSummarySyncInput
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -294,5 +296,170 @@ export const useSubmitRaiseClaim = <TError = ErrorType<ErrorMessage>,
         TContext
       > => {
       return useMutation(getSubmitRaiseClaimMutationOptions(options));
+    }
+
+export const getGetRaisesUrl = () => {
+
+
+
+
+  return `/api/raises`
+}
+
+/**
+ * @summary Get public raise summaries
+ */
+export const getRaises = async ( options?: Parameters<typeof customFetch>[1]): Promise<RaiseSummary[]> => {
+
+  return customFetch<RaiseSummary[]>(getGetRaisesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRaisesQueryKey = () => {
+    return [
+    `/api/raises`
+    ] as const;
+    }
+
+
+export const getGetRaisesQueryOptions = <TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRaisesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRaises>>> = ({ signal }) => getRaises({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetRaisesQueryResult = NonNullable<Awaited<ReturnType<typeof getRaises>>>
+export type GetRaisesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get public raise summaries
+ */
+
+export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetRaisesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSyncRaiseSummariesUrl = () => {
+
+
+
+
+  return `/api/raises`
+}
+
+/**
+ * @summary Sync public claim status and aggregate totals
+ */
+export const syncRaiseSummaries = async (raiseSummarySyncInput: RaiseSummarySyncInput, options?: Parameters<typeof customFetch>[1]): Promise<RaiseSummary[]> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<RaiseSummary[]>(getSyncRaiseSummariesUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(raiseSummarySyncInput)
+  }
+);}
+
+
+
+
+
+export const getSyncRaiseSummariesMutationKey = () => ['syncRaiseSummaries'] as const;
+
+export const getSyncRaiseSummariesMutationOptions = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncRaiseSummaries>>, TError,SyncRaiseSummariesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof syncRaiseSummaries>>, TError,SyncRaiseSummariesMutationVariables, TContext> => {
+
+const mutationKey = getSyncRaiseSummariesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof syncRaiseSummaries>>, SyncRaiseSummariesMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  syncRaiseSummaries(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SyncRaiseSummariesMutationResult = NonNullable<Awaited<ReturnType<typeof syncRaiseSummaries>>>
+    export type SyncRaiseSummariesMutationBody = BodyType<RaiseSummarySyncInput>
+    export type SyncRaiseSummariesMutationError = ErrorType<ErrorMessage>
+    export type SyncRaiseSummariesMutationVariables = {data: BodyType<RaiseSummarySyncInput>}
+
+    /**
+ * @summary Sync public claim status and aggregate totals
+ */
+export const useSyncRaiseSummaries = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncRaiseSummaries>>, TError,SyncRaiseSummariesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof syncRaiseSummaries>>,
+        TError,
+        SyncRaiseSummariesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSyncRaiseSummariesMutationOptions(options));
     }
 

@@ -1,0 +1,94 @@
+import {
+  GetRaisesResponse,
+  SyncRaiseSummariesBody,
+  SyncRaiseSummariesResponse,
+} from "@workspace/api-zod";
+import { Router, type IRouter } from "express";
+
+const router: IRouter = Router();
+
+const seededRaises = [
+  {
+    id: "cedar-grid",
+    name: "AI Encyclopedia",
+    thesis: "Perpetual truth-seeking markets let facts compete; AI generates official pages from current market understanding.",
+    stage: "Seed",
+    range: { min: 1_000_000, max: 2_000_000 },
+    claimed: false,
+    softTotal: 0,
+    hardTotal: 0,
+  },
+  {
+    id: "harbor-materials",
+    name: "Private Social Trading",
+    thesis: "Traders can sell viewing keys to selected people who want to follow or copy confidential NEAR Intents trades, with public PnL to help them evaluate performance.",
+    stage: "Pre-seed",
+    range: { min: 500_000, max: 1_000_000 },
+    claimed: false,
+    softTotal: 0,
+    hardTotal: 0,
+  },
+  {
+    id: "lumen-labs",
+    name: "Universal Checkout Widget",
+    thesis: "A checkout widget lets any merchant or app accept Intents payments from the wallet and blockchain a user already has.",
+    stage: "Series A",
+    range: { min: 3_000_000, max: 5_000_000 },
+    claimed: false,
+    softTotal: 0,
+    hardTotal: 0,
+  },
+  {
+    id: "swarm-for-hire",
+    name: "Swarm-for-Hire",
+    thesis: "Onchain work bids fund agents with NEAR for inference, with guardrails and governance AI review.",
+    stage: "Pre-seed",
+    range: { min: 500_000, max: 1_000_000 },
+    claimed: false,
+    softTotal: 0,
+    hardTotal: 0,
+  },
+];
+
+let raises = GetRaisesResponse.parse(seededRaises);
+const raiseIds = new Set(raises.map((raise) => raise.id));
+
+router.get("/raises", (_req, res) => {
+  res.set("Cache-Control", "no-store").json(GetRaisesResponse.parse(raises));
+});
+
+router.put("/raises", (req, res): void => {
+  const parsed = SyncRaiseSummariesBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.set("Cache-Control", "no-store").status(400).json({ error: "Invalid raise summaries." });
+    return;
+  }
+
+  const updates = parsed.data.raises;
+  const updateIds = updates.map((raise) => raise.id);
+  if (
+    updates.length !== raises.length ||
+    new Set(updateIds).size !== raiseIds.size ||
+    updateIds.some((id) => !raiseIds.has(id))
+  ) {
+    res.set("Cache-Control", "no-store").status(400).json({ error: "Raise IDs do not match the demo list." });
+    return;
+  }
+
+  const updatesById = new Map(updates.map((raise) => [raise.id, raise]));
+  raises = GetRaisesResponse.parse(
+    raises.map((raise) => {
+      const update = updatesById.get(raise.id)!;
+      return {
+        ...raise,
+        claimed: update.claimed,
+        softTotal: update.softTotal,
+        hardTotal: update.hardTotal,
+      };
+    }),
+  );
+
+  res.set("Cache-Control", "no-store").json(SyncRaiseSummariesResponse.parse(raises));
+});
+
+export default router;

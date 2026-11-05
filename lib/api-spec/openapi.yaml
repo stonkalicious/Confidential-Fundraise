@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: raise-claim
     description: Single demo raise claim
+  - name: raises
+    description: Public raise summaries
 paths:
   /healthz:
     get:
@@ -67,6 +69,45 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
+  /raises:
+    get:
+      operationId: getRaises
+      tags: [raises]
+      summary: Get public raise summaries
+      responses:
+        "200":
+          description: Raises with public status and aggregate totals only
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RaiseSummary"
+    put:
+      operationId: syncRaiseSummaries
+      tags: [raises]
+      summary: Sync public claim status and aggregate totals
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RaiseSummarySyncInput"
+      responses:
+        "200":
+          description: Updated public raise summaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RaiseSummary"
+        "400":
+          description: Invalid raise summary update
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
 components:
   schemas:
     HealthStatus:
@@ -103,6 +144,75 @@ components:
       required:
         - founderName
         - email
+    RaiseSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        thesis:
+          type: string
+        stage:
+          type: string
+        range:
+          $ref: "#/components/schemas/RaiseRange"
+        claimed:
+          type: boolean
+        softTotal:
+          type: integer
+          minimum: 0
+        hardTotal:
+          type: integer
+          minimum: 0
+      required:
+        - id
+        - name
+        - thesis
+        - stage
+        - range
+        - claimed
+        - softTotal
+        - hardTotal
+    RaiseRange:
+      type: object
+      properties:
+        min:
+          type: integer
+          minimum: 0
+        max:
+          type: integer
+          minimum: 0
+      required:
+        - min
+        - max
+    RaiseStatusUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+        claimed:
+          type: boolean
+        softTotal:
+          type: integer
+          minimum: 0
+        hardTotal:
+          type: integer
+          minimum: 0
+      required:
+        - id
+        - claimed
+        - softTotal
+        - hardTotal
+    RaiseSummarySyncInput:
+      type: object
+      properties:
+        raises:
+          type: array
+          items:
+            $ref: "#/components/schemas/RaiseStatusUpdate"
+      required:
+        - raises
     ErrorMessage:
       type: object
       properties:

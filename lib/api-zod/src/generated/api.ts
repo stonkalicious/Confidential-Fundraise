@@ -49,3 +49,76 @@ export const SubmitRaiseClaimResponse = zod.object({
 })
 
 
+/**
+ * @summary Get public raise summaries
+ */
+export const getRaisesResponseRangeMinMin = 0;
+
+export const getRaisesResponseRangeMaxMin = 0;
+
+export const getRaisesResponseSoftTotalMin = 0;
+
+export const getRaisesResponseHardTotalMin = 0;
+
+
+
+export const GetRaisesResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "thesis": zod.string(),
+  "stage": zod.string(),
+  "range": zod.object({
+  "min": zod.number().int().min(getRaisesResponseRangeMinMin),
+  "max": zod.number().int().min(getRaisesResponseRangeMaxMin)
+}),
+  "claimed": zod.boolean(),
+  "softTotal": zod.number().int().min(getRaisesResponseSoftTotalMin),
+  "hardTotal": zod.number().int().min(getRaisesResponseHardTotalMin)
+})
+export const GetRaisesResponse = zod.array(GetRaisesResponseItem)
+
+
+/**
+ * @summary Sync public claim status and aggregate totals
+ */
+export const syncRaiseSummariesBodyRaisesItemSoftTotalMin = 0;
+
+export const syncRaiseSummariesBodyRaisesItemHardTotalMin = 0;
+
+
+
+export const SyncRaiseSummariesBody = zod.object({
+  "raises": zod.array(zod.object({
+  "id": zod.string(),
+  "claimed": zod.boolean(),
+  "softTotal": zod.number().int().min(syncRaiseSummariesBodyRaisesItemSoftTotalMin),
+  "hardTotal": zod.number().int().min(syncRaiseSummariesBodyRaisesItemHardTotalMin)
+}))
+})
+
+export const syncRaiseSummariesResponseRangeMinMin = 0;
+
+export const syncRaiseSummariesResponseRangeMaxMin = 0;
+
+export const syncRaiseSummariesResponseSoftTotalMin = 0;
+
+export const syncRaiseSummariesResponseHardTotalMin = 0;
+
+
+
+export const SyncRaiseSummariesResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "thesis": zod.string(),
+  "stage": zod.string(),
+  "range": zod.object({
+  "min": zod.number().int().min(syncRaiseSummariesResponseRangeMinMin),
+  "max": zod.number().int().min(syncRaiseSummariesResponseRangeMaxMin)
+}),
+  "claimed": zod.boolean(),
+  "softTotal": zod.number().int().min(syncRaiseSummariesResponseSoftTotalMin),
+  "hardTotal": zod.number().int().min(syncRaiseSummariesResponseHardTotalMin)
+})
+export const SyncRaiseSummariesResponse = zod.array(SyncRaiseSummariesResponseItem)
+
+

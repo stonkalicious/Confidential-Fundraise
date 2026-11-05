@@ -27,6 +27,39 @@ export interface RaiseClaimInput {
   vehicleLink?: string;
 }
 
+export interface RaiseRange {
+  /** @minimum 0 */
+  min: number;
+  /** @minimum 0 */
+  max: number;
+}
+
+export interface RaiseSummary {
+  id: string;
+  name: string;
+  thesis: string;
+  stage: string;
+  range: RaiseRange;
+  claimed: boolean;
+  /** @minimum 0 */
+  softTotal: number;
+  /** @minimum 0 */
+  hardTotal: number;
+}
+
+export interface RaiseStatusUpdate {
+  id: string;
+  claimed: boolean;
+  /** @minimum 0 */
+  softTotal: number;
+  /** @minimum 0 */
+  hardTotal: number;
+}
+
+export interface RaiseSummarySyncInput {
+  raises: RaiseStatusUpdate[];
+}
+
 export interface ErrorMessage {
   error: string;
 }

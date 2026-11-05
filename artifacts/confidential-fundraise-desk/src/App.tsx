@@ -1,5 +1,6 @@
-import { type FormEvent, type ReactNode, useMemo, useState } from 'react';
+import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { syncRaiseSummaries } from '@workspace/api-client-react';
 import RaiseList from '@/components/raise-list';
 import { type Raise } from '@/data/raises';
 import { loadRaises, saveRaises } from '@/data/raise-storage';
@@ -655,6 +656,19 @@ function Router() {
   const [loaded] = useState(loadRaises);
   const [raises, setRaises] = useState<Raise[]>(loaded.raises);
   const [storageError, setStorageError] = useState(loaded.error);
+  const [syncError, setSyncError] = useState('');
+
+  useEffect(() => {
+    const publicRaises = raises.map(({ id, claimed, commitments = [] }) => ({
+      id,
+      claimed,
+      softTotal: commitments.reduce((total, item) => total + (item.hard ? 0 : item.amount), 0),
+      hardTotal: commitments.reduce((total, item) => total + (item.hard ? item.amount : 0), 0),
+    }));
+    void syncRaiseSummaries({ raises: publicRaises })
+      .then(() => setSyncError(''))
+      .catch(() => setSyncError('Public raise summary could not sync to /api/raises.'));
+  }, [raises]);
 
   function updateRaise(id: string, changes: Partial<Raise>): boolean {
     const next = raises.map((item) => item.id === id ? { ...item, ...changes } : item);
@@ -673,6 +687,7 @@ function Router() {
     // survives a page crash.
     <RoutedErrorBoundary>
       {storageError && <p className="frame" role="alert">{storageError}</p>}
+      {syncError && <p className="frame" role="alert">{syncError}</p>}
       <Switch>
         <Route path="/"><RaiseList raises={raises} /></Route>
         <Route path="/raises/:id">
