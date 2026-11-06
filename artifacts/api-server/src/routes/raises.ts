@@ -333,6 +333,14 @@ router.post(
   async (req, res): Promise<void> => {
     if (!requireApprovalCode(req, res)) return;
 
+    const userSessionToken = req.get("x-near-user-session")?.trim();
+    if (!userSessionToken) {
+      noStore(res)
+        .status(401)
+        .json({ error: "Authenticate a NEAR wallet before requesting a confidential quote." });
+      return;
+    }
+
     const params = RequestDemoQuoteParams.safeParse(req.params);
     if (!params.success) {
       noStore(res).status(400).json({ error: "Invalid raise or commitment ID." });
@@ -378,7 +386,10 @@ router.post(
     try {
       upstreamResponse = await fetch(INTENTS_QUOTE_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${userSessionToken}`,
+        },
         body: JSON.stringify(quoteRequest),
         signal: AbortSignal.timeout(15_000),
       });
@@ -410,7 +421,7 @@ router.post(
       const error =
         upstreamResponse.status === 401 &&
         providerMessage.toLowerCase().includes("authentication is required")
-          ? "NEAR Intents requires an end-user wallet-authenticated session for confidential quotes. This demo does not request signatures, so no confidential quote was issued. No funds moved."
+          ? "NEAR Intents rejected the NEAR wallet session for this confidential quote. Reauthenticate the wallet and try again. No funds moved."
           : `NEAR Intents rejected the dry-run quote (HTTP ${upstreamResponse.status}).${providerMessage ? ` ${providerMessage}` : ""} No funds moved.`;
       noStore(res).status(502).json({ error });
       return;

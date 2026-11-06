@@ -195,6 +195,10 @@ button:focus-visible, input:focus-visible {
 .quote-heading p { margin: 0; color: #908a7d; font: 10px var(--app-font-mono); }
 .quote-card { overflow: hidden; }
 .quote-topline { display: flex; align-items: center; justify-content: space-between; padding: 13px 17px; border-bottom: 1px solid #e4dfd3; color: #807a6c; font: 10px var(--app-font-mono); }
+.near-auth-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px 17px; border-bottom: 1px solid #e4dfd3; }
+.near-auth-row strong { color: #39354a; font-size: 12px; overflow-wrap: anywhere; }
+.near-auth-row p { margin: 5px 0 0; color: #807a6c; font-size: 11px; line-height: 1.5; }
+.quote-action-row { padding: 0 17px 16px; }
 .quote-url { color: #514c5b; overflow-wrap: anywhere; }
 .quote-json { margin: 0; padding: 19px; color: #474256; overflow-x: auto; font: 11px/1.75 var(--app-font-mono); white-space: pre; }
 .quote-result { margin: 0; padding: 19px; color: #474256; font: 13px/1.65 var(--app-font-mono); overflow-wrap: anywhere; }
@@ -315,6 +319,7 @@ button:focus-visible, input:focus-visible {
   .side-card { order: 2; }
   .commitment-card { align-items: flex-start; flex-direction: column; }
   .quote-heading { align-items: flex-start; flex-direction: column; gap: 7px; }
+  .near-auth-row { align-items: flex-start; flex-direction: column; }
   .quote-json { font-size: 10px; }
   .progress-top { flex-direction: column; }
   .progress-target { text-align: left; }

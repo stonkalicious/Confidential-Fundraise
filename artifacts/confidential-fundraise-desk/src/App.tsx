@@ -19,6 +19,11 @@ import SiteHeader from '@/components/site-header';
 import { INITIAL_RAISES, type Raise } from '@/data/raises';
 import { loadRaises, saveRaises } from '@/data/raise-storage';
 import { trackEvent } from '@/lib/analytics';
+import {
+  authenticateNearWallet,
+  disconnectNearWallet,
+  type NearUserSession,
+} from '@/lib/near-intents-auth';
 import { ErrorBoundary } from '@/components/error-boundary';
 import RulesCalculator from '@/components/rules-calculator';
 import { Toaster } from '@/components/ui/toaster';
@@ -96,7 +101,6 @@ function isHttpStatus(error: unknown, status: number): boolean {
 }
 
 function isQuoteAuthenticationRequired(error: unknown): boolean {
-  if (isHttpStatus(error, 401) || isHttpStatus(error, 403)) return true;
   if (!error || typeof error !== 'object' || !('data' in error)) return false;
 
   const data = error.data;
@@ -105,9 +109,7 @@ function isQuoteAuthenticationRequired(error: unknown): boolean {
       typeof data === 'object' &&
       'error' in data &&
       typeof data.error === 'string' &&
-      data.error.startsWith(
-        'NEAR Intents requires an end-user wallet-authenticated session for confidential quotes.',
-      ),
+      /authenticate a near wallet|rejected the near wallet session/i.test(data.error),
   );
 }
 
@@ -131,6 +133,7 @@ function formatUsdcBaseUnits(amount: string): string {
 }
 
 type DemoQuoteState =
+  | { commitmentId: string; status: 'ready' }
   | { commitmentId: string; status: 'loading' }
   | { commitmentId: string; status: 'error'; error: string }
   | { commitmentId: string; status: 'success'; result: DemoIntentsQuote };
@@ -170,6 +173,7 @@ function AppDesk({
   onRequestDemoQuote: (
     commitmentId: string,
     approvalCode: string,
+    userSessionToken: string,
   ) => Promise<DemoIntentsQuote>;
 }) {
   const isFundThesis = raise.isFundThesis === true;
@@ -179,6 +183,9 @@ function AppDesk({
   const [sponsorLoading, setSponsorLoading] = useState(false);
   const commitments = privateRaise?.commitments ?? [];
   const [quoteState, setQuoteState] = useState<DemoQuoteState | null>(null);
+  const [nearSession, setNearSession] = useState<NearUserSession | null>(null);
+  const [nearAuthLoading, setNearAuthLoading] = useState(false);
+  const [nearAuthError, setNearAuthError] = useState('');
   const quotedCommitment = quoteState
     ? commitments.find((item) => item.id === quoteState.commitmentId && item.hard)
     : undefined;
@@ -212,6 +219,8 @@ function AppDesk({
       setApprovalCode('');
       setPrivateRaise(null);
       setQuoteState(null);
+      setNearSession(null);
+      setNearAuthError('');
       setSponsorError('');
     }
   }, [view]);
@@ -278,20 +287,57 @@ function AppDesk({
   }
 
   async function requestDemoQuote(commitmentId: string) {
+    if (!nearSession || nearSession.expiresAt <= Date.now()) {
+      setNearSession(null);
+      setQuoteState({
+        commitmentId,
+        status: 'error',
+        error: 'Authenticate a NEAR wallet before requesting this confidential quote.',
+      });
+      return;
+    }
     setQuoteState({ commitmentId, status: 'loading' });
     try {
-      const result = await onRequestDemoQuote(commitmentId, approvalCode);
+      const result = await onRequestDemoQuote(
+        commitmentId,
+        approvalCode,
+        nearSession.accessToken,
+      );
       trackEvent('quote_outcome', { outcome: 'success' });
       setQuoteState({ commitmentId, status: 'success', result });
     } catch (error) {
-      trackEvent('quote_outcome', {
-        outcome: isQuoteAuthenticationRequired(error) ? 'auth_required' : 'provider_error',
-      });
+      const authRequired = isQuoteAuthenticationRequired(error);
+      trackEvent('quote_outcome', { outcome: authRequired ? 'auth_required' : 'provider_error' });
+      if (authRequired) setNearSession(null);
       setQuoteState({
         commitmentId,
         status: 'error',
         error: requestErrorMessage(error, 'The NEAR Intents quote request failed. No funds moved.'),
       });
+    }
+  }
+
+  async function connectNearWallet() {
+    setNearAuthLoading(true);
+    setNearAuthError('');
+    try {
+      setNearSession(await authenticateNearWallet());
+    } catch (error) {
+      setNearAuthError(
+        requestErrorMessage(error, 'NEAR wallet authentication did not complete. No funds moved.'),
+      );
+    } finally {
+      setNearAuthLoading(false);
+    }
+  }
+
+  async function clearNearWalletSession() {
+    setNearSession(null);
+    setNearAuthError('');
+    try {
+      await disconnectNearWallet();
+    } catch {
+      // Clearing the in-memory session is sufficient if the wallet is already disconnected.
     }
   }
 
@@ -343,7 +389,7 @@ function AppDesk({
       await onUpdateCommitment(id, status, approvalCode);
       applyPrivateCommitmentStatus(id, status);
       if (status.hard) {
-        await requestDemoQuote(id);
+        setQuoteState({ commitmentId: id, status: 'ready' });
       } else if (quoteState?.commitmentId === id) {
         setQuoteState(null);
       }
@@ -358,7 +404,7 @@ function AppDesk({
       const status = { hard: true, verified: true };
       await onUpdateCommitment(id, status, approvalCode);
       applyPrivateCommitmentStatus(id, status);
-      await requestDemoQuote(id);
+      setQuoteState({ commitmentId: id, status: 'ready' });
     } catch (error) {
       setSponsorError(requestErrorMessage(error, 'The commitment could not be verified.'));
     }
@@ -549,6 +595,18 @@ function AppDesk({
                               >
                                 {item.hard ? 'Revert to soft' : 'Mark hard'}
                               </button>
+                              {item.hard && (
+                                <button
+                                  className="quiet-button"
+                                  data-testid="button-prepare-quote"
+                                  type="button"
+                                  onClick={() =>
+                                    setQuoteState({ commitmentId: item.id, status: 'ready' })
+                                  }
+                                >
+                                  Request quote
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -578,6 +636,68 @@ function AppDesk({
                     <span className="quote-url" data-testid="text-quote-endpoint">POST https://1click.chaindefuser.com/v0/quote</span>
                     <span>confidentiality: basic</span>
                   </div>
+                  <div className="near-auth-row">
+                    <div>
+                      <strong data-testid="text-near-session-account">
+                        {nearSession
+                          ? `NEAR wallet: ${nearSession.accountId}`
+                          : 'NEAR wallet not authenticated'}
+                      </strong>
+                      <p>
+                        Authentication signs an empty intent only. It does not authorize a swap or move tokens.
+                      </p>
+                    </div>
+                    {nearSession ? (
+                      <button
+                        className="quiet-button"
+                        data-testid="button-disconnect-near-wallet"
+                        type="button"
+                        onClick={clearNearWalletSession}
+                      >
+                        Disconnect NEAR wallet
+                      </button>
+                    ) : (
+                      <button
+                        className="primary-button"
+                        data-testid="button-authenticate-near-wallet"
+                        type="button"
+                        onClick={connectNearWallet}
+                        disabled={nearAuthLoading}
+                      >
+                        {nearAuthLoading ? 'Authenticating…' : 'Authenticate with NEAR wallet'}
+                      </button>
+                    )}
+                  </div>
+                  {nearAuthError && (
+                    <p className="quote-result quote-result-error" role="alert" data-testid="status-near-auth-error">
+                      {nearAuthError}
+                    </p>
+                  )}
+                  {(quoteState.status === 'ready' || quoteState.status === 'error') &&
+                    nearSession && (
+                      <div className="quote-action-row">
+                        <button
+                          className="primary-button"
+                          data-testid="button-request-confidential-quote"
+                          type="button"
+                          onClick={() => requestDemoQuote(quoteState.commitmentId)}
+                        >
+                          {quoteState.status === 'error' ? 'Retry dry-run quote' : 'Request confidential dry-run quote'}
+                        </button>
+                      </div>
+                    )}
+                  {quoteState.status === 'ready' && !nearSession && (
+                    <p className="quote-result" role="status" data-testid="status-near-auth-required">
+                      Authenticate with a NEAR wallet before requesting this confidential quote.
+                    </p>
+                  )}
+                  {quoteState.status === 'ready' &&
+                    nearSession &&
+                    nearSession.expiresAt <= Date.now() && (
+                    <p className="quote-result quote-result-error" role="alert">
+                      This NEAR wallet session has expired. Authenticate again to continue.
+                    </p>
+                  )}
                   {quoteState.status === 'loading' && (
                     <p className="quote-result" role="status" data-testid="status-quote-loading">
                       Requesting a dry-run quote with fixed synthetic values…
@@ -1061,9 +1181,12 @@ function Router() {
                 onUpdateCommitment={(commitmentId, status, approvalCode) =>
                   updateCommitment(raise.id, commitmentId, status, approvalCode)
                 }
-                onRequestDemoQuote={(commitmentId, approvalCode) =>
+                onRequestDemoQuote={(commitmentId, approvalCode, userSessionToken) =>
                   requestDemoQuoteApi(raise.id, commitmentId, {
-                    headers: { Authorization: `Bearer ${approvalCode}` },
+                    headers: {
+                      Authorization: `Bearer ${approvalCode}`,
+                      'X-NEAR-User-Session': userSessionToken,
+                    },
                   })
                 }
               />

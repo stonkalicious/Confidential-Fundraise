@@ -1261,12 +1261,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useRequestDemoQuote = <TError = ErrorType<ErrorMessage>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestDemoQuote>>, TError,RequestDemoQuoteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof requestDemoQuote>>,
         TError,
         RequestDemoQuoteMutationVariables,
         TContext
       > => {
-      return useMutation(getRequestDemoQuoteMutationOptions(options));
+      return useMutation(getRequestDemoQuoteMutationOptions(options), queryClient);
     }
 

@@ -387,6 +387,7 @@ paths:
       description: Uses fixed synthetic quote values and never executes a swap
       security:
         - ApprovalCode: []
+          NearUserSession: []
       parameters:
         - name: id
           in: path
@@ -406,7 +407,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/DemoIntentsQuote"
         "401":
-          description: Approval code is invalid
+          description: Sponsor approval code or NEAR user session is missing or invalid
           content:
             application/json:
               schema:
@@ -446,6 +447,10 @@ components:
     ApprovalCode:
       type: http
       scheme: bearer
+    NearUserSession:
+      type: apiKey
+      in: header
+      name: X-NEAR-User-Session
   schemas:
     HealthStatus:
       type: object
