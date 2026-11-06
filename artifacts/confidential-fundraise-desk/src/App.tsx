@@ -875,7 +875,7 @@ function AppDesk({
               <h1 className="how-title">How the app works</h1>
               <p>Confidential Fundraise Desk is a minimal demo of fundraise coordination with shared server-held records.</p>
               <p>
-                A prospect submits a soft commitment, and a founder can claim a raise with contact details. New raises stay out of the public list until a sponsor approves them. The Sponsor view uses a shared approval code to access individual commitments and claim contact details. Marking a commitment hard displays an illustrative NEAR Intents 1Click quote body; no request is sent, no blockchain verification occurs, and no settlement is triggered.
+                A prospect submits a soft commitment, and a founder can claim a raise with contact details. New raises stay out of the public list until a sponsor approves them. The Sponsor view uses a shared approval code to access individual commitments and claim contact details. Marking a commitment hard enables a live dry-run quote using fixed synthetic values. It does not sign or settle a swap, and verification remains demo-only with no blockchain call.
               </p>
               <p>
                 Public pages and API responses show approved raise information and aggregate soft and hard totals only. Individual commitment identifiers, amounts, and claim contact details are not included in public responses.

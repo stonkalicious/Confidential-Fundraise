@@ -422,7 +422,7 @@ router.post(
         upstreamResponse.status === 401 &&
         providerMessage.toLowerCase().includes("authentication is required")
           ? "NEAR Intents rejected the NEAR wallet session for this confidential quote. Reauthenticate the wallet and try again. No funds moved."
-          : `NEAR Intents rejected the dry-run quote (HTTP ${upstreamResponse.status}).${providerMessage ? ` ${providerMessage}` : ""} No funds moved.`;
+          : `NEAR Intents rejected the dry-run quote (HTTP ${upstreamResponse.status}). No funds moved.`;
       noStore(res).status(502).json({ error });
       return;
     }
