@@ -19,6 +19,7 @@ import SiteHeader from '@/components/site-header';
 import { INITIAL_RAISES, type Raise } from '@/data/raises';
 import { loadRaises, saveRaises } from '@/data/raise-storage';
 import { getQuoteFailureOutcome, trackQuoteOutcome } from '@/lib/analytics';
+import { startSponsorIdleLock } from '@/lib/sponsor-idle-lock';
 import {
   authenticateNearWallet,
   disconnectNearWallet,
@@ -167,6 +168,7 @@ function AppDesk({
   const [view, setView] = useState<View>(getInitialView);
   const [approvalCode, setApprovalCode] = useState('');
   const [privateRaise, setPrivateRaise] = useState<PrivateRaiseDetails | null>(null);
+  const sponsorSessionVersion = useRef(0);
   const [sponsorLoading, setSponsorLoading] = useState(false);
   const commitments = privateRaise?.commitments ?? [];
   const [quoteState, setQuoteState] = useState<DemoQuoteState | null>(null);
@@ -203,6 +205,7 @@ function AppDesk({
 
   useEffect(() => {
     if (view !== 'sponsor') {
+      sponsorSessionVersion.current += 1;
       setApprovalCode('');
       setPrivateRaise(null);
       setQuoteState(null);
@@ -210,6 +213,26 @@ function AppDesk({
       setNearAuthError('');
       setSponsorError('');
     }
+  }, [view]);
+
+  useEffect(() => {
+    if (view !== 'sponsor') return;
+
+    const clearSponsorState = () => {
+      sponsorSessionVersion.current += 1;
+      setApprovalCode('');
+      setPrivateRaise(null);
+      setQuoteState(null);
+      setNearSession(null);
+      setNearAuthError('');
+      setSponsorError('');
+      setSponsorLoading(false);
+    };
+    const stopIdleLock = startSponsorIdleLock(clearSponsorState);
+    return () => {
+      stopIdleLock();
+      sponsorSessionVersion.current += 1;
+    };
   }, [view]);
 
   async function submitCommitment(event: FormEvent<HTMLFormElement>) {
@@ -241,14 +264,22 @@ function AppDesk({
       setSponsorError('Enter the sponsor approval code.');
       return;
     }
+    const sessionVersion = sponsorSessionVersion.current;
     setSponsorLoading(true);
     try {
-      setPrivateRaise(await onGetPrivateRaise(approvalCode));
+      const result = await onGetPrivateRaise(approvalCode);
+      if (sessionVersion === sponsorSessionVersion.current) {
+        setPrivateRaise(result);
+      }
     } catch (error) {
-      setPrivateRaise(null);
-      setSponsorError(requestErrorMessage(error, 'Private sponsor details could not be loaded.'));
+      if (sessionVersion === sponsorSessionVersion.current) {
+        setPrivateRaise(null);
+        setSponsorError(requestErrorMessage(error, 'Private sponsor details could not be loaded.'));
+      }
     } finally {
-      setSponsorLoading(false);
+      if (sessionVersion === sponsorSessionVersion.current) {
+        setSponsorLoading(false);
+      }
     }
   }
 
@@ -283,6 +314,7 @@ function AppDesk({
       });
       return;
     }
+    const sessionVersion = sponsorSessionVersion.current;
     setQuoteState({ commitmentId, status: 'loading' });
     try {
       const result = await onRequestDemoQuote(
@@ -291,11 +323,14 @@ function AppDesk({
         nearSession.accessToken,
       );
       trackQuoteOutcome('success');
-      setQuoteState({ commitmentId, status: 'success', result });
+      if (sessionVersion === sponsorSessionVersion.current) {
+        setQuoteState({ commitmentId, status: 'success', result });
+      }
     } catch (error) {
       const outcome = getQuoteFailureOutcome(error);
       const authRequired = outcome === 'auth_required';
       trackQuoteOutcome(outcome);
+      if (sessionVersion !== sponsorSessionVersion.current) return;
       if (authRequired) setNearSession(null);
       setQuoteState({
         commitmentId,
@@ -306,16 +341,24 @@ function AppDesk({
   }
 
   async function connectNearWallet() {
+    const sessionVersion = sponsorSessionVersion.current;
     setNearAuthLoading(true);
     setNearAuthError('');
     try {
-      setNearSession(await authenticateNearWallet());
+      const session = await authenticateNearWallet();
+      if (sessionVersion === sponsorSessionVersion.current) {
+        setNearSession(session);
+      }
     } catch (error) {
-      setNearAuthError(
-        requestErrorMessage(error, 'NEAR wallet authentication did not complete. No funds moved.'),
-      );
+      if (sessionVersion === sponsorSessionVersion.current) {
+        setNearAuthError(
+          requestErrorMessage(error, 'NEAR wallet authentication did not complete. No funds moved.'),
+        );
+      }
     } finally {
-      setNearAuthLoading(false);
+      if (sessionVersion === sponsorSessionVersion.current) {
+        setNearAuthLoading(false);
+      }
     }
   }
 
@@ -371,10 +414,12 @@ function AppDesk({
   async function toggleCommitmentHardStatus(id: string) {
     const item = commitments.find((commitment) => commitment.id === id);
     if (!item) return;
+    const sessionVersion = sponsorSessionVersion.current;
     setSponsorError('');
     try {
       const status = { hard: !item.hard, verified: false };
       await onUpdateCommitment(id, status, approvalCode);
+      if (sessionVersion !== sponsorSessionVersion.current) return;
       applyPrivateCommitmentStatus(id, status);
       if (status.hard) {
         setQuoteState({ commitmentId: id, status: 'ready' });
@@ -382,19 +427,25 @@ function AppDesk({
         setQuoteState(null);
       }
     } catch (error) {
-      setSponsorError(requestErrorMessage(error, 'The commitment status could not be updated.'));
+      if (sessionVersion === sponsorSessionVersion.current) {
+        setSponsorError(requestErrorMessage(error, 'The commitment status could not be updated.'));
+      }
     }
   }
 
   async function verifyCommitment(id: string) {
+    const sessionVersion = sponsorSessionVersion.current;
     setSponsorError('');
     try {
       const status = { hard: true, verified: true };
       await onUpdateCommitment(id, status, approvalCode);
+      if (sessionVersion !== sponsorSessionVersion.current) return;
       applyPrivateCommitmentStatus(id, status);
       setQuoteState({ commitmentId: id, status: 'ready' });
     } catch (error) {
-      setSponsorError(requestErrorMessage(error, 'The commitment could not be verified.'));
+      if (sessionVersion === sponsorSessionVersion.current) {
+        setSponsorError(requestErrorMessage(error, 'The commitment could not be verified.'));
+      }
     }
   }
 
