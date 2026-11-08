@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { db, raiseStateTable } from "@workspace/db";
 import {
   GetPendingRaisesResponse,
   GetPrivateRaiseResponse,
@@ -21,6 +22,7 @@ export const DEFAULT_RAISE_ID = "confidential-fundraise-thesis";
 
 type RaiseRecord = {
   id: string;
+  position: number;
   name: string;
   thesis: string;
   stage: string;
@@ -36,7 +38,7 @@ type RaiseRecord = {
   hardTotal: number;
 };
 
-const seededRaises: RaiseRecord[] = [
+const seedData: Omit<RaiseRecord, "position">[] = [
   {
     id: DEFAULT_RAISE_ID,
     name: "Confidential Fundraise Thesis",
@@ -94,7 +96,133 @@ const seededRaises: RaiseRecord[] = [
   },
 ];
 
-let raises = [...seededRaises];
+const seededRaises: RaiseRecord[] = seedData.map((raise, position) => ({
+  ...raise,
+  position,
+}));
+
+let raises = seededRaises.map(cloneRaise);
+let nextPosition = seededRaises.length;
+let storeInitialized = false;
+let writeQueue: Promise<void> = Promise.resolve();
+
+function cloneRaise(raise: RaiseRecord): RaiseRecord {
+  return {
+    ...raise,
+    range: { ...raise.range },
+    ...(raise.claim ? { claim: { ...raise.claim } } : {}),
+    commitments: raise.commitments.map((commitment) => ({ ...commitment })),
+  };
+}
+
+function withWriteQueue<T>(operation: () => Promise<T>): Promise<T> {
+  const result = writeQueue.then(operation);
+  writeQueue = result.then(
+    () => undefined,
+    () => undefined,
+  );
+  return result;
+}
+
+function databaseRow(raise: RaiseRecord) {
+  const { position, ...state } = raise;
+  return {
+    id: raise.id,
+    position,
+    state: state as Record<string, unknown>,
+  };
+}
+
+function raiseFromDatabase(state: unknown, position: number): RaiseRecord {
+  if (
+    typeof state !== "object" ||
+    state === null ||
+    !Number.isSafeInteger(position) ||
+    position < 0
+  ) {
+    throw new Error("Stored raise data is invalid.");
+  }
+
+  const storedState = state as Record<string, unknown>;
+  if (storedState.status !== "approved" && storedState.status !== "pending") {
+    throw new Error("Stored raise status is invalid.");
+  }
+
+  const claim = storedState.claim;
+  const parsed = GetPrivateRaiseResponse.parse({
+    ...storedState,
+    claimed: Boolean(claim),
+    ...(typeof claim === "object" &&
+    claim !== null &&
+    "founderName" in claim &&
+    typeof claim.founderName === "string"
+      ? { claimantName: claim.founderName }
+      : {}),
+  });
+
+  return {
+    id: parsed.id,
+    position,
+    name: parsed.name,
+    thesis: parsed.thesis,
+    stage: parsed.stage,
+    range: parsed.range,
+    status: storedState.status,
+    ...(parsed.claim ? { claim: parsed.claim } : {}),
+    commitments: parsed.commitments,
+    softTotal: parsed.softTotal,
+    hardTotal: parsed.hardTotal,
+  };
+}
+
+async function persistRaise(raise: RaiseRecord): Promise<void> {
+  if (storeInitialized) {
+    const row = databaseRow(raise);
+    await db
+      .insert(raiseStateTable)
+      .values(row)
+      .onConflictDoUpdate({
+        target: raiseStateTable.id,
+        set: {
+          position: row.position,
+          state: row.state,
+          updatedAt: new Date(),
+        },
+      });
+  }
+
+  const index = raises.findIndex((item) => item.id === raise.id);
+  const saved = cloneRaise(raise);
+  if (index < 0) raises.push(saved);
+  else raises[index] = saved;
+}
+
+export function initializeRaiseStore(
+  seedRows: readonly RaiseRecord[] = seededRaises,
+): Promise<void> {
+  return withWriteQueue(async () => {
+    const existingRows = await db
+      .select({ id: raiseStateTable.id })
+      .from(raiseStateTable);
+    const existingIds = new Set(existingRows.map((row) => row.id));
+    const missingSeeds = seedRows.filter((raise) => !existingIds.has(raise.id));
+
+    if (missingSeeds.length > 0) {
+      await db
+        .insert(raiseStateTable)
+        .values(missingSeeds.map(databaseRow))
+        .onConflictDoNothing({ target: raiseStateTable.id });
+    }
+
+    const storedRows = await db.select().from(raiseStateTable);
+    raises = storedRows
+      .map((row) => raiseFromDatabase(row.state, row.position))
+      .sort((left, right) => left.position - right.position || left.id.localeCompare(right.id));
+    nextPosition =
+      raises.reduce((maximum, raise) => Math.max(maximum, raise.position), -1) + 1;
+    storeInitialized = true;
+  });
+}
 
 export type RaiseStoreResult =
   | { kind: "success"; raise: RaiseSummary; created?: boolean }
@@ -190,94 +318,120 @@ function slugify(name: string): string {
     .slice(0, 48) || "raise";
 }
 
-export function submitRaiseRecord(input: RaiseSubmissionInput): RaiseSubmissionReceipt {
-  const id = `${slugify(input.name)}-${randomUUID().slice(0, 8)}`;
-  raises.push({
-    id,
-    name: input.name.trim(),
-    thesis: input.thesis.trim(),
-    stage: input.stage.trim(),
-    range: input.range,
-    status: "pending",
-    commitments: [],
-    softTotal: 0,
-    hardTotal: 0,
+export function submitRaiseRecord(
+  input: RaiseSubmissionInput,
+): Promise<RaiseSubmissionReceipt> {
+  return withWriteQueue(async () => {
+    const id = `${slugify(input.name)}-${randomUUID().slice(0, 8)}`;
+    const raise: RaiseRecord = {
+      id,
+      position: nextPosition++,
+      name: input.name.trim(),
+      thesis: input.thesis.trim(),
+      stage: input.stage.trim(),
+      range: { ...input.range },
+      status: "pending",
+      commitments: [],
+      softTotal: 0,
+      hardTotal: 0,
+    };
+    await persistRaise(raise);
+    return SubmitRaiseResponse.parse({ id, status: "pending" });
   });
-  return SubmitRaiseResponse.parse({ id, status: "pending" });
 }
 
-export function approveRaiseRecord(id: string): RaiseSummary | undefined {
-  const raise = raises.find((item) => item.id === id && item.status === "pending");
-  if (!raise) return undefined;
-  raise.status = "approved";
-  return publicSnapshot(raise);
+export function approveRaiseRecord(id: string): Promise<RaiseSummary | undefined> {
+  return withWriteQueue(async () => {
+    const raise = raises.find((item) => item.id === id && item.status === "pending");
+    if (!raise) return undefined;
+    const approvedRaise = { ...raise, status: "approved" as const };
+    await persistRaise(approvedRaise);
+    return publicSnapshot(approvedRaise);
+  });
 }
 
-export function claimRaiseRecord(id: string, input: ClaimRaiseInput): RaiseStoreResult {
-  const raise = findApprovedRaise(id);
-  if (!raise) return { kind: "notFound" };
-  if (raise.claim) return { kind: "alreadyClaimed" };
+export function claimRaiseRecord(
+  id: string,
+  input: ClaimRaiseInput,
+): Promise<RaiseStoreResult> {
+  return withWriteQueue(async () => {
+    const raise = findApprovedRaise(id);
+    if (!raise) return { kind: "notFound" };
+    if (raise.claim) return { kind: "alreadyClaimed" };
 
-  const signatureOrAccount = input.signatureOrAccount?.trim();
-  raise.claim = {
-    founderName: input.founderName.trim(),
-    email: input.email.trim(),
-    ...(signatureOrAccount ? { signatureOrAccount } : {}),
-  };
-  return { kind: "success", raise: publicSnapshot(raise) };
+    const signatureOrAccount = input.signatureOrAccount?.trim();
+    const claimedRaise: RaiseRecord = {
+      ...raise,
+      claim: {
+        founderName: input.founderName.trim(),
+        email: input.email.trim(),
+        ...(signatureOrAccount ? { signatureOrAccount } : {}),
+      },
+    };
+    await persistRaise(claimedRaise);
+    return { kind: "success", raise: publicSnapshot(claimedRaise) };
+  });
 }
 
 export function submitSoftCommitmentRecord(
   id: string,
   input: SoftCommitmentInput,
-): RaiseStoreResult {
-  const raise = findApprovedRaise(id);
-  if (!raise) return { kind: "notFound" };
+): Promise<RaiseStoreResult> {
+  return withWriteQueue(async () => {
+    const raise = findApprovedRaise(id);
+    if (!raise) return { kind: "notFound" };
 
-  const identifier = input.identifier.trim();
-  const existing = input.id
-    ? raise.commitments.find((commitment) => commitment.id === input.id)
-    : undefined;
-  if (existing) {
-    if (existing.identifier !== identifier || existing.amount !== input.amount) {
-      return { kind: "conflict" };
+    const identifier = input.identifier.trim();
+    const existing = input.id
+      ? raise.commitments.find((commitment) => commitment.id === input.id)
+      : undefined;
+    if (existing) {
+      if (existing.identifier !== identifier || existing.amount !== input.amount) {
+        return { kind: "conflict" };
+      }
+      return { kind: "success", raise: publicSnapshot(raise), created: false };
     }
-    return { kind: "success", raise: publicSnapshot(raise), created: false };
-  }
 
-  const commitments = [...raise.commitments, {
-    id: input.id || randomUUID(),
-    identifier,
-    amount: input.amount,
-    hard: false,
-    verified: false,
-  }];
-  const totals = calculateTotals(commitments);
-  if (!totals) return { kind: "amountOutOfRange" };
-  // Commit only after both aggregates have been validated.
-  raise.commitments = commitments;
-  Object.assign(raise, totals);
-  return { kind: "success", raise: publicSnapshot(raise), created: true };
+    const commitments = [
+      ...raise.commitments,
+      {
+        id: input.id || randomUUID(),
+        identifier,
+        amount: input.amount,
+        hard: false,
+        verified: false,
+      },
+    ];
+    const totals = calculateTotals(commitments);
+    if (!totals) return { kind: "amountOutOfRange" };
+
+    const updatedRaise = { ...raise, commitments, ...totals };
+    await persistRaise(updatedRaise);
+    return { kind: "success", raise: publicSnapshot(updatedRaise), created: true };
+  });
 }
 
 export function updateRaiseCommitmentRecord(
   id: string,
   commitmentId: string,
   input: CommitmentStatusInput,
-): RaiseStoreResult {
-  const raise = findApprovedRaise(id);
-  if (!raise) return { kind: "notFound" };
-  if (input.verified && !input.hard) return { kind: "invalidStatus" };
+): Promise<RaiseStoreResult> {
+  return withWriteQueue(async () => {
+    const raise = findApprovedRaise(id);
+    if (!raise) return { kind: "notFound" };
+    if (input.verified && !input.hard) return { kind: "invalidStatus" };
 
-  const commitment = raise.commitments.find((item) => item.id === commitmentId);
-  if (!commitment) return { kind: "commitmentNotFound" };
+    const commitment = raise.commitments.find((item) => item.id === commitmentId);
+    if (!commitment) return { kind: "commitmentNotFound" };
 
-  const commitments = raise.commitments.map((item) =>
-    item.id === commitmentId ? { ...item, ...input } : item,
-  );
-  const totals = calculateTotals(commitments);
-  if (!totals) return { kind: "amountOutOfRange" };
-  raise.commitments = commitments;
-  Object.assign(raise, totals);
-  return { kind: "success", raise: publicSnapshot(raise) };
+    const commitments = raise.commitments.map((item) =>
+      item.id === commitmentId ? { ...item, ...input } : item,
+    );
+    const totals = calculateTotals(commitments);
+    if (!totals) return { kind: "amountOutOfRange" };
+
+    const updatedRaise = { ...raise, commitments, ...totals };
+    await persistRaise(updatedRaise);
+    return { kind: "success", raise: publicSnapshot(updatedRaise) };
+  });
 }

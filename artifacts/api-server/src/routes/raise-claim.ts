@@ -22,7 +22,7 @@ router.get("/raise-claim", (_req, res) => {
   );
 });
 
-router.post("/raise-claim", (req, res): void => {
+router.post("/raise-claim", async (req, res): Promise<void> => {
   const body =
     req.body && typeof req.body === "object"
       ? (req.body as Record<string, unknown>)
@@ -49,7 +49,7 @@ router.post("/raise-claim", (req, res): void => {
     return;
   }
 
-  const result = claimRaiseRecord(DEFAULT_RAISE_ID, {
+  const result = await claimRaiseRecord(DEFAULT_RAISE_ID, {
     founderName: parsed.data.founderName,
     email: parsed.data.email,
     ...(parsed.data.vehicleLink ? { signatureOrAccount: parsed.data.vehicleLink } : {}),

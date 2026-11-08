@@ -28,13 +28,13 @@ test("quote requests stay authorized, hard-only, fixed-value, and sanitized", as
   assert.ok(address && typeof address === "object");
   const baseUrl = `http://127.0.0.1:${address.port}/api`;
   const originalFetch = globalThis.fetch;
-  const privateRaiseId = submitRaiseRecord({
+  const privateRaiseId = (await submitRaiseRecord({
     name: "Quote route privacy test",
     thesis: "Synthetic test record.",
     stage: "Seed",
     range: { min: 1, max: 10_000_000 },
-  }).id;
-  approveRaiseRecord(privateRaiseId);
+  })).id;
+  await approveRaiseRecord(privateRaiseId);
 
   const privateCommitment = {
     id: "private-commitment-secret-id",

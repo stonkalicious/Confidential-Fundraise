@@ -94,7 +94,7 @@ function isRateLimited(req: Request, bucket: string, max: number, windowMs: numb
   return false;
 }
 
-router.post("/raises", (req, res): void => {
+router.post("/raises", async (req, res): Promise<void> => {
   const body =
     req.body && typeof req.body === "object"
       ? {
@@ -125,7 +125,8 @@ router.post("/raises", (req, res): void => {
     return;
   }
 
-  noStore(res).status(201).json(SubmitRaiseResponse.parse(submitRaiseRecord(parsed.data)));
+  const submitted = await submitRaiseRecord(parsed.data);
+  noStore(res).status(201).json(SubmitRaiseResponse.parse(submitted));
 });
 
 router.get("/raises", (_req, res) => {
@@ -170,7 +171,7 @@ router.get("/raises/:id/private", (req, res): void => {
   noStore(res).json(GetPrivateRaiseResponse.parse(raise));
 });
 
-router.post("/raises/:id/approve", (req, res): void => {
+router.post("/raises/:id/approve", async (req, res): Promise<void> => {
   if (!requireApprovalCode(req, res)) return;
   const params = ApproveRaiseParams.safeParse(req.params);
   if (!params.success) {
@@ -178,7 +179,7 @@ router.post("/raises/:id/approve", (req, res): void => {
     return;
   }
 
-  const raise = approveRaiseRecord(params.data.id);
+  const raise = await approveRaiseRecord(params.data.id);
   if (!raise) {
     noStore(res).status(404).json({ error: "Pending raise not found." });
     return;
@@ -187,7 +188,7 @@ router.post("/raises/:id/approve", (req, res): void => {
   noStore(res).json(ApproveRaiseResponse.parse(raise));
 });
 
-router.post("/raises/:id/claim", (req, res): void => {
+router.post("/raises/:id/claim", async (req, res): Promise<void> => {
   const params = ClaimRaiseParams.safeParse(req.params);
   if (!params.success) {
     noStore(res).status(400).json({ error: "Invalid raise ID." });
@@ -213,7 +214,7 @@ router.post("/raises/:id/claim", (req, res): void => {
     return;
   }
 
-  const result = claimRaiseRecord(params.data.id, parsed.data);
+  const result = await claimRaiseRecord(params.data.id, parsed.data);
   if (result.kind === "notFound") {
     noStore(res).status(404).json({ error: `Raise '${params.data.id}' not found.` });
     return;
@@ -230,7 +231,7 @@ router.post("/raises/:id/claim", (req, res): void => {
   noStore(res).status(201).json(ClaimRaiseResponse.parse(result.raise));
 });
 
-router.post("/raises/:id/commitments", (req, res): void => {
+router.post("/raises/:id/commitments", async (req, res): Promise<void> => {
   const params = SubmitSoftCommitmentParams.safeParse(req.params);
   if (!params.success) {
     noStore(res).status(400).json({ error: "Invalid raise ID." });
@@ -258,7 +259,7 @@ router.post("/raises/:id/commitments", (req, res): void => {
     return;
   }
 
-  const result = submitSoftCommitmentRecord(params.data.id, parsed.data);
+  const result = await submitSoftCommitmentRecord(params.data.id, parsed.data);
   if (result.kind === "amountOutOfRange") {
     noStore(res).status(400).json({ error: "The commitment would exceed the supported total." });
     return;
@@ -283,7 +284,9 @@ router.post("/raises/:id/commitments", (req, res): void => {
     .json(SubmitSoftCommitmentResponse.parse(result.raise));
 });
 
-router.patch("/raises/:id/commitments/:commitmentId", (req, res): void => {
+router.patch(
+  "/raises/:id/commitments/:commitmentId",
+  async (req, res): Promise<void> => {
   if (!requireApprovalCode(req, res)) return;
   const params = UpdateRaiseCommitmentParams.safeParse(req.params);
   if (!params.success) {
@@ -297,7 +300,7 @@ router.patch("/raises/:id/commitments/:commitmentId", (req, res): void => {
     return;
   }
 
-  const result = updateRaiseCommitmentRecord(
+  const result = await updateRaiseCommitmentRecord(
     params.data.id,
     params.data.commitmentId,
     parsed.data,
@@ -326,7 +329,8 @@ router.patch("/raises/:id/commitments/:commitmentId", (req, res): void => {
   }
 
   noStore(res).json(UpdateRaiseCommitmentResponse.parse(result.raise));
-});
+  },
+);
 
 router.post(
   "/raises/:id/commitments/:commitmentId/quote",
