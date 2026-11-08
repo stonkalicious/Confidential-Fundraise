@@ -18,7 +18,7 @@ import RoadmapPage from '@/components/roadmap-page';
 import SiteHeader from '@/components/site-header';
 import { INITIAL_RAISES, type Raise } from '@/data/raises';
 import { loadRaises, saveRaises } from '@/data/raise-storage';
-import { trackEvent } from '@/lib/analytics';
+import { getQuoteFailureOutcome, trackQuoteOutcome } from '@/lib/analytics';
 import {
   authenticateNearWallet,
   disconnectNearWallet,
@@ -98,19 +98,6 @@ function requestErrorMessage(error: unknown, fallback: string): string {
 
 function isHttpStatus(error: unknown, status: number): boolean {
   return error !== null && typeof error === 'object' && 'status' in error && error.status === status;
-}
-
-function isQuoteAuthenticationRequired(error: unknown): boolean {
-  if (!error || typeof error !== 'object' || !('data' in error)) return false;
-
-  const data = error.data;
-  return Boolean(
-    data &&
-      typeof data === 'object' &&
-      'error' in data &&
-      typeof data.error === 'string' &&
-      /authenticate a near wallet|rejected the near wallet session/i.test(data.error),
-  );
 }
 
 function euro(value: number) {
@@ -303,11 +290,12 @@ function AppDesk({
         approvalCode,
         nearSession.accessToken,
       );
-      trackEvent('quote_outcome', { outcome: 'success' });
+      trackQuoteOutcome('success');
       setQuoteState({ commitmentId, status: 'success', result });
     } catch (error) {
-      const authRequired = isQuoteAuthenticationRequired(error);
-      trackEvent('quote_outcome', { outcome: authRequired ? 'auth_required' : 'provider_error' });
+      const outcome = getQuoteFailureOutcome(error);
+      const authRequired = outcome === 'auth_required';
+      trackQuoteOutcome(outcome);
       if (authRequired) setNearSession(null);
       setQuoteState({
         commitmentId,
