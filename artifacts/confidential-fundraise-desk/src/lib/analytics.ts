@@ -36,3 +36,13 @@ export function trackEvent(name: string, data?: AnalyticsData): void {
 export function trackQuoteOutcome(outcome: QuoteOutcome): void {
   trackEvent('quote_outcome', { outcome });
 }
+
+export function createQuoteOutcomeReporter(): (outcome: QuoteOutcome) => void {
+  let reported = false;
+
+  return (outcome) => {
+    if (reported) return;
+    reported = true;
+    trackQuoteOutcome(outcome);
+  };
+}

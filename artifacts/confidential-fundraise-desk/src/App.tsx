@@ -21,7 +21,7 @@ import { DemoSettlementCard, InvestorDemoSettlements } from '@/components/demo-s
 import { newDemoReceipt, rememberDemoReceipt } from '@/lib/demo-settlement-wallet';
 import { INITIAL_RAISES, type Raise } from '@/data/raises';
 import { loadRaises, saveRaises } from '@/data/raise-storage';
-import { getQuoteFailureOutcome, trackQuoteOutcome } from '@/lib/analytics';
+import { createQuoteOutcomeReporter, getQuoteFailureOutcome } from '@/lib/analytics';
 import { startSponsorIdleLock } from '@/lib/sponsor-idle-lock';
 import {
   authenticateNearWallet,
@@ -337,6 +337,7 @@ function AppDesk({
   }
 
   async function requestDemoQuote(commitmentId: string) {
+    const reportOutcome = createQuoteOutcomeReporter();
     let session = nearSession;
     if (!session || session.expiresAt <= Date.now() + 30_000) {
       try {
@@ -348,6 +349,7 @@ function AppDesk({
     }
     if (!session) {
       setNearSession(null);
+      reportOutcome('auth_required');
       setQuoteState({
         commitmentId,
         status: 'error',
@@ -367,14 +369,14 @@ function AppDesk({
         if (sessionVersion === sponsorSessionVersion.current) setNearSession(session);
         result = await onRequestDemoQuote(commitmentId, approvalCode, session.accessToken);
       }
-      trackQuoteOutcome('success');
+      reportOutcome('success');
       if (sessionVersion === sponsorSessionVersion.current) {
         setQuoteState({ commitmentId, status: 'success', result });
       }
     } catch (error) {
       const outcome = getQuoteFailureOutcome(error);
       const authRequired = outcome === 'auth_required';
-      trackQuoteOutcome(outcome);
+      reportOutcome(outcome);
       if (sessionVersion !== sponsorSessionVersion.current) return;
       if (authRequired) setNearSession(null);
       setQuoteState({
