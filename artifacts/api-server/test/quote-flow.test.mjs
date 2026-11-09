@@ -81,6 +81,28 @@ test("quote requests stay authorized, hard-only, fixed-value, and sanitized", as
     return { status: response.status, body: await response.json() };
   }
 
+  await t.test("missing sponsor configuration blocks quotes without exposing private details", async () => {
+    delete process.env.RAISE_APPROVAL_CODE;
+    try {
+      const response = await request(quotePath, {
+        method: "POST",
+        headers: quoteHeaders,
+      });
+
+      assert.equal(response.status, 503);
+      assert.deepEqual(response.body, {
+        error: "Sponsor access is not configured.",
+      });
+      assert.equal(providerRequests.length, 0);
+      const responseText = JSON.stringify(response.body);
+      assert.ok(!responseText.includes(privateCommitment.id));
+      assert.ok(!responseText.includes(privateCommitment.identifier));
+      assert.ok(!responseText.includes(String(privateCommitment.amount)));
+    } finally {
+      process.env.RAISE_APPROVAL_CODE = approvalCode;
+    }
+  });
+
   await t.test("sponsor approval is required before wallet or provider checks", async () => {
     const response = await request(quotePath, {
       headers: { "x-near-user-session": userSessionToken },
