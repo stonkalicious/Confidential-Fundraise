@@ -180,6 +180,33 @@ test("quote requests stay authorized, hard-only, fixed-value, and sanitized", as
     assert.ok(!JSON.stringify(response.body).includes(privateCommitment.identifier));
   });
 
+  await t.test("incomplete provider amounts return a safe error", async (invalidAmountTest) => {
+    const invalidQuotes = [
+      ["missing amountIn", { amountOut: "995000" }],
+      ["missing amountOut", { amountIn: "1000000" }],
+      ["empty amountIn", { amountIn: "", amountOut: "995000" }],
+      ["empty amountOut", { amountIn: "1000000", amountOut: "" }],
+      ["blank amountIn", { amountIn: "   ", amountOut: "995000" }],
+      ["blank amountOut", { amountIn: "1000000", amountOut: "   " }],
+      ["non-string amountIn", { amountIn: 1_000_000, amountOut: "995000" }],
+      ["non-string amountOut", { amountIn: "1000000", amountOut: 995_000 }],
+    ];
+
+    for (const [name, quote] of invalidQuotes) {
+      await invalidAmountTest.test(name, async () => {
+        providerMock = async () => jsonResponse({ quote });
+        const response = await request(quotePath, {
+          method: "POST",
+          headers: quoteHeaders,
+        });
+
+        assert.equal(response.status, 502);
+        assert.deepEqual(Object.keys(response.body), ["error"]);
+        assert.match(response.body.error, /unreadable quote/i);
+      });
+    }
+  });
+
   await t.test("provider requests use synthetic values and successful responses are sanitized", async () => {
     providerMock = async () =>
       jsonResponse({

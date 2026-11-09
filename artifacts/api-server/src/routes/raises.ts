@@ -633,7 +633,9 @@ router.post(
     if (
       !quote ||
       typeof quote.amountIn !== "string" ||
-      typeof quote.amountOut !== "string"
+      typeof quote.amountOut !== "string" ||
+      quote.amountIn.trim().length === 0 ||
+      quote.amountOut.trim().length === 0
     ) {
       req.log.warn(
         { upstreamStatus: upstreamResponse.status },
