@@ -33,7 +33,9 @@ import {
   getPendingRaises,
   getPrivateRaise,
   getRaise,
+  getRaiseWithConfirmedTestnetCount,
   getRaises,
+  getRaisesWithConfirmedTestnetCounts,
   submitRaiseRecord,
   submitSoftCommitmentRecord,
   updateRaiseCommitmentRecord,
@@ -324,8 +326,8 @@ router.post("/raises", async (req, res): Promise<void> => {
   noStore(res).status(201).json(SubmitRaiseResponse.parse(submitted));
 });
 
-router.get("/raises", (_req, res) => {
-  noStore(res).json(GetRaisesResponse.parse(getRaises()));
+router.get("/raises", async (_req, res): Promise<void> => {
+  noStore(res).json(GetRaisesResponse.parse(await getRaisesWithConfirmedTestnetCounts()));
 });
 
 router.get("/raises/pending", (req, res): void => {
@@ -333,14 +335,14 @@ router.get("/raises/pending", (req, res): void => {
   noStore(res).json(GetPendingRaisesResponse.parse(getPendingRaises()));
 });
 
-router.get("/raises/:id", (req, res): void => {
+router.get("/raises/:id", async (req, res): Promise<void> => {
   const params = GetRaiseByIdParams.safeParse(req.params);
   if (!params.success) {
     noStore(res).status(400).json({ error: "Invalid raise ID." });
     return;
   }
 
-  const raise = getRaise(params.data.id);
+  const raise = await getRaiseWithConfirmedTestnetCount(params.data.id);
   if (!raise) {
     noStore(res).status(404).json({ error: `Raise '${params.data.id}' not found.` });
     return;

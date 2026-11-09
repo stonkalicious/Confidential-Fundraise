@@ -7,7 +7,6 @@
  */
 export interface DemoSettlementConfig {
   testnet: string;
-  mainnet: string;
 }
 
 export type DemoSettlementInputNetwork = typeof DemoSettlementInputNetwork[keyof typeof DemoSettlementInputNetwork];
@@ -15,7 +14,6 @@ export type DemoSettlementInputNetwork = typeof DemoSettlementInputNetwork[keyof
 
 export const DemoSettlementInputNetwork = {
   testnet: 'testnet',
-  mainnet: 'mainnet',
 } as const;
 
 export interface DemoSettlementInput {
@@ -195,6 +193,8 @@ export interface RaiseSummary {
   softTotal: number;
   /** @minimum 0 */
   hardTotal: number;
+  /** @minimum 0 */
+  confirmedTestnetTransfers?: number;
 }
 
 export interface AgentRaiseClaim {

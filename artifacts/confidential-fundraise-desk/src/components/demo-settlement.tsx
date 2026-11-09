@@ -42,7 +42,7 @@ export function DemoSettlementCard({
   const [exists, setExists] = useState(sponsor);
   const [settlement, setSettlement] = useState<DemoSettlement>();
   const [config, setConfig] = useState<DemoSettlementConfig>();
-  const [network, setNetwork] = useState<'testnet' | 'mainnet'>('testnet');
+  const network = 'testnet' as const;
   const [receiver, setReceiver] = useState('');
   const [reference, setReference] = useState('');
   const [confirmed, setConfirmed] = useState(false);
@@ -134,26 +134,19 @@ export function DemoSettlementCard({
     <section className="demo-settlement" data-testid={sponsor ? 'sponsor-demo-settlement' : 'investor-demo-settlement'}>
       <button type="button" className="quiet-button" aria-expanded={open}
         data-testid="button-open-demo-settlement" onClick={() => setOpen(!open)}>
-        Settle $1 (demo)
+        Settle 1 test USDC
       </button>
       {open && <div className="demo-settlement-body">
-        <h3>Demo settlement — 1 USDC</h3>
-        <p className="side-copy">Optional direct NEAR token transfer. This is not an Intents swap and does not change commitment totals or fund rights.</p>
+        <h3>Demo settlement — 1 test USDC</h3>
+        <p className="side-copy">Optional NEAR testnet transfer. Test USDC has no real value. This is not an Intents swap and does not change EUR commitment totals or fund rights.</p>
         {!sponsor && receipt && !receipt.persisted &&
           <p className="inline-error">This browser could not save your demo receipt. Keep this tab open; reloading may lose access.</p>}
         {sponsor && !settlement && <>
-          <label className="field-label">Demo network
-            <select className="field" value={network} disabled={busy}
-              data-testid="select-demo-network"
-              onChange={(e) => { setNetwork(e.target.value as typeof network); setConfirmed(false); }}>
-              <option value="testnet">NEAR testnet — test USDC, no real value</option>
-              <option value="mainnet">NEAR mainnet — real 1 USDC fallback</option>
-            </select>
-          </label>
-          <p className="side-copy demo-break">Token contract: {config?.[network] ?? 'Loading…'}</p>
+          <p className="side-copy"><strong>NEAR testnet — 1 test USDC, no real value.</strong></p>
+          <p className="side-copy demo-break">Token contract: {config?.testnet ?? 'Loading…'}</p>
           <label className="field-label">Receiving NEAR account
             <input className="field" value={receiver} maxLength={64} disabled={busy}
-              data-testid="input-demo-receiver" placeholder={network === 'testnet' ? 'sponsor.testnet' : 'sponsor.near'}
+              data-testid="input-demo-receiver" placeholder="sponsor.testnet"
               onChange={(e) => { setReceiver(e.target.value); setConfirmed(false); }} />
           </label>
           <label className="field-label">Reviewed link or document hash (optional)
@@ -162,9 +155,7 @@ export function DemoSettlementCard({
               onChange={(e) => { setReference(e.target.value); setConfirmed(false); }} />
           </label>
           <p className="side-copy">Paste only a reference you have already reviewed. No files are uploaded or parsed. The receiver must already be registered with this USDC contract.</p>
-          <p className="side-copy">{network === 'testnet'
-            ? 'Demo: 1 test USDC has no dollar value. Gas uses test NEAR.'
-            : 'Mainnet demo: this sends real 1 USDC, plus a small NEAR deposit and gas. Transfers are irreversible.'}</p>
+          <p className="side-copy">The transfer is exactly 1 test USDC. Gas uses test NEAR; no real funds move.</p>
           <label className="demo-confirm">
             <input type="checkbox" checked={confirmed} disabled={busy}
               data-testid="checkbox-sponsor-demo" onChange={(e) => setConfirmed(e.target.checked)} />
@@ -183,7 +174,7 @@ export function DemoSettlementCard({
         {settlement && <>
           <p className="side-copy"><strong>{settlement.network === 'testnet'
             ? 'NEAR testnet — 1 test USDC, no real dollar value.'
-            : 'NEAR mainnet — real 1 USDC. NEAR gas is additional; transfers are irreversible.'}</strong></p>
+            : 'This older mainnet setup cannot send demo transfers.'}</strong></p>
           <p className="side-copy demo-break">Token contract: {settlement.tokenContract}<br />
             Receiver: {settlement.receiverAccount}
             {settlement.signerAccount && <><br />Sender: {settlement.signerAccount}</>}
@@ -203,12 +194,14 @@ export function DemoSettlementCard({
               Transaction hash: <a href={`https://${settlement.network === 'testnet' ? 'testnet.' : ''}nearblocks.io/txns/${settlement.transactionHash}`}
                 target="_blank" rel="noopener noreferrer">{settlement.transactionHash}</a>
             </p>
+          ) : !sponsor && settlement.network !== 'testnet' ? (
+            <p className="side-copy" role="status">Mainnet sending is disabled. No transfer can be initiated from this demo.</p>
           ) : !sponsor && <>
-            <p className="side-copy">You need 1 {settlement.network === 'testnet' ? 'test ' : ''}USDC on NEAR and NEAR for gas. Both reviews apply to the fixed details above. The wallet asks for your approval; the app never holds your keys.</p>
+            <p className="side-copy">You need 1 test USDC and test NEAR for gas. Both reviews apply to the fixed details above. The wallet asks for your approval; the app never holds your keys.</p>
             {!attempted && <>
               <button type="button" className="quiet-button" disabled={busy}
                 data-testid="button-connect-demo-wallet" onClick={() => void run(connect)}>
-                {account ? `Wallet: ${account}` : `Connect ${settlement.network} NEAR wallet`}
+                {account ? `Wallet: ${account}` : 'Connect NEAR testnet wallet'}
               </button>
               <label className="demo-confirm">
                 <input type="checkbox" checked={confirmed} disabled={busy}
@@ -217,7 +210,7 @@ export function DemoSettlementCard({
               </label>
               <button type="button" className="mark-button" disabled={busy || !confirmed || !account}
                 data-testid="button-send-demo-usdc" onClick={() => void run(send)}>
-                {busy ? 'Preparing demo transfer…' : `Send 1 ${settlement.network === 'testnet' ? 'test ' : ''}USDC (demo)`}
+                {busy ? 'Preparing demo transfer…' : 'Send 1 test USDC'}
               </button>
             </>}
             {attempted && <>

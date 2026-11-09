@@ -59,6 +59,8 @@ test("demo settlement gates, exact USDC verification, persistence and core-flow 
     }, ...(body ? { body: JSON.stringify(body) } : {}) });
     return { status: response.status, data: await response.json() };
   };
+  const config = await request("/demo-settlement-config");
+  assert.deepEqual(config.data, { testnet: USDC_CONTRACTS.testnet });
   const cid = randomUUID(), receipt = randomBytes(32).toString("hex");
   const path = `/raises/${id}/demo-settlements/${cid}`;
   assert.equal((await request(path, { sponsor: true })).status, 404);
@@ -68,6 +70,10 @@ test("demo settlement gates, exact USDC verification, persistence and core-flow 
   assert.equal(core.status, 201);
   assert.equal(core.data.softTotal, 1234);
   assert.ok(!JSON.stringify(core.data).includes(receipt));
+  const publicBefore = await request(`/raises/${id}`);
+  assert.equal(publicBefore.status, 200);
+  assert.equal(publicBefore.data.confirmedTestnetTransfers, 0);
+  assert.ok(!JSON.stringify(publicBefore.data).includes("Private demo investor"));
   const input = { network: "testnet", receiverAccount: "demo-sponsor.testnet", confirmed: true,
     reference: "https://example.com/reviewed-terms" };
   assert.equal((await request(path)).status, 401);
@@ -91,7 +97,7 @@ test("demo settlement gates, exact USDC verification, persistence and core-flow 
   const sponsorTime = settlement.confirmations[0].timestamp;
   configured = await request(path, { method: "POST", sponsor: true, body: input });
   assert.equal(configured.data.settlement.confirmations[0].timestamp, sponsorTime);
-  assert.equal((await request(path, { method: "POST", sponsor: true, body: { ...input, network: "mainnet" } })).status, 409);
+  assert.equal((await request(path, { method: "POST", sponsor: true, body: { ...input, network: "mainnet" } })).status, 400);
   assert.equal((await request(path + "/prepare", { method: "POST", receipt })).status, 409);
   const confirmation = { settlementId: settlement.id, signerAccount: "demo-investor.testnet", confirmed: true };
   assert.equal((await request(path + "/confirm", { method: "POST", sponsor: true, body: confirmation })).status, 403);
@@ -162,10 +168,23 @@ test("demo settlement gates, exact USDC verification, persistence and core-flow 
   assert.equal(success.data.settlement.status, "success");
   assert.equal(success.data.settlement.transactionHash, hash);
   assert.deepEqual(success.data.settlement.confirmations, confirmations);
+  const publicAfter = await request(`/raises/${id}`);
+  assert.equal(publicAfter.status, 200);
+  assert.equal(publicAfter.data.confirmedTestnetTransfers, 1);
+  assert.equal(publicAfter.data.softTotal, 1234);
+  assert.equal(publicAfter.data.hardTotal, 0);
+  assert.ok(!JSON.stringify(publicAfter.data).includes("Private demo investor"));
+  assert.ok(!JSON.stringify(publicAfter.data).includes(hash));
+  assert.ok(!JSON.stringify(publicAfter.data).includes("demo-investor.testnet"));
+  const publicList = await request("/raises");
+  const listedRaise = publicList.data.find((raise) => raise.id === id);
+  assert.equal(listedRaise.confirmedTestnetTransfers, 1);
+  assert.ok(!JSON.stringify(publicList.data).includes("Private demo investor"));
   assert.equal((await request(path + "/verify", { method: "POST", receipt, body: { transactionHash: hash } })).status, 200);
   assert.equal((await request(path + "/verify", { method: "POST", receipt, body: { transactionHash: "B".repeat(44) } })).status, 409);
   await initializeRaiseStore();
   assert.equal((await request(path, { receipt })).data.settlement.transactionHash, hash, "receipt survives rehydration");
+  assert.equal((await request(`/raises/${id}`)).data.confirmedTestnetTransfers, 1, "public count survives rehydration");
   assert.equal(getRaise(id).softTotal, 1234);
   assert.equal(getRaise(id).hardTotal, 0);
   assert.equal(getPrivateRaise(id).commitments[0].hard, false);

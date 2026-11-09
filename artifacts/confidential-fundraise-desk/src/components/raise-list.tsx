@@ -133,6 +133,10 @@ export default function RaiseList({
                       <div className="raise-details">
                         {raise.stage} · {format(raise.roundRange.min)} – {format(raise.roundRange.max)}
                       </div>
+                      <div className="raise-details" data-testid={`raise-aggregate-${raise.id}`}>
+                        Soft {format(raise.softTotal ?? 0)} · Hard {format(raise.hardTotal ?? 0)} ·
+                        {' '}{raise.confirmedTestnetTransfers ?? 0} confirmed testnet transfers
+                      </div>
                     </div>
                     <span className="raise-list-status">
                       {raise.claimed

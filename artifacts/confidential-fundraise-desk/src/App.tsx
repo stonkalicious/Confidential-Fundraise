@@ -74,6 +74,9 @@ function mergeApiRaise(summary: RaiseSummary, base: Raise): Raise {
     claimantName: summary.claimantName ?? base.claimantName ?? base.claim?.founderName ?? null,
     softTotal: useLocalTotals ? localSoftTotal : summary.softTotal,
     hardTotal: useLocalTotals ? localHardTotal : summary.hardTotal,
+    ...(summary.confirmedTestnetTransfers !== undefined
+      ? { confirmedTestnetTransfers: summary.confirmedTestnetTransfers }
+      : {}),
   };
 }
 
@@ -1009,6 +1012,10 @@ function AppDesk({
                   <div className="aggregate-value" data-testid="text-hard-total">{euro(hardTotal)}</div>
                 </div>
               </div>
+              <div className="aggregate testnet-transfer-count" data-testid="text-confirmed-testnet-transfers">
+                <div className="aggregate-label">Confirmed testnet transfers</div>
+                <div className="aggregate-value">{raise.confirmedTestnetTransfers ?? 0}</div>
+              </div>
               <div className="share-row">
                 <span className="share-note">The demo threshold is met at {euro(target)} in hard commitments. Reaching it does not trigger settlement.</span>
                 <button className="quiet-button" data-testid="button-copy-share-url" type="button" onClick={copyShareUrl}>
@@ -1026,13 +1033,13 @@ function AppDesk({
               <h1 className="how-title">How the app works</h1>
               <p>Confidential Fundraising is a minimal demo of fundraise coordination with shared server-held records.</p>
               <p>
-                A prospect submits a soft commitment, and a founder can claim a raise with contact details. New raises stay out of the public list until a sponsor approves them. The Sponsor view uses a shared approval code to access individual commitments and claim contact details. Marking a commitment hard enables a live dry-run quote using fixed synthetic values. It does not sign or settle a swap, and verification remains demo-only with no blockchain call.
+                A prospect submits a soft commitment, and a founder can claim a raise with contact details. New raises stay out of the public list until a sponsor approves them. The Sponsor view uses a shared approval code to access individual commitments and claim contact details. Marking a commitment hard enables a dry-run NEAR Intents quote with fixed synthetic values; the quote never executes a swap. Separately, the sponsor and investor can confirm an optional transfer of exactly 1 test USDC on NEAR testnet.
               </p>
               <p>
-                Public pages and API responses show approved raise information and aggregate soft and hard totals only. Individual commitment identifiers, amounts, and claim contact details are not included in public responses.
+                Public pages and API responses show approved raise information, aggregate soft and hard EUR totals, and an anonymous count of confirmed testnet transfers. Individual commitment identifiers, amounts, and claim contact details are not included in public responses.
               </p>
               <p>
-                The pre-seeded raises are fictional. Do not enter sensitive real prospect information. The server keeps this data only in memory, so it resets when the API restarts. This demo does not perform NEAR settlement.
+                The pre-seeded raises and commitments are synthetic; do not enter sensitive real prospect information. Demo records are stored in PostgreSQL and persist across API restarts. Public pages show aggregate EUR soft and hard totals plus an anonymous count of server-confirmed testnet transfers. Investor identifiers, amounts, and names stay private. Test USDC has no real value and does not change EUR commitment totals.
               </p>
             </article>
           </section>

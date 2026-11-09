@@ -8,5 +8,4 @@
 
 export interface DemoSettlementConfig {
   testnet: string;
-  mainnet: string;
 }

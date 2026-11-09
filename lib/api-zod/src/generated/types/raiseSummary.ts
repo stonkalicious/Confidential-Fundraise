@@ -23,4 +23,6 @@ export interface RaiseSummary {
   softTotal: number;
   /** @minimum 0 */
   hardTotal: number;
+  /** @minimum 0 */
+  confirmedTestnetTransfers?: number;
 }

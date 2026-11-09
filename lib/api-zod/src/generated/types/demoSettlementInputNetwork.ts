@@ -11,5 +11,4 @@ export type DemoSettlementInputNetwork = typeof DemoSettlementInputNetwork[keyof
 
 export const DemoSettlementInputNetwork = {
   testnet: 'testnet',
-  mainnet: 'mainnet',
 } as const;

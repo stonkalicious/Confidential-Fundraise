@@ -13,6 +13,7 @@ export type Raise = {
   claimantName?: string | null;
   softTotal?: number;
   hardTotal?: number;
+  confirmedTestnetTransfers?: number;
   claim?: {
     founderName: string;
     email: string;

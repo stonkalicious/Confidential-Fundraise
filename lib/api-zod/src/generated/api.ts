@@ -137,6 +137,8 @@ export const getRaisesResponseSoftTotalMin = 0;
 
 export const getRaisesResponseHardTotalMin = 0;
 
+export const getRaisesResponseConfirmedTestnetTransfersMin = 0;
+
 
 
 export const GetRaisesResponseItem = zod.object({
@@ -153,7 +155,8 @@ export const GetRaisesResponseItem = zod.object({
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
   "softTotal": zod.int().min(getRaisesResponseSoftTotalMin),
-  "hardTotal": zod.int().min(getRaisesResponseHardTotalMin)
+  "hardTotal": zod.int().min(getRaisesResponseHardTotalMin),
+  "confirmedTestnetTransfers": zod.int().min(getRaisesResponseConfirmedTestnetTransfersMin).optional()
 })
 export const GetRaisesResponse = zod.array(GetRaisesResponseItem)
 
@@ -216,6 +219,8 @@ export const updateAgentRaiseResponseSoftTotalMin = 0;
 
 export const updateAgentRaiseResponseHardTotalMin = 0;
 
+export const updateAgentRaiseResponseConfirmedTestnetTransfersMin = 0;
+
 
 
 export const UpdateAgentRaiseResponse = zod.object({
@@ -232,7 +237,8 @@ export const UpdateAgentRaiseResponse = zod.object({
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
   "softTotal": zod.int().min(updateAgentRaiseResponseSoftTotalMin),
-  "hardTotal": zod.int().min(updateAgentRaiseResponseHardTotalMin)
+  "hardTotal": zod.int().min(updateAgentRaiseResponseHardTotalMin),
+  "confirmedTestnetTransfers": zod.int().min(updateAgentRaiseResponseConfirmedTestnetTransfersMin).optional()
 })
 
 
@@ -248,6 +254,8 @@ export const GetRaiseByIdParams = zod.object({
 export const getRaiseByIdResponseSoftTotalMin = 0;
 
 export const getRaiseByIdResponseHardTotalMin = 0;
+
+export const getRaiseByIdResponseConfirmedTestnetTransfersMin = 0;
 
 
 
@@ -265,7 +273,8 @@ export const GetRaiseByIdResponse = zod.object({
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
   "softTotal": zod.int().min(getRaiseByIdResponseSoftTotalMin),
-  "hardTotal": zod.int().min(getRaiseByIdResponseHardTotalMin)
+  "hardTotal": zod.int().min(getRaiseByIdResponseHardTotalMin),
+  "confirmedTestnetTransfers": zod.int().min(getRaiseByIdResponseConfirmedTestnetTransfersMin).optional()
 })
 
 
@@ -282,6 +291,8 @@ export const ReserveAgentRaiseParams = zod.object({
 export const reserveAgentRaiseResponseRaiseSoftTotalMin = 0;
 
 export const reserveAgentRaiseResponseRaiseHardTotalMin = 0;
+
+export const reserveAgentRaiseResponseRaiseConfirmedTestnetTransfersMin = 0;
 
 
 
@@ -301,7 +312,8 @@ export const ReserveAgentRaiseResponse = zod.object({
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
   "softTotal": zod.int().min(reserveAgentRaiseResponseRaiseSoftTotalMin),
-  "hardTotal": zod.int().min(reserveAgentRaiseResponseRaiseHardTotalMin)
+  "hardTotal": zod.int().min(reserveAgentRaiseResponseRaiseHardTotalMin),
+  "confirmedTestnetTransfers": zod.int().min(reserveAgentRaiseResponseRaiseConfirmedTestnetTransfersMin).optional()
 })
 })
 
@@ -318,6 +330,8 @@ export const GetPrivateRaiseParams = zod.object({
 export const getPrivateRaiseResponseOneSoftTotalMin = 0;
 
 export const getPrivateRaiseResponseOneHardTotalMin = 0;
+
+export const getPrivateRaiseResponseOneConfirmedTestnetTransfersMin = 0;
 
 
 
@@ -336,7 +350,8 @@ export const GetPrivateRaiseResponse = zod.object({
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
   "softTotal": zod.int().min(getPrivateRaiseResponseOneSoftTotalMin),
-  "hardTotal": zod.int().min(getPrivateRaiseResponseOneHardTotalMin)
+  "hardTotal": zod.int().min(getPrivateRaiseResponseOneHardTotalMin),
+  "confirmedTestnetTransfers": zod.int().min(getPrivateRaiseResponseOneConfirmedTestnetTransfersMin).optional()
 }).and(zod.object({
   "claim": zod.object({
   "founderName": zod.string(),
@@ -366,6 +381,8 @@ export const approveRaiseResponseSoftTotalMin = 0;
 
 export const approveRaiseResponseHardTotalMin = 0;
 
+export const approveRaiseResponseConfirmedTestnetTransfersMin = 0;
+
 
 
 export const ApproveRaiseResponse = zod.object({
@@ -382,7 +399,8 @@ export const ApproveRaiseResponse = zod.object({
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
   "softTotal": zod.int().min(approveRaiseResponseSoftTotalMin),
-  "hardTotal": zod.int().min(approveRaiseResponseHardTotalMin)
+  "hardTotal": zod.int().min(approveRaiseResponseHardTotalMin),
+  "confirmedTestnetTransfers": zod.int().min(approveRaiseResponseConfirmedTestnetTransfersMin).optional()
 })
 
 
@@ -413,6 +431,8 @@ export const claimRaiseResponseSoftTotalMin = 0;
 
 export const claimRaiseResponseHardTotalMin = 0;
 
+export const claimRaiseResponseConfirmedTestnetTransfersMin = 0;
+
 
 
 export const ClaimRaiseResponse = zod.object({
@@ -429,7 +449,8 @@ export const ClaimRaiseResponse = zod.object({
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
   "softTotal": zod.int().min(claimRaiseResponseSoftTotalMin),
-  "hardTotal": zod.int().min(claimRaiseResponseHardTotalMin)
+  "hardTotal": zod.int().min(claimRaiseResponseHardTotalMin),
+  "confirmedTestnetTransfers": zod.int().min(claimRaiseResponseConfirmedTestnetTransfersMin).optional()
 })
 
 
@@ -461,6 +482,8 @@ export const submitSoftCommitmentResponseSoftTotalMin = 0;
 
 export const submitSoftCommitmentResponseHardTotalMin = 0;
 
+export const submitSoftCommitmentResponseConfirmedTestnetTransfersMin = 0;
+
 
 
 export const SubmitSoftCommitmentResponse = zod.object({
@@ -477,7 +500,8 @@ export const SubmitSoftCommitmentResponse = zod.object({
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
   "softTotal": zod.int().min(submitSoftCommitmentResponseSoftTotalMin),
-  "hardTotal": zod.int().min(submitSoftCommitmentResponseHardTotalMin)
+  "hardTotal": zod.int().min(submitSoftCommitmentResponseHardTotalMin),
+  "confirmedTestnetTransfers": zod.int().min(submitSoftCommitmentResponseConfirmedTestnetTransfersMin).optional()
 })
 
 
@@ -500,6 +524,8 @@ export const updateRaiseCommitmentResponseSoftTotalMin = 0;
 
 export const updateRaiseCommitmentResponseHardTotalMin = 0;
 
+export const updateRaiseCommitmentResponseConfirmedTestnetTransfersMin = 0;
+
 
 
 export const UpdateRaiseCommitmentResponse = zod.object({
@@ -516,7 +542,8 @@ export const UpdateRaiseCommitmentResponse = zod.object({
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
   "softTotal": zod.int().min(updateRaiseCommitmentResponseSoftTotalMin),
-  "hardTotal": zod.int().min(updateRaiseCommitmentResponseHardTotalMin)
+  "hardTotal": zod.int().min(updateRaiseCommitmentResponseHardTotalMin),
+  "confirmedTestnetTransfers": zod.int().min(updateRaiseCommitmentResponseConfirmedTestnetTransfersMin).optional()
 })
 
 
@@ -542,8 +569,7 @@ export const RequestDemoQuoteResponse = zod.object({
 
 
 export const GetDemoSettlementConfigResponse = zod.object({
-  "testnet": zod.string(),
-  "mainnet": zod.string()
+  "testnet": zod.string()
 })
 
 
@@ -588,7 +614,7 @@ export const configureDemoSettlementBodyReferenceMax = 300;
 
 
 export const ConfigureDemoSettlementBody = zod.object({
-  "network": zod.enum(['testnet', 'mainnet']),
+  "network": zod.enum(['testnet']),
   "receiverAccount": zod.string().min(configureDemoSettlementBodyReceiverAccountMin).max(configureDemoSettlementBodyReceiverAccountMax),
   "reference": zod.string().max(configureDemoSettlementBodyReferenceMax).optional(),
   "confirmed": zod.boolean()

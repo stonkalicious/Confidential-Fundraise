@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
-import { eq } from "drizzle-orm";
-import { db, raiseStateTable } from "@workspace/db";
+import { and, count, eq, inArray, isNotNull } from "drizzle-orm";
+import { db, demoSettlementsTable, raiseStateTable } from "@workspace/db";
 import publicRaiseSeedData from "../data/public-raises.json";
 import {
   GetPendingRaisesResponse,
@@ -418,6 +418,42 @@ export function getRaises(): RaiseSummary[] {
 export function getRaise(id: string): RaiseSummary | undefined {
   const raise = findApprovedRaise(id);
   return raise ? publicSnapshot(raise) : undefined;
+}
+
+async function withConfirmedTestnetCounts(summaries: RaiseSummary[]): Promise<RaiseSummary[]> {
+  if (summaries.length === 0) return summaries;
+  const counts = await db
+    .select({ raiseId: demoSettlementsTable.raiseId, total: count() })
+    .from(demoSettlementsTable)
+    .where(and(
+      inArray(demoSettlementsTable.raiseId, summaries.map((raise) => raise.id)),
+      eq(demoSettlementsTable.network, "testnet"),
+      isNotNull(demoSettlementsTable.transactionHash),
+    ))
+    .groupBy(demoSettlementsTable.raiseId);
+  const countByRaise = new Map(counts.map((row) => [row.raiseId, row.total]));
+  return summaries.map((raise) => ({
+    ...raise,
+    confirmedTestnetTransfers: countByRaise.get(raise.id) ?? 0,
+  }));
+}
+
+export async function getRaisesWithConfirmedTestnetCounts(): Promise<RaiseSummary[]> {
+  return withConfirmedTestnetCounts(getRaises());
+}
+
+export async function getRaiseWithConfirmedTestnetCount(id: string): Promise<RaiseSummary | undefined> {
+  const raise = getRaise(id);
+  if (!raise) return undefined;
+  const [row] = await db
+    .select({ total: count() })
+    .from(demoSettlementsTable)
+    .where(and(
+      eq(demoSettlementsTable.raiseId, id),
+      eq(demoSettlementsTable.network, "testnet"),
+      isNotNull(demoSettlementsTable.transactionHash),
+    ));
+  return { ...raise, confirmedTestnetTransfers: row?.total ?? 0 };
 }
 
 export function getPrivateRaise(id: string): PrivateRaiseDetails | undefined {

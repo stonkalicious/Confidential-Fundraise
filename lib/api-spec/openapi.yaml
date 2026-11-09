@@ -702,12 +702,11 @@ components:
       type: object
       properties:
         testnet: { type: string }
-        mainnet: { type: string }
-      required: [testnet, mainnet]
+      required: [testnet]
     DemoSettlementInput:
       type: object
       properties:
-        network: { type: string, enum: [testnet, mainnet] }
+        network: { type: string, enum: [testnet] }
         receiverAccount: { type: string, minLength: 2, maxLength: 64 }
         reference: { type: string, maxLength: 300 }
         confirmed: { type: boolean }
@@ -905,6 +904,9 @@ components:
           type: integer
           minimum: 0
         hardTotal:
+          type: integer
+          minimum: 0
+        confirmedTestnetTransfers:
           type: integer
           minimum: 0
       required:

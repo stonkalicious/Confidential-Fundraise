@@ -16,6 +16,7 @@ export async function connectSettlementWallet(network: Network): Promise<string>
 
 export async function sendDemoUsdc(settlement: DemoSettlement): Promise<string> {
   const { network, signerAccount, tokenContract, receiverAccount, transferMemo } = settlement;
+  if (network !== 'testnet') throw new Error('Demo transfers are limited to NEAR testnet.');
   if (!signerAccount || !transferMemo) throw new Error('Both confirmations and preparation are required.');
   const { wallet } = await settlementConnector(network).getConnectedWallet();
   const accounts = await wallet.getAccounts({ network });

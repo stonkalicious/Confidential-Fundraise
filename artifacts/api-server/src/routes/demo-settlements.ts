@@ -71,7 +71,7 @@ async function find(id: string, commitmentId: string): Promise<DemoSettlementRec
 }
 
 router.get("/demo-settlement-config", (_req, res) => {
-  res.json(GetDemoSettlementConfigResponse.parse(USDC_CONTRACTS));
+  res.json(GetDemoSettlementConfigResponse.parse({ testnet: USDC_CONTRACTS.testnet }));
 });
 router.get(path, handle("either", async (_req, res, id, cid) => {
   const [row] = await db.select().from(demoSettlementsTable).where(whereCommitment(id, cid));
@@ -118,6 +118,9 @@ router.post(`${path}/confirm`, handle("investor", async (req, res, id, cid) => {
 }));
 router.post(`${path}/prepare`, handle("investor", async (_req, res, id, cid) => {
   const row = await find(id, cid);
+  if (row.network !== "testnet") {
+    throw new SettlementError("Demo transfers are limited to NEAR testnet.", 409);
+  }
   if (!row.sponsorConfirmedAt || !row.investorConfirmedAt || !row.signerAccount) {
     throw new SettlementError("Both sponsor and investor must confirm before a transfer can be prepared.");
   }
