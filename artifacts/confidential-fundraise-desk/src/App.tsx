@@ -23,6 +23,7 @@ import { INITIAL_RAISES, type Raise } from '@/data/raises';
 import { loadRaises, saveRaises } from '@/data/raise-storage';
 import { createQuoteOutcomeReporter, getQuoteFailureOutcome } from '@/lib/analytics';
 import { startSponsorIdleLock } from '@/lib/sponsor-idle-lock';
+import { isTemporaryNearSessionRefreshFailure } from '@/lib/near-session-recovery';
 import {
   authenticateNearWallet,
   disconnectNearWallet,
@@ -183,6 +184,7 @@ function AppDesk({
   const commitments = privateRaise?.commitments ?? [];
   const [quoteState, setQuoteState] = useState<DemoQuoteState | null>(null);
   const [nearSession, setNearSession] = useState<NearUserSession | null>(null);
+  const [nearSessionUnavailable, setNearSessionUnavailable] = useState(false);
   const [nearAuthLoading, setNearAuthLoading] = useState(false);
   const [nearAuthError, setNearAuthError] = useState('');
   const [nearKeyRegistration, setNearKeyRegistration] =
@@ -222,6 +224,7 @@ function AppDesk({
       setPrivateRaise(null);
       setQuoteState(null);
       setNearSession(null);
+      setNearSessionUnavailable(false);
       setNearAuthError('');
       setNearKeyRegistration(null);
       setSponsorError('');
@@ -234,10 +237,18 @@ function AppDesk({
     setNearAuthLoading(true);
     void refreshNearWalletSession()
       .then((session) => {
-        if (active) setNearSession(session);
+        if (active) {
+          setNearSession(session);
+          setNearSessionUnavailable(false);
+        }
       })
-      .catch(() => {
-        // No saved refresh session is a normal first-visit state.
+      .catch((error: unknown) => {
+        if (active && isTemporaryNearSessionRefreshFailure(error)) {
+          setNearSessionUnavailable(true);
+          setNearAuthError(
+            'NEAR Intents is temporarily unavailable. Retry your saved wallet session without signing again.',
+          );
+        }
       })
       .finally(() => {
         if (active) setNearAuthLoading(false);
@@ -256,6 +267,7 @@ function AppDesk({
       setPrivateRaise(null);
       setQuoteState(null);
       setNearSession(null);
+      setNearSessionUnavailable(false);
       setNearAuthError('');
       setNearKeyRegistration(null);
       setSponsorError('');
@@ -340,11 +352,21 @@ function AppDesk({
   async function requestDemoQuote(commitmentId: string) {
     const reportOutcome = createQuoteOutcomeReporter();
     let session = nearSession;
+    let refreshTemporarilyUnavailable = false;
     if (!session || session.expiresAt <= Date.now() + 30_000) {
       try {
         session = await refreshNearWalletSession();
         setNearSession(session);
-      } catch {
+        setNearSessionUnavailable(false);
+      } catch (error) {
+        const temporaryFailure = isTemporaryNearSessionRefreshFailure(error);
+        refreshTemporarilyUnavailable = temporaryFailure;
+        setNearSessionUnavailable(temporaryFailure);
+        if (temporaryFailure) {
+          setNearAuthError(
+            'NEAR Intents is temporarily unavailable. Retry your saved wallet session without signing again.',
+          );
+        }
         session = null;
       }
     }
@@ -354,7 +376,9 @@ function AppDesk({
       setQuoteState({
         commitmentId,
         status: 'error',
-        error: 'Authenticate a NEAR wallet before requesting this confidential quote.',
+        error: refreshTemporarilyUnavailable
+          ? 'NEAR Intents is temporarily unavailable. Retry the saved wallet session before requesting this quote.'
+          : 'Authenticate a NEAR wallet before requesting this confidential quote.',
       });
       return;
     }
@@ -397,6 +421,7 @@ function AppDesk({
       const session = await authenticateNearWallet();
       if (sessionVersion === sponsorSessionVersion.current) {
         setNearSession(session);
+        setNearSessionUnavailable(false);
       }
     } catch (error) {
       if (sessionVersion === sponsorSessionVersion.current) {
@@ -425,6 +450,7 @@ function AppDesk({
       if (sessionVersion === sponsorSessionVersion.current) {
         setNearKeyRegistration(null);
         setNearSession(session);
+        setNearSessionUnavailable(false);
       }
     } catch (error) {
       if (sessionVersion === sponsorSessionVersion.current) {
@@ -444,11 +470,38 @@ function AppDesk({
     try {
       await disconnectNearWallet();
       setNearSession(null);
+      setNearSessionUnavailable(false);
       setNearKeyRegistration(null);
     } catch (error) {
       setNearAuthError(
         requestErrorMessage(error, 'The NEAR wallet session could not be cleared. Try again.'),
       );
+    }
+  }
+
+  async function retrySavedNearSession() {
+    const sessionVersion = sponsorSessionVersion.current;
+    setNearAuthLoading(true);
+    setNearAuthError('');
+    try {
+      const session = await refreshNearWalletSession();
+      if (sessionVersion === sponsorSessionVersion.current) {
+        setNearSession(session);
+        setNearSessionUnavailable(false);
+      }
+    } catch (error) {
+      if (sessionVersion === sponsorSessionVersion.current) {
+        setNearSessionUnavailable(isTemporaryNearSessionRefreshFailure(error));
+        setNearAuthError(
+          isTemporaryNearSessionRefreshFailure(error)
+            ? 'NEAR Intents is still unavailable. Retry your saved wallet session shortly.'
+            : 'The saved NEAR wallet session has expired. Authenticate again to continue.',
+        );
+      }
+    } finally {
+      if (sessionVersion === sponsorSessionVersion.current) {
+        setNearAuthLoading(false);
+      }
     }
   }
 
@@ -779,6 +832,16 @@ function AppDesk({
                         onClick={clearNearWalletSession}
                       >
                         Disconnect NEAR wallet
+                      </button>
+                    ) : nearSessionUnavailable ? (
+                      <button
+                        className="primary-button"
+                        data-testid="button-retry-saved-near-session"
+                        type="button"
+                        onClick={retrySavedNearSession}
+                        disabled={nearAuthLoading}
+                      >
+                        {nearAuthLoading ? 'Retrying saved session…' : 'Retry saved session'}
                       </button>
                     ) : !nearKeyRegistration ? (
                       <button

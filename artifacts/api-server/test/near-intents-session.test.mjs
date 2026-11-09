@@ -124,6 +124,42 @@ test("NEAR refresh credentials stay server-side and are cleared on disconnect", 
     assert.ok(!JSON.stringify(response.body).includes(refreshSecret));
   });
 
+  await t.test("temporary provider failures preserve the cookie for a successful retry", async () => {
+    providerMock = async () => jsonResponse({ message: "temporarily unavailable" }, 503);
+    const failedResponse = await request("/near-intents/session/refresh", {
+      method: "POST",
+      headers: { cookie: sessionCookieHeader },
+    });
+    assert.equal(failedResponse.status, 502);
+    assert.equal(failedResponse.cookies.length, 0);
+
+    providerMock = async () => {
+      throw new TypeError("Network unavailable");
+    };
+    const networkFailureResponse = await request("/near-intents/session/refresh", {
+      method: "POST",
+      headers: { cookie: sessionCookieHeader },
+    });
+    assert.equal(networkFailureResponse.status, 502);
+    assert.equal(networkFailureResponse.cookies.length, 0);
+
+    providerMock = async (_input, init) => {
+      assert.equal(JSON.parse(init.body).refreshToken, refreshSecret);
+      return jsonResponse({ accessToken: "recovered-access-token", expiresIn: 300 });
+    };
+    const recoveredResponse = await request("/near-intents/session/refresh", {
+      method: "POST",
+      headers: { cookie: sessionCookieHeader },
+    });
+    assert.equal(recoveredResponse.status, 200);
+    assert.deepEqual(recoveredResponse.body, {
+      accountId: "alice.near",
+      accessToken: "recovered-access-token",
+      expiresIn: 300,
+    });
+    assert.ok(!JSON.stringify(recoveredResponse.body).includes(refreshSecret));
+  });
+
   await t.test("expired provider refresh tokens clear the browser session", async () => {
     providerMock = async () => jsonResponse({ message: "invalid refresh token" }, 401);
     const response = await request("/near-intents/session/refresh", {
