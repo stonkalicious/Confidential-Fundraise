@@ -9,6 +9,54 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Exchange a signed wallet proof for a NEAR Intents session
+ */
+
+
+
+
+
+
+
+export const AuthenticateNearIntentsSessionBody = zod.object({
+  "signedData": zod.object({
+  "standard": zod.literal("nep413"),
+  "payload": zod.object({
+  "recipient": zod.string().min(1),
+  "nonce": zod.string().min(1),
+  "message": zod.string().min(1)
+}),
+  "public_key": zod.string().min(1),
+  "signature": zod.string().min(1)
+})
+})
+
+export const AuthenticateNearIntentsSessionResponse = zod.object({
+  "accountId": zod.string(),
+  "accessToken": zod.string(),
+  "expiresIn": zod.number()
+})
+
+
+/**
+ * @summary Clear the stored NEAR Intents refresh credential
+ */
+export const DisconnectNearIntentsSessionResponse = zod.object({
+  "cleared": zod.boolean()
+})
+
+
+/**
+ * @summary Refresh a NEAR Intents access token
+ */
+export const RefreshNearIntentsSessionResponse = zod.object({
+  "accountId": zod.string(),
+  "accessToken": zod.string(),
+  "expiresIn": zod.number()
+})
+
+
+/**
  * Returns server health status
  * @summary Health check
  */

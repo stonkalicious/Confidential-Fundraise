@@ -5,6 +5,38 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type NearIntentsSignedDataPayload = {
+  /** @minLength 1 */
+  recipient: string;
+  /** @minLength 1 */
+  nonce: string;
+  /** @minLength 1 */
+  message: string;
+};
+
+export interface NearIntentsSignedData {
+  standard: 'nep413';
+  payload: NearIntentsSignedDataPayload;
+  /** @minLength 1 */
+  public_key: string;
+  /** @minLength 1 */
+  signature: string;
+}
+
+export interface NearIntentsSessionInput {
+  signedData: NearIntentsSignedData;
+}
+
+export interface NearIntentsSession {
+  accountId: string;
+  accessToken: string;
+  expiresIn: number;
+}
+
+export interface NearIntentsSessionCleared {
+  cleared: boolean;
+}
+
 export interface HealthStatus {
   status: string;
 }

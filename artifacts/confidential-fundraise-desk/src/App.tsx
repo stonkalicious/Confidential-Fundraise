@@ -25,6 +25,7 @@ import {
   disconnectNearWallet,
   NearIntentsKeyRegistrationRequiredError,
   registerNearIntentsKeyAndAuthenticate,
+  refreshNearWalletSession,
   type NearUserSession,
 } from '@/lib/near-intents-auth';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -221,6 +222,25 @@ function AppDesk({
 
   useEffect(() => {
     if (view !== 'sponsor') return;
+    let active = true;
+    setNearAuthLoading(true);
+    void refreshNearWalletSession()
+      .then((session) => {
+        if (active) setNearSession(session);
+      })
+      .catch(() => {
+        // No saved refresh session is a normal first-visit state.
+      })
+      .finally(() => {
+        if (active) setNearAuthLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [view]);
+
+  useEffect(() => {
+    if (view !== 'sponsor') return;
 
     const clearSponsorState = () => {
       sponsorSessionVersion.current += 1;
@@ -310,7 +330,16 @@ function AppDesk({
   }
 
   async function requestDemoQuote(commitmentId: string) {
-    if (!nearSession || nearSession.expiresAt <= Date.now()) {
+    let session = nearSession;
+    if (!session || session.expiresAt <= Date.now() + 30_000) {
+      try {
+        session = await refreshNearWalletSession();
+        setNearSession(session);
+      } catch {
+        session = null;
+      }
+    }
+    if (!session) {
       setNearSession(null);
       setQuoteState({
         commitmentId,
@@ -322,11 +351,15 @@ function AppDesk({
     const sessionVersion = sponsorSessionVersion.current;
     setQuoteState({ commitmentId, status: 'loading' });
     try {
-      const result = await onRequestDemoQuote(
-        commitmentId,
-        approvalCode,
-        nearSession.accessToken,
-      );
+      let result: DemoIntentsQuote;
+      try {
+        result = await onRequestDemoQuote(commitmentId, approvalCode, session.accessToken);
+      } catch (error) {
+        if (getQuoteFailureOutcome(error) !== 'auth_required') throw error;
+        session = await refreshNearWalletSession();
+        if (sessionVersion === sponsorSessionVersion.current) setNearSession(session);
+        result = await onRequestDemoQuote(commitmentId, approvalCode, session.accessToken);
+      }
       trackQuoteOutcome('success');
       if (sessionVersion === sponsorSessionVersion.current) {
         setQuoteState({ commitmentId, status: 'success', result });
@@ -397,13 +430,15 @@ function AppDesk({
   }
 
   async function clearNearWalletSession() {
-    setNearSession(null);
     setNearAuthError('');
-    setNearRegistrationAccountId(null);
     try {
       await disconnectNearWallet();
-    } catch {
-      // Clearing the in-memory session is sufficient if the wallet is already disconnected.
+      setNearSession(null);
+      setNearRegistrationAccountId(null);
+    } catch (error) {
+      setNearAuthError(
+        requestErrorMessage(error, 'The NEAR wallet session could not be cleared. Try again.'),
+      );
     }
   }
 

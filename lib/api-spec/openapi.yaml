@@ -14,7 +14,74 @@ tags:
     description: Single demo raise claim
   - name: raises
     description: Public raise records and actions
+  - name: near-intents-auth
+    description: Secure NEAR Intents user sessions
 paths:
+  /near-intents/session:
+    post:
+      operationId: authenticateNearIntentsSession
+      tags: [near-intents-auth]
+      summary: Exchange a signed wallet proof for a NEAR Intents session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NearIntentsSessionInput"
+      responses:
+        "200":
+          description: Access token returned; refresh token is stored in an HttpOnly cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NearIntentsSession"
+        "400":
+          description: Invalid signed wallet proof
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "502":
+          description: NEAR Intents could not authenticate the wallet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+    delete:
+      operationId: disconnectNearIntentsSession
+      tags: [near-intents-auth]
+      summary: Clear the stored NEAR Intents refresh credential
+      responses:
+        "200":
+          description: Stored session credentials cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NearIntentsSessionCleared"
+  /near-intents/session/refresh:
+    post:
+      operationId: refreshNearIntentsSession
+      tags: [near-intents-auth]
+      summary: Refresh a NEAR Intents access token
+      responses:
+        "200":
+          description: Refreshed access token returned without exposing the refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NearIntentsSession"
+        "401":
+          description: No valid refresh session is available
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "502":
+          description: NEAR Intents could not refresh the session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
   /healthz:
     get:
       operationId: healthCheck
@@ -530,6 +597,54 @@ components:
       in: header
       name: X-NEAR-User-Session
   schemas:
+    NearIntentsSignedData:
+      type: object
+      properties:
+        standard:
+          type: string
+          const: nep413
+        payload:
+          type: object
+          properties:
+            recipient:
+              type: string
+              minLength: 1
+            nonce:
+              type: string
+              minLength: 1
+            message:
+              type: string
+              minLength: 1
+          required: [recipient, nonce, message]
+        public_key:
+          type: string
+          minLength: 1
+        signature:
+          type: string
+          minLength: 1
+      required: [standard, payload, public_key, signature]
+    NearIntentsSessionInput:
+      type: object
+      properties:
+        signedData:
+          $ref: "#/components/schemas/NearIntentsSignedData"
+      required: [signedData]
+    NearIntentsSession:
+      type: object
+      properties:
+        accountId:
+          type: string
+        accessToken:
+          type: string
+        expiresIn:
+          type: number
+      required: [accountId, accessToken, expiresIn]
+    NearIntentsSessionCleared:
+      type: object
+      properties:
+        cleared:
+          type: boolean
+      required: [cleared]
     HealthStatus:
       type: object
       properties:

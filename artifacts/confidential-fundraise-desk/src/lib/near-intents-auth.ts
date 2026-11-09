@@ -1,10 +1,16 @@
 import { base58, base64, hex } from '@scure/base';
 import { NearConnector } from '@hot-labs/near-connect';
+import {
+  authenticateNearIntentsSession as createNearIntentsSessionApi,
+  disconnectNearIntentsSession as clearNearIntentsSessionApi,
+  refreshNearIntentsSession as refreshNearIntentsSessionApi,
+  type NearIntentsSessionInput,
+} from '@workspace/api-client-react';
 
-const AUTHENTICATE_URL = 'https://1click.chaindefuser.com/v0/auth/authenticate';
 const NEAR_RPC_URL = 'https://rpc.mainnet.near.org';
 const INTENTS_ACCOUNT_ID = 'intents.near';
 const VERSIONED_NONCE_PREFIX = Uint8Array.from([0x56, 0x28, 0xf6, 0xc6, 0]);
+type SignedData = NearIntentsSessionInput['signedData'];
 
 export type NearUserSession = {
   accountId: string;
@@ -21,13 +27,6 @@ export class NearIntentsKeyRegistrationRequiredError extends Error {
     this.accountId = accountId;
   }
 }
-
-type AuthenticateResponse = {
-  accessToken?: unknown;
-  expiresIn?: unknown;
-  message?: unknown;
-  error?: unknown;
-};
 
 let connector: NearConnector | null = null;
 
@@ -153,7 +152,7 @@ async function authenticateConnectedWallet(
     network: 'mainnet',
     signerId: account.accountId,
   });
-  const signedData = {
+  const signedData: SignedData = {
     standard: 'nep413',
     payload: {
       recipient: INTENTS_ACCOUNT_ID,
@@ -164,35 +163,12 @@ async function authenticateConnectedWallet(
     signature: toEd25519Value(walletSignature.signature, 'base64'),
   };
 
-  const response = await fetch(AUTHENTICATE_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ signedData }),
-    signal: AbortSignal.timeout(15_000),
-  });
-  const body = (await response.json().catch(() => ({}))) as AuthenticateResponse;
-  if (!response.ok) {
-    const message =
-      typeof body.message === 'string'
-        ? body.message
-        : typeof body.error === 'string'
-          ? body.error
-          : `NEAR Intents could not authenticate this wallet (HTTP ${response.status}).`;
-    throw new Error(message);
-  }
-  if (
-    typeof body.accessToken !== 'string' ||
-    typeof body.expiresIn !== 'number' ||
-    !Number.isFinite(body.expiresIn) ||
-    body.expiresIn <= 0
-  ) {
-    throw new Error('NEAR Intents returned an invalid wallet session.');
-  }
+  const session = await createNearIntentsSessionApi({ signedData });
 
   return {
-    accountId: account.accountId,
-    accessToken: body.accessToken,
-    expiresAt: Date.now() + body.expiresIn * 1_000,
+    accountId: session.accountId,
+    accessToken: session.accessToken,
+    expiresAt: Date.now() + session.expiresIn * 1_000,
   };
 }
 
@@ -254,7 +230,22 @@ export async function registerNearIntentsKeyAndAuthenticate(
 }
 
 export async function disconnectNearWallet(): Promise<void> {
+  await clearNearIntentsSessionApi();
+
   const nearConnector = getConnector();
-  const connected = await nearConnector.getConnectedWallet();
-  await nearConnector.disconnect(connected.wallet);
+  try {
+    const connected = await nearConnector.getConnectedWallet();
+    await nearConnector.disconnect(connected.wallet);
+  } catch {
+    // A missing or already-disconnected wallet does not prevent server cleanup.
+  }
+}
+
+export async function refreshNearWalletSession(): Promise<NearUserSession> {
+  const session = await refreshNearIntentsSessionApi();
+  return {
+    accountId: session.accountId,
+    accessToken: session.accessToken,
+    expiresAt: Date.now() + session.expiresIn * 1_000,
+  };
 }

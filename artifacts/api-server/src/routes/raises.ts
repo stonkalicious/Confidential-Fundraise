@@ -1,5 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import {
+  AuthenticateNearIntentsSessionBody,
+  AuthenticateNearIntentsSessionResponse,
   ApproveRaiseParams,
   ApproveRaiseResponse,
   ClaimRaiseBody,
@@ -11,6 +13,8 @@ import {
   GetRaiseByIdParams,
   GetRaiseByIdResponse,
   GetRaisesResponse,
+  DisconnectNearIntentsSessionResponse,
+  RefreshNearIntentsSessionResponse,
   SubmitRaiseBody,
   SubmitRaiseResponse,
   SubmitSoftCommitmentBody,
@@ -38,6 +42,13 @@ import {
 const router: IRouter = Router();
 const rateLimitWindows = new Map<string, number[]>();
 const INTENTS_QUOTE_URL = "https://1click.chaindefuser.com/v0/quote";
+const INTENTS_AUTHENTICATE_URL = "https://1click.chaindefuser.com/v0/auth/authenticate";
+const INTENTS_REFRESH_URL = "https://1click.chaindefuser.com/v0/auth/refresh";
+const NEAR_REFRESH_COOKIE = "near_intents_refresh";
+const NEAR_ACCOUNT_COOKIE = "near_intents_account";
+const NEAR_SESSION_COOKIE_PATH = "/api/near-intents/session";
+const MAX_REFRESH_COOKIE_AGE_MS = 365 * 24 * 60 * 60 * 1_000;
+type ProviderAccessSession = { accessToken: string; expiresIn: number };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -45,6 +56,63 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function noStore(res: Response): Response {
   return res.set("Cache-Control", "no-store");
+}
+
+function nearSessionCookieOptions(maxAge?: number) {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict" as const,
+    path: NEAR_SESSION_COOKIE_PATH,
+    ...(maxAge === undefined ? {} : { maxAge }),
+  };
+}
+
+function getCookie(req: Request, name: string): string | null {
+  const header = req.get("cookie");
+  if (!header) return null;
+  for (const entry of header.split(";")) {
+    const separator = entry.indexOf("=");
+    if (separator < 0 || entry.slice(0, separator).trim() !== name) continue;
+    const value = entry.slice(separator + 1).trim();
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+function clearNearSessionCookies(res: Response): void {
+  const options = nearSessionCookieOptions();
+  res.clearCookie(NEAR_REFRESH_COOKIE, options);
+  res.clearCookie(NEAR_ACCOUNT_COOKIE, options);
+}
+
+function setNearSessionCookies(
+  res: Response,
+  refreshToken: string,
+  accountId: string,
+  refreshExpiresIn: number,
+): void {
+  const maxAge = Math.min(refreshExpiresIn * 1_000, MAX_REFRESH_COOKIE_AGE_MS);
+  res.cookie(NEAR_REFRESH_COOKIE, refreshToken, nearSessionCookieOptions(maxAge));
+  res.cookie(NEAR_ACCOUNT_COOKIE, accountId, nearSessionCookieOptions(maxAge));
+}
+
+function parseNearSession(value: unknown): ProviderAccessSession | null {
+  if (
+    !isRecord(value) ||
+    typeof value.accessToken !== "string" ||
+    !value.accessToken ||
+    typeof value.expiresIn !== "number" ||
+    !Number.isFinite(value.expiresIn) ||
+    value.expiresIn <= 0
+  ) {
+    return null;
+  }
+  return { accessToken: value.accessToken, expiresIn: value.expiresIn };
 }
 
 function requireApprovalCode(req: Request, res: Response): boolean {
@@ -72,6 +140,133 @@ function requireApprovalCode(req: Request, res: Response): boolean {
   }
   return true;
 }
+
+router.post("/near-intents/session", async (req, res): Promise<void> => {
+  noStore(res);
+  if (isRateLimited(req, "near-session-auth", 10, 10 * 60_000)) {
+    res.status(429).json({ error: "Too many wallet authentication attempts. Try again later." });
+    return;
+  }
+
+  const parsed = AuthenticateNearIntentsSessionBody.safeParse(req.body);
+  if (!parsed.success || parsed.data.signedData.payload.recipient !== "intents.near") {
+    res.status(400).json({ error: "The signed NEAR wallet proof is invalid." });
+    return;
+  }
+
+  let accountId: unknown;
+  try {
+    const message = JSON.parse(parsed.data.signedData.payload.message) as unknown;
+    accountId = isRecord(message) ? message.signer_id : undefined;
+  } catch {
+    accountId = undefined;
+  }
+  if (typeof accountId !== "string" || !accountId.trim() || accountId.length > 64) {
+    res.status(400).json({ error: "The signed NEAR wallet proof is invalid." });
+    return;
+  }
+
+  let upstream: Awaited<ReturnType<typeof fetch>>;
+  let body: unknown;
+  try {
+    upstream = await fetch(INTENTS_AUTHENTICATE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ signedData: parsed.data.signedData }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    body = await upstream.json().catch(() => ({}));
+  } catch {
+    res.status(502).json({ error: "NEAR Intents could not authenticate this wallet." });
+    return;
+  }
+
+  const authSession = parseNearSession(body);
+  if (
+    !upstream.ok ||
+    !authSession ||
+    !isRecord(body) ||
+    typeof body.refreshToken !== "string" ||
+    !body.refreshToken ||
+    typeof body.refreshExpiresIn !== "number" ||
+    !Number.isFinite(body.refreshExpiresIn) ||
+    body.refreshExpiresIn <= 0
+  ) {
+    req.log.warn(
+      { upstreamStatus: upstream.status },
+      "NEAR Intents did not issue a valid user session",
+    );
+    res.status(502).json({ error: "NEAR Intents could not authenticate this wallet." });
+    return;
+  }
+
+  setNearSessionCookies(res, body.refreshToken, accountId, body.refreshExpiresIn);
+  res.json(
+    AuthenticateNearIntentsSessionResponse.parse({
+      accountId,
+      accessToken: authSession.accessToken,
+      expiresIn: authSession.expiresIn,
+    }),
+  );
+});
+
+router.post("/near-intents/session/refresh", async (req, res): Promise<void> => {
+  noStore(res);
+  if (isRateLimited(req, "near-session-refresh", 60, 60_000)) {
+    res.status(429).json({ error: "Too many wallet refresh attempts. Try again shortly." });
+    return;
+  }
+
+  const refreshToken = getCookie(req, NEAR_REFRESH_COOKIE);
+  const accountId = getCookie(req, NEAR_ACCOUNT_COOKIE);
+  if (!refreshToken || !accountId || accountId.length > 64) {
+    clearNearSessionCookies(res);
+    res.status(401).json({ error: "No active NEAR wallet session is available." });
+    return;
+  }
+
+  let upstream: Awaited<ReturnType<typeof fetch>>;
+  let body: unknown;
+  try {
+    upstream = await fetch(INTENTS_REFRESH_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    body = await upstream.json().catch(() => ({}));
+  } catch {
+    res.status(502).json({ error: "NEAR Intents could not refresh this wallet session." });
+    return;
+  }
+
+  const refreshed = parseNearSession(body);
+  if (!upstream.ok || !refreshed) {
+    if (upstream.status === 401) clearNearSessionCookies(res);
+    req.log.warn(
+      { upstreamStatus: upstream.status },
+      "NEAR Intents could not refresh the user session",
+    );
+    res
+      .status(upstream.status === 401 ? 401 : 502)
+      .json({ error: "NEAR Intents could not refresh this wallet session." });
+    return;
+  }
+
+  res.json(
+    RefreshNearIntentsSessionResponse.parse({
+      accountId,
+      accessToken: refreshed.accessToken,
+      expiresIn: refreshed.expiresIn,
+    }),
+  );
+});
+
+router.delete("/near-intents/session", (_req, res): void => {
+  noStore(res);
+  clearNearSessionCookies(res);
+  res.json(DisconnectNearIntentsSessionResponse.parse({ cleared: true }));
+});
 
 function isRateLimited(req: Request, bucket: string, max: number, windowMs: number): boolean {
   const source = req.ip || req.socket.remoteAddress || "unknown";
