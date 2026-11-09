@@ -7,14 +7,16 @@ export default function SiteHeader() {
   return (
     <header className="topbar">
       <div className="brand" aria-label="Confidential Fundraising - Powered by NEAR">
-        <img
-          className="brand-mark"
-          src={`${import.meta.env.BASE_URL}fundraising-logo.png`}
-          width={32}
-          height={32}
-          alt=""
-        />
-        <div className="brand-name">Confidential Fundraising - Powered by NEAR</div>
+        <div className="brand-name">
+          <span>Confidential Fundraising - Powered by NEAR</span>
+          <img
+            className="brand-mark"
+            src={`${import.meta.env.BASE_URL}fundraising-logo.png`}
+            width={22}
+            height={22}
+            alt=""
+          />
+        </div>
       </div>
       <div className="topbar-actions">
         <span className="demo-label" data-testid="text-demo-label">Demo only</span>

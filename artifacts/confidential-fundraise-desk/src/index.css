@@ -85,10 +85,11 @@ button:focus-visible, input:focus-visible {
 }
 .brand { display: flex; align-items: center; gap: 12px; }
 .brand-mark {
-  width: 32px; height: 32px; display: block; flex-shrink: 0;
+  width: 22px; height: 22px; display: block; flex-shrink: 0;
   border-radius: 50%; object-fit: cover;
 }
-.brand-name { font-size: 13px; font-weight: 700; letter-spacing: -.025em; }
+.brand-name { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; letter-spacing: -.025em; }
+.brand-name > span { min-width: 0; }
 .brand-kicker { color: #797568; font: 10px var(--app-font-mono); letter-spacing: .11em; text-transform: uppercase; }
 .topbar-actions { display: flex; align-items: center; gap: 12px; }
 .demo-label {

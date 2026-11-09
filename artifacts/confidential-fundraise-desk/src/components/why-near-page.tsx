@@ -33,7 +33,7 @@ export default function WhyNearPage() {
     <div className="app-shell">
       <SiteHeader />
       <main className="frame">
-        <Link className="raise-back-link" href="/">← Raises</Link>
+        <Link className="raise-back-link" href="/">← Active raises</Link>
         <article className="view-content roadmap-panel" data-testid="why-near-page">
           <div className="thesis-copy">
             <h1 className="roadmap-title">Why use NEAR Intents?</h1>

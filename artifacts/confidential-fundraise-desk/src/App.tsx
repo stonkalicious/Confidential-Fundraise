@@ -568,7 +568,7 @@ function AppDesk({
       <SiteHeader />
 
       <main className="frame">
-        <Link className="raise-back-link" href="/">← Raises</Link>
+        <Link className="raise-back-link" href="/">← Active raises</Link>
         <h1 className="raise-heading">{raise.companyName}</h1>
         <p className="section-copy">{raise.thesis}</p>
         <div className="raise-details">{raise.stage} · {euro(raise.roundRange.min)} – {euro(raise.roundRange.max)}</div>

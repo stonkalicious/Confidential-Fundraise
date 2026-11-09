@@ -6,7 +6,7 @@ export default function RoadmapPage() {
     <div className="app-shell">
       <SiteHeader />
       <main className="frame">
-        <Link className="raise-back-link" href="/">← Raises</Link>
+        <Link className="raise-back-link" href="/">← Active raises</Link>
         <section className="view-content roadmap-panel">
           <h1 className="roadmap-title">Roadmap</h1>
           <p className="roadmap-status">(Not built — future direction only)</p>

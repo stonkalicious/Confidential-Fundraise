@@ -122,7 +122,7 @@ export default function RaiseList({
       <main className="frame">
         <div className="raise-home-grid">
           <section className="raise-list-column">
-            <h1 className="section-title">Raises</h1>
+            <h1 className="section-title">Active raises</h1>
             <ul className="raise-list" data-testid="raise-list">
               {raises.map((raise) => (
                 <li key={raise.id}>
