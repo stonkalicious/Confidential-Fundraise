@@ -12,6 +12,16 @@ export type NearUserSession = {
   expiresAt: number;
 };
 
+export class NearIntentsKeyRegistrationRequiredError extends Error {
+  readonly accountId: string;
+
+  constructor(accountId: string) {
+    super(`The public key for ${accountId} is not registered with NEAR Intents.`);
+    this.name = 'NearIntentsKeyRegistrationRequiredError';
+    this.accountId = accountId;
+  }
+}
+
 type AuthenticateResponse = {
   accessToken?: unknown;
   expiresIn?: unknown;
@@ -103,8 +113,8 @@ function createVersionedNonce(salt: Uint8Array, deadline: Date): string {
   return base64.encode(nonceBytes);
 }
 
-async function requireRegisteredKey(accountId: string, publicKey: string | undefined): Promise<void> {
-  if (/^[0-9a-f]{64}$/i.test(accountId)) return;
+async function hasRegisteredKey(accountId: string, publicKey: string | undefined): Promise<boolean> {
+  if (/^[0-9a-f]{64}$/i.test(accountId)) return true;
   if (!publicKey) {
     throw new Error('This NEAR wallet did not provide a public key to verify its demo account.');
   }
@@ -116,11 +126,7 @@ async function requireRegisteredKey(accountId: string, publicKey: string | undef
     account_id: accountId,
     public_key: formattedPublicKey,
   });
-  if (isRegistered !== true) {
-    throw new Error(
-      'This NEAR wallet key is not registered with NEAR Intents. Use a registered demo wallet to request a confidential quote.',
-    );
-  }
+  return isRegistered === true;
 }
 
 function toEd25519Value(value: string, encoding: 'base58' | 'base64'): string {
@@ -129,15 +135,10 @@ function toEd25519Value(value: string, encoding: 'base58' | 'base64'): string {
   return `ed25519:${encoded}`;
 }
 
-export async function authenticateNearWallet(): Promise<NearUserSession> {
-  const nearConnector = getConnector();
-  const wallet = await nearConnector.connect();
-  const [account] = await wallet.getAccounts({ network: 'mainnet' });
-  if (!account?.accountId) {
-    throw new Error('The connected NEAR wallet did not provide an account.');
-  }
-  await requireRegisteredKey(account.accountId, account.publicKey);
-
+async function authenticateConnectedWallet(
+  wallet: Awaited<ReturnType<NearConnector['connect']>>,
+  account: { accountId: string; publicKey?: string },
+): Promise<NearUserSession> {
   const deadline = new Date(Date.now() + 5 * 60_000);
   const nonce = createVersionedNonce(await getCurrentSalt(), deadline);
   const message = JSON.stringify({
@@ -193,6 +194,63 @@ export async function authenticateNearWallet(): Promise<NearUserSession> {
     accessToken: body.accessToken,
     expiresAt: Date.now() + body.expiresIn * 1_000,
   };
+}
+
+export async function authenticateNearWallet(): Promise<NearUserSession> {
+  const wallet = await getConnector().connect();
+  const [account] = await wallet.getAccounts({ network: 'mainnet' });
+  if (!account?.accountId) {
+    throw new Error('The connected NEAR wallet did not provide an account.');
+  }
+  if (!(await hasRegisteredKey(account.accountId, account.publicKey))) {
+    throw new NearIntentsKeyRegistrationRequiredError(account.accountId);
+  }
+  return authenticateConnectedWallet(wallet, account);
+}
+
+export async function registerNearIntentsKeyAndAuthenticate(
+  expectedAccountId: string,
+): Promise<NearUserSession> {
+  const { wallet, accounts } = await getConnector().getConnectedWallet();
+  const account = accounts.find(({ accountId }) => accountId === expectedAccountId);
+  if (!account) {
+    throw new Error('The connected NEAR wallet account changed. Connect it again to continue.');
+  }
+  if (!account.publicKey) {
+    throw new Error('This NEAR wallet did not provide a public key to register.');
+  }
+
+  const isAlreadyRegistered = await hasRegisteredKey(account.accountId, account.publicKey);
+  if (!isAlreadyRegistered) {
+    const outcome = await wallet.signAndSendTransaction({
+      network: 'mainnet',
+      signerId: account.accountId,
+      receiverId: INTENTS_ACCOUNT_ID,
+      actions: [
+        {
+          type: 'FunctionCall',
+          params: {
+            methodName: 'add_public_key',
+            args: { public_key: toEd25519Value(account.publicKey, 'base58') },
+            gas: '100000000000000',
+            deposit: '1',
+          },
+        },
+      ],
+    });
+    if (
+      !outcome.status ||
+      typeof outcome.status !== 'object' ||
+      'Failure' in outcome.status
+    ) {
+      throw new Error('NEAR Intents key registration did not complete successfully.');
+    }
+  }
+
+  if (!(await hasRegisteredKey(account.accountId, account.publicKey))) {
+    throw new Error('NEAR Intents did not confirm that the wallet key was registered.');
+  }
+  return authenticateConnectedWallet(wallet, account);
 }
 
 export async function disconnectNearWallet(): Promise<void> {
