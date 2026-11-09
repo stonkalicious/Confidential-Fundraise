@@ -15,7 +15,10 @@ import {
 } from '@workspace/api-client-react';
 import RaiseList from '@/components/raise-list';
 import RoadmapPage from '@/components/roadmap-page';
+import WhyNearPage from '@/components/why-near-page';
 import SiteHeader from '@/components/site-header';
+import { DemoSettlementCard, InvestorDemoSettlements } from '@/components/demo-settlement';
+import { newDemoReceipt, rememberDemoReceipt } from '@/lib/demo-settlement-wallet';
 import { INITIAL_RAISES, type Raise } from '@/data/raises';
 import { loadRaises, saveRaises } from '@/data/raise-storage';
 import { getQuoteFailureOutcome, trackQuoteOutcome } from '@/lib/analytics';
@@ -65,6 +68,7 @@ function mergeApiRaise(summary: RaiseSummary, base: Raise): Raise {
     companyName: summary.name,
     thesis: summary.thesis,
     stage: summary.stage,
+    sourceLink: summary.sourceLink ?? base.sourceLink,
     roundRange: summary.range,
     claimed: summary.claimed || Boolean(base.claim),
     claimantName: summary.claimantName ?? base.claimantName ?? base.claim?.founderName ?? null,
@@ -555,7 +559,7 @@ function AppDesk({
 
   return (
     <div className="app-shell">
-      <SiteHeader demoLabel={DEMO_LABEL} />
+      <SiteHeader />
 
       <main className="frame">
         <Link className="raise-back-link" href="/">← Raises</Link>
@@ -576,6 +580,8 @@ function AppDesk({
             </button>
           ))}
         </nav>
+
+        <InvestorDemoSettlements raiseId={raise.id} />
 
         {view === 'prospect' && (
           <section className="view-content content-grid" key="prospect">
@@ -672,6 +678,7 @@ function AppDesk({
                     {commitments.length > 0 ? (
                       <div data-testid="sponsor-commitment-list">
                         {commitments.map((item) => (
+                          <div key={item.id}>
                           <div className="commitment-card" key={item.id} data-testid="commitment-row">
                             <div className="commitment-meta">
                               <div className="record-line" data-testid="status-commitment">
@@ -717,6 +724,8 @@ function AppDesk({
                                 </button>
                               )}
                             </div>
+                          </div>
+                          <DemoSettlementCard raiseId={raise.id} commitmentId={item.id} approvalCode={approvalCode} />
                           </div>
                         ))}
                       </div>
@@ -1015,7 +1024,7 @@ function AppDesk({
           <section className="view-content how-panel" key="how">
             <article className="how-copy">
               <h1 className="how-title">How the app works</h1>
-              <p>Confidential Fundraise Desk is a minimal demo of fundraise coordination with shared server-held records.</p>
+              <p>Confidential Fundraising is a minimal demo of fundraise coordination with shared server-held records.</p>
               <p>
                 A prospect submits a soft commitment, and a founder can claim a raise with contact details. New raises stay out of the public list until a sponsor approves them. The Sponsor view uses a shared approval code to access individual commitments and claim contact details. Marking a commitment hard enables a live dry-run quote using fixed synthetic values. It does not sign or settle a swap, and verification remains demo-only with no blockchain call.
               </p>
@@ -1034,7 +1043,7 @@ function AppDesk({
             <article className="thesis-copy">
               {isFundThesis ? (
                 <>
-              <h1 className="thesis-title">Confidential Fundraise Desk — Example Thesis Summary</h1>
+              <h1 className="thesis-title">Confidential Fundraising — Example Thesis Summary</h1>
               <p className="thesis-disclaimer">(Demo context only. Synthetic. Not an offer.)</p>
 
               <h2>Private money and cross-chain settlement</h2>
@@ -1067,7 +1076,7 @@ function AppDesk({
               </div>
 
               <p>
-                This page is context for the Confidential Fundraise Desk prototype only. It demonstrates shared demo commitment tracking and an illustrative NEAR Intents quote; it does not execute settlement. It is not a solicitation.
+                This page is context for the Confidential Fundraising prototype only. It demonstrates shared demo commitment tracking and an illustrative NEAR Intents quote; the quote does not execute cross-chain settlement. It is not a solicitation.
               </p>
               <p>
                 The form below only displays a local demo confirmation. It does not send a contact request or create a commitment.
@@ -1211,7 +1220,9 @@ function Router() {
 
   async function submitCommitment(id: string, identifier: string, amount: number) {
     const commitmentId = crypto.randomUUID();
-    applyApiRaise(await submitSoftCommitmentApi(id, { id: commitmentId, identifier, amount }));
+    const demoReceipt = newDemoReceipt();
+    applyApiRaise(await submitSoftCommitmentApi(id, { id: commitmentId, identifier, amount, demoReceipt }));
+    rememberDemoReceipt(id, commitmentId, demoReceipt);
     updateLocalRaise(id, (raise) => ({
       ...raise,
       commitments: [
@@ -1305,6 +1316,7 @@ function Router() {
       {storageError && <p className="frame" role="alert">{storageError}</p>}
       {syncError && <p className="frame" role="alert">{syncError}</p>}
       <Switch>
+        <Route path="/why-near"><WhyNearPage /></Route>
         <Route path="/roadmap"><RoadmapPage /></Route>
         <Route path="/">
           <RaiseList raises={raises} onApproved={refreshPublicRaises} />

@@ -14,6 +14,7 @@ export interface RaiseSummary {
   thesis: string;
   stage: string;
   range: RaiseRange;
+  sourceLink?: string;
   claimed: boolean;
   status?: RaiseSummaryStatus;
   /** @nullable */

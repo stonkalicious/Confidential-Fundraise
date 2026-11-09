@@ -1,19 +1,23 @@
 import { useState } from 'react';
 import { Link } from 'wouter';
 
-const DEFAULT_DEMO_LABEL = 'Demo only — public data shows approved raises and aggregates.';
-
-export default function SiteHeader({ demoLabel = DEFAULT_DEMO_LABEL }: { demoLabel?: string }) {
+export default function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <header className="topbar">
-      <div className="brand" aria-label="Confidential Fundraise Desk - Powered by NEAR">
-        <span className="brand-mark" aria-hidden="true">F</span>
-        <div className="brand-name">Confidential Fundraise Desk - Powered by NEAR</div>
+      <div className="brand" aria-label="Confidential Fundraising - Powered by NEAR">
+        <img
+          className="brand-mark"
+          src={`${import.meta.env.BASE_URL}fundraising-logo.png`}
+          width={32}
+          height={32}
+          alt=""
+        />
+        <div className="brand-name">Confidential Fundraising - Powered by NEAR</div>
       </div>
       <div className="topbar-actions">
-        <span className="demo-label" data-testid="text-demo-label">{demoLabel}</span>
+        <span className="demo-label" data-testid="text-demo-label">Demo only</span>
         <div
           className="site-menu"
           onKeyDown={(event) => {
@@ -34,6 +38,14 @@ export default function SiteHeader({ demoLabel = DEFAULT_DEMO_LABEL }: { demoLab
           </button>
           {menuOpen && (
             <div className="site-menu-dropdown" id="site-menu-dropdown" aria-label="More pages">
+              <Link
+                className="site-menu-item"
+                href="/why-near"
+                data-testid="menu-why-near"
+                onClick={() => setMenuOpen(false)}
+              >
+                Why NEAR?
+              </Link>
               <Link
                 className="site-menu-item"
                 href="/roadmap"

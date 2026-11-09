@@ -146,6 +146,26 @@ export default function RaiseList({
           </section>
 
           <aside className="raise-submission-column">
+            <section className="raise-submit-card raise-how-card" aria-labelledby="raise-how-title">
+              <h2 className="section-title" id="raise-how-title">How it works</h2>
+              <ol className="raise-how-steps">
+                <li>
+                  <h3>Find a raise</h3>
+                  <p>Browse public raises, or submit your own for approval.</p>
+                </li>
+                <li>
+                  <h3>Express interest privately</h3>
+                  <p>
+                    Add a soft commitment. Public pages show aggregate totals, not individual commitment details.
+                  </p>
+                </li>
+                <li>
+                  <Link className="raise-how-link" href="/why-near" data-testid="link-how-near">
+                    Use Near to make the commitment real.
+                  </Link>
+                </li>
+              </ol>
+            </section>
             <form className="raise-submit-card" onSubmit={submitRaise}>
               <h2 className="section-title">Submit a raise</h2>
               <div className="field-wrap">

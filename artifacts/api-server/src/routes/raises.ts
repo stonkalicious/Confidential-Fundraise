@@ -115,7 +115,7 @@ function parseNearSession(value: unknown): ProviderAccessSession | null {
   return { accessToken: value.accessToken, expiresIn: value.expiresIn };
 }
 
-function requireApprovalCode(req: Request, res: Response): boolean {
+export function requireApprovalCode(req: Request, res: Response): boolean {
   const expected = process.env.RAISE_APPROVAL_CODE;
   if (!expected?.trim()) {
     noStore(res);

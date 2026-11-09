@@ -30,6 +30,12 @@ import type {
   ClaimRaiseInput,
   CommitmentStatusInput,
   DemoIntentsQuote,
+  DemoSettlementConfig,
+  DemoSettlementConfirmationInput,
+  DemoSettlementErrorResponse,
+  DemoSettlementInput,
+  DemoSettlementState,
+  DemoSettlementVerificationInput,
   ErrorMessage,
   HealthStatus,
   NearIntentsSession,
@@ -1674,5 +1680,531 @@ export const useRequestDemoQuote = <TError = ErrorType<ErrorMessage>,
         TContext
       > => {
       return useMutation(getRequestDemoQuoteMutationOptions(options), queryClient);
+    }
+
+export const getGetDemoSettlementConfigUrl = () => {
+
+
+
+
+  return `/api/demo-settlement-config`
+}
+
+export const getDemoSettlementConfig = async ( options?: Parameters<typeof customFetch>[1]): Promise<DemoSettlementConfig> => {
+
+  return customFetch<DemoSettlementConfig>(getGetDemoSettlementConfigUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDemoSettlementConfigQueryKey = () => {
+    return [
+    `/api/demo-settlement-config`
+    ] as const;
+    }
+
+
+export const getGetDemoSettlementConfigQueryOptions = <TData = Awaited<ReturnType<typeof getDemoSettlementConfig>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDemoSettlementConfig>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDemoSettlementConfigQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDemoSettlementConfig>>> = ({ signal }) => getDemoSettlementConfig({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDemoSettlementConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetDemoSettlementConfigQueryResult = NonNullable<Awaited<ReturnType<typeof getDemoSettlementConfig>>>
+export type GetDemoSettlementConfigQueryError = ErrorType<unknown>
+
+
+export function useGetDemoSettlementConfig<TData = Awaited<ReturnType<typeof getDemoSettlementConfig>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDemoSettlementConfig>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDemoSettlementConfig>>,
+          TError,
+          Awaited<ReturnType<typeof getDemoSettlementConfig>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDemoSettlementConfig<TData = Awaited<ReturnType<typeof getDemoSettlementConfig>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDemoSettlementConfig>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDemoSettlementConfig>>,
+          TError,
+          Awaited<ReturnType<typeof getDemoSettlementConfig>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDemoSettlementConfig<TData = Awaited<ReturnType<typeof getDemoSettlementConfig>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDemoSettlementConfig>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetDemoSettlementConfig<TData = Awaited<ReturnType<typeof getDemoSettlementConfig>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDemoSettlementConfig>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetDemoSettlementConfigQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetDemoSettlementUrl = (id: string,
+    commitmentId: string,) => {
+
+
+
+
+  return `/api/raises/${id}/demo-settlements/${commitmentId}`
+}
+
+/**
+ * Private to the sponsor or the investor holding the original demo receipt.
+ */
+export const getDemoSettlement = async (id: string,
+    commitmentId: string, options?: Parameters<typeof customFetch>[1]): Promise<DemoSettlementState> => {
+
+  return customFetch<DemoSettlementState>(getGetDemoSettlementUrl(id,commitmentId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDemoSettlementQueryKey = (id: string,
+    commitmentId: string,) => {
+    return [
+    `/api/raises/${id}/demo-settlements/${commitmentId}`
+    ] as const;
+    }
+
+
+export const getGetDemoSettlementQueryOptions = <TData = Awaited<ReturnType<typeof getDemoSettlement>>, TError = ErrorType<DemoSettlementErrorResponse>>(id: string,
+    commitmentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDemoSettlement>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDemoSettlementQueryKey(id,commitmentId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDemoSettlement>>> = ({ signal }) => getDemoSettlement(id,commitmentId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && commitmentId !== null && commitmentId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDemoSettlement>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetDemoSettlementQueryResult = NonNullable<Awaited<ReturnType<typeof getDemoSettlement>>>
+export type GetDemoSettlementQueryError = ErrorType<DemoSettlementErrorResponse>
+
+
+export function useGetDemoSettlement<TData = Awaited<ReturnType<typeof getDemoSettlement>>, TError = ErrorType<DemoSettlementErrorResponse>>(
+ id: string,
+    commitmentId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDemoSettlement>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDemoSettlement>>,
+          TError,
+          Awaited<ReturnType<typeof getDemoSettlement>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDemoSettlement<TData = Awaited<ReturnType<typeof getDemoSettlement>>, TError = ErrorType<DemoSettlementErrorResponse>>(
+ id: string,
+    commitmentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDemoSettlement>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDemoSettlement>>,
+          TError,
+          Awaited<ReturnType<typeof getDemoSettlement>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDemoSettlement<TData = Awaited<ReturnType<typeof getDemoSettlement>>, TError = ErrorType<DemoSettlementErrorResponse>>(
+ id: string,
+    commitmentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDemoSettlement>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetDemoSettlement<TData = Awaited<ReturnType<typeof getDemoSettlement>>, TError = ErrorType<DemoSettlementErrorResponse>>(
+ id: string,
+    commitmentId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDemoSettlement>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetDemoSettlementQueryOptions(id,commitmentId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getConfigureDemoSettlementUrl = (id: string,
+    commitmentId: string,) => {
+
+
+
+
+  return `/api/raises/${id}/demo-settlements/${commitmentId}`
+}
+
+export const configureDemoSettlement = async (id: string,
+    commitmentId: string,
+    demoSettlementInput: DemoSettlementInput, options?: Parameters<typeof customFetch>[1]): Promise<DemoSettlementState> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<DemoSettlementState>(getConfigureDemoSettlementUrl(id,commitmentId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(demoSettlementInput)
+  }
+);}
+
+
+
+
+
+export const getConfigureDemoSettlementMutationKey = () => ['configureDemoSettlement'] as const;
+
+export const getConfigureDemoSettlementMutationOptions = <TError = ErrorType<DemoSettlementErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof configureDemoSettlement>>, TError,ConfigureDemoSettlementMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof configureDemoSettlement>>, TError,ConfigureDemoSettlementMutationVariables, TContext> => {
+
+const mutationKey = getConfigureDemoSettlementMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof configureDemoSettlement>>, ConfigureDemoSettlementMutationVariables> = (props) => {
+          const {id,commitmentId,data} = props ?? {};
+
+          return  configureDemoSettlement(id,commitmentId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfigureDemoSettlementMutationResult = NonNullable<Awaited<ReturnType<typeof configureDemoSettlement>>>
+    export type ConfigureDemoSettlementMutationBody = BodyType<DemoSettlementInput>
+    export type ConfigureDemoSettlementMutationError = ErrorType<DemoSettlementErrorResponse>
+    export type ConfigureDemoSettlementMutationVariables = {id: string;commitmentId: string;data: BodyType<DemoSettlementInput>}
+
+    export const useConfigureDemoSettlement = <TError = ErrorType<DemoSettlementErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof configureDemoSettlement>>, TError,ConfigureDemoSettlementMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof configureDemoSettlement>>,
+        TError,
+        ConfigureDemoSettlementMutationVariables,
+        TContext
+      > => {
+      return useMutation(getConfigureDemoSettlementMutationOptions(options), queryClient);
+    }
+
+export const getConfirmDemoSettlementUrl = (id: string,
+    commitmentId: string,) => {
+
+
+
+
+  return `/api/raises/${id}/demo-settlements/${commitmentId}/confirm`
+}
+
+export const confirmDemoSettlement = async (id: string,
+    commitmentId: string,
+    demoSettlementConfirmationInput: DemoSettlementConfirmationInput, options?: Parameters<typeof customFetch>[1]): Promise<DemoSettlementState> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<DemoSettlementState>(getConfirmDemoSettlementUrl(id,commitmentId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(demoSettlementConfirmationInput)
+  }
+);}
+
+
+
+
+
+export const getConfirmDemoSettlementMutationKey = () => ['confirmDemoSettlement'] as const;
+
+export const getConfirmDemoSettlementMutationOptions = <TError = ErrorType<DemoSettlementErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmDemoSettlement>>, TError,ConfirmDemoSettlementMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confirmDemoSettlement>>, TError,ConfirmDemoSettlementMutationVariables, TContext> => {
+
+const mutationKey = getConfirmDemoSettlementMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmDemoSettlement>>, ConfirmDemoSettlementMutationVariables> = (props) => {
+          const {id,commitmentId,data} = props ?? {};
+
+          return  confirmDemoSettlement(id,commitmentId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfirmDemoSettlementMutationResult = NonNullable<Awaited<ReturnType<typeof confirmDemoSettlement>>>
+    export type ConfirmDemoSettlementMutationBody = BodyType<DemoSettlementConfirmationInput>
+    export type ConfirmDemoSettlementMutationError = ErrorType<DemoSettlementErrorResponse>
+    export type ConfirmDemoSettlementMutationVariables = {id: string;commitmentId: string;data: BodyType<DemoSettlementConfirmationInput>}
+
+    export const useConfirmDemoSettlement = <TError = ErrorType<DemoSettlementErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmDemoSettlement>>, TError,ConfirmDemoSettlementMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof confirmDemoSettlement>>,
+        TError,
+        ConfirmDemoSettlementMutationVariables,
+        TContext
+      > => {
+      return useMutation(getConfirmDemoSettlementMutationOptions(options), queryClient);
+    }
+
+export const getPrepareDemoSettlementUrl = (id: string,
+    commitmentId: string,) => {
+
+
+
+
+  return `/api/raises/${id}/demo-settlements/${commitmentId}/prepare`
+}
+
+export const prepareDemoSettlement = async (id: string,
+    commitmentId: string, options?: Parameters<typeof customFetch>[1]): Promise<DemoSettlementState> => {
+
+  return customFetch<DemoSettlementState>(getPrepareDemoSettlementUrl(id,commitmentId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getPrepareDemoSettlementMutationKey = () => ['prepareDemoSettlement'] as const;
+
+export const getPrepareDemoSettlementMutationOptions = <TError = ErrorType<DemoSettlementErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prepareDemoSettlement>>, TError,PrepareDemoSettlementMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof prepareDemoSettlement>>, TError,PrepareDemoSettlementMutationVariables, TContext> => {
+
+const mutationKey = getPrepareDemoSettlementMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof prepareDemoSettlement>>, PrepareDemoSettlementMutationVariables> = (props) => {
+          const {id,commitmentId} = props ?? {};
+
+          return  prepareDemoSettlement(id,commitmentId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PrepareDemoSettlementMutationResult = NonNullable<Awaited<ReturnType<typeof prepareDemoSettlement>>>
+
+    export type PrepareDemoSettlementMutationError = ErrorType<DemoSettlementErrorResponse>
+    export type PrepareDemoSettlementMutationVariables = {id: string;commitmentId: string}
+
+    export const usePrepareDemoSettlement = <TError = ErrorType<DemoSettlementErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prepareDemoSettlement>>, TError,PrepareDemoSettlementMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof prepareDemoSettlement>>,
+        TError,
+        PrepareDemoSettlementMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPrepareDemoSettlementMutationOptions(options), queryClient);
+    }
+
+export const getVerifyDemoSettlementUrl = (id: string,
+    commitmentId: string,) => {
+
+
+
+
+  return `/api/raises/${id}/demo-settlements/${commitmentId}/verify`
+}
+
+export const verifyDemoSettlement = async (id: string,
+    commitmentId: string,
+    demoSettlementVerificationInput: DemoSettlementVerificationInput, options?: Parameters<typeof customFetch>[1]): Promise<DemoSettlementState> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<DemoSettlementState>(getVerifyDemoSettlementUrl(id,commitmentId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(demoSettlementVerificationInput)
+  }
+);}
+
+
+
+
+
+export const getVerifyDemoSettlementMutationKey = () => ['verifyDemoSettlement'] as const;
+
+export const getVerifyDemoSettlementMutationOptions = <TError = ErrorType<DemoSettlementErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyDemoSettlement>>, TError,VerifyDemoSettlementMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof verifyDemoSettlement>>, TError,VerifyDemoSettlementMutationVariables, TContext> => {
+
+const mutationKey = getVerifyDemoSettlementMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof verifyDemoSettlement>>, VerifyDemoSettlementMutationVariables> = (props) => {
+          const {id,commitmentId,data} = props ?? {};
+
+          return  verifyDemoSettlement(id,commitmentId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type VerifyDemoSettlementMutationResult = NonNullable<Awaited<ReturnType<typeof verifyDemoSettlement>>>
+    export type VerifyDemoSettlementMutationBody = BodyType<DemoSettlementVerificationInput>
+    export type VerifyDemoSettlementMutationError = ErrorType<DemoSettlementErrorResponse>
+    export type VerifyDemoSettlementMutationVariables = {id: string;commitmentId: string;data: BodyType<DemoSettlementVerificationInput>}
+
+    export const useVerifyDemoSettlement = <TError = ErrorType<DemoSettlementErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyDemoSettlement>>, TError,VerifyDemoSettlementMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof verifyDemoSettlement>>,
+        TError,
+        VerifyDemoSettlementMutationVariables,
+        TContext
+      > => {
+      return useMutation(getVerifyDemoSettlementMutationOptions(options), queryClient);
     }
 

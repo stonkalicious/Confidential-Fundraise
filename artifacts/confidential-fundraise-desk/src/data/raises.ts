@@ -6,6 +6,7 @@ export type Raise = {
   thesis: string;
   investmentThesis: string;
   stage: string;
+  sourceLink?: string;
   roundRange: { min: number; max: number };
   isFundThesis?: boolean;
   claimed: boolean;
@@ -25,7 +26,7 @@ export type Raise = {
 export const INITIAL_RAISES: Raise[] = [
   {
     id: 'confidential-fundraise-thesis',
-    companyName: 'Confidential Fundraise Thesis',
+    companyName: 'Privacy Token Fund',
     thesis: 'Fund-wide thesis for private money and confidential cross-chain settlement.',
     investmentThesis: '',
     stage: 'Fundraise',

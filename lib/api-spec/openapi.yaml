@@ -587,8 +587,109 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
+  /demo-settlement-config:
+    get:
+      operationId: getDemoSettlementConfig
+      responses:
+        "200":
+          description: Fixed Circle USDC contracts; all transfers are exactly 1000000 base units.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DemoSettlementConfig" }
+  /raises/{id}/demo-settlements/{commitmentId}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+      - { name: commitmentId, in: path, required: true, schema: { type: string } }
+    get:
+      operationId: getDemoSettlement
+      description: Private to the sponsor or the investor holding the original demo receipt.
+      security: [{ ApprovalCode: [] }, { DemoReceipt: [] }]
+      responses:
+        "200":
+          description: Current immutable transfer details and confirmations, or empty before sponsor setup.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DemoSettlementState" }
+        default: { $ref: "#/components/responses/DemoSettlementError" }
+    post:
+      operationId: configureDemoSettlement
+      security: [{ ApprovalCode: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DemoSettlementInput" }
+      responses:
+        "200":
+          description: Sponsor confirmed the fixed transfer details.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DemoSettlementState" }
+        default: { $ref: "#/components/responses/DemoSettlementError" }
+  /raises/{id}/demo-settlements/{commitmentId}/confirm:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+      - { name: commitmentId, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: confirmDemoSettlement
+      security: [{ DemoReceipt: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DemoSettlementConfirmationInput" }
+      responses:
+        "200":
+          description: Investor confirmed the same immutable transfer.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DemoSettlementState" }
+        default: { $ref: "#/components/responses/DemoSettlementError" }
+  /raises/{id}/demo-settlements/{commitmentId}/prepare:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+      - { name: commitmentId, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: prepareDemoSettlement
+      security: [{ DemoReceipt: [] }]
+      responses:
+        "200":
+          description: Both confirmations checked; one unique transfer memo is issued.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DemoSettlementState" }
+        default: { $ref: "#/components/responses/DemoSettlementError" }
+  /raises/{id}/demo-settlements/{commitmentId}/verify:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+      - { name: commitmentId, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: verifyDemoSettlement
+      security: [{ DemoReceipt: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DemoSettlementVerificationInput" }
+      responses:
+        "200":
+          description: Final successful on-chain USDC transfer verified by the server.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DemoSettlementState" }
+        default: { $ref: "#/components/responses/DemoSettlementError" }
 components:
+  responses:
+    DemoSettlementError:
+      description: Invalid input, unauthorized role, missing commitment, confirmation conflict, or unavailable NEAR verification. Never treat this as success or automatically resend a payment.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorMessage" }
   securitySchemes:
+    DemoReceipt:
+      type: apiKey
+      in: header
+      name: X-Demo-Receipt
     ApprovalCode:
       type: http
       scheme: bearer
@@ -597,6 +698,61 @@ components:
       in: header
       name: X-NEAR-User-Session
   schemas:
+    DemoSettlementConfig:
+      type: object
+      properties:
+        testnet: { type: string }
+        mainnet: { type: string }
+      required: [testnet, mainnet]
+    DemoSettlementInput:
+      type: object
+      properties:
+        network: { type: string, enum: [testnet, mainnet] }
+        receiverAccount: { type: string, minLength: 2, maxLength: 64 }
+        reference: { type: string, maxLength: 300 }
+        confirmed: { type: boolean }
+      required: [network, receiverAccount, confirmed]
+    DemoSettlementConfirmationInput:
+      type: object
+      properties:
+        settlementId: { type: string, format: uuid }
+        signerAccount: { type: string, minLength: 2, maxLength: 64 }
+        confirmed: { type: boolean }
+      required: [settlementId, signerAccount, confirmed]
+    DemoSettlementVerificationInput:
+      type: object
+      properties:
+        transactionHash: { type: string, minLength: 40, maxLength: 50 }
+      required: [transactionHash]
+    DemoSettlementConfirmation:
+      type: object
+      properties:
+        role: { type: string, enum: [sponsor, investor] }
+        timestamp: { type: string, format: date-time }
+      required: [role, timestamp]
+    DemoSettlement:
+      type: object
+      properties:
+        id: { type: string }
+        network: { type: string, enum: [testnet, mainnet] }
+        tokenContract: { type: string }
+        receiverAccount: { type: string }
+        reference: { type: string }
+        signerAccount: { type: string }
+        confirmations:
+          type: array
+          items: { $ref: "#/components/schemas/DemoSettlementConfirmation" }
+        status: { type: string, enum: [awaiting_investor, ready, prepared, success] }
+        transferMemo: { type: string }
+        transactionHash: { type: string }
+      required: [id, network, tokenContract, receiverAccount, confirmations, status]
+    DemoSettlementState:
+      type: object
+      properties:
+        settlement: { $ref: "#/components/schemas/DemoSettlement" }
+        maySend:
+          type: boolean
+          description: Returned only by preparation; true only for the request that first reserves this transfer.
     NearIntentsSignedData:
       type: object
       properties:
@@ -735,6 +891,9 @@ components:
           type: string
         range:
           $ref: "#/components/schemas/RaiseRange"
+        sourceLink:
+          type: string
+          format: uri
         claimed:
           type: boolean
         status:
@@ -850,6 +1009,10 @@ components:
     SoftCommitmentInput:
       type: object
       properties:
+        demoReceipt:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+          description: Optional investor capability for the separate demo settlement; never returned publicly.
         id:
           type: string
           maxLength: 80

@@ -1,4 +1,5 @@
 - [MVP scope](mvp-scope.md) — Keep the focus very tight; do not add too much.
+- [Branding preferences](branding.md) — Preserve “Powered by” attribution and the user-provided logo when changing the app name.
 - [Raise data privacy](raise-data-privacy.md) — Individual commitments and investor contact details must remain private.
 - [Codegen version inference](codegen-version-inference.md) — Orval may misdetect dependencies declared through the pnpm catalog.
 - [Native Node tests](native-node-tests.md) — In this workspace, Node 24 can run `node:test` files that import TypeScript source without `tsx`.

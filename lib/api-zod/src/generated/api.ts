@@ -148,6 +148,7 @@ export const GetRaisesResponseItem = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
@@ -226,6 +227,7 @@ export const UpdateAgentRaiseResponse = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
@@ -258,6 +260,7 @@ export const GetRaiseByIdResponse = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
@@ -293,6 +296,7 @@ export const ReserveAgentRaiseResponse = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
@@ -327,6 +331,7 @@ export const GetPrivateRaiseResponse = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
@@ -372,6 +377,7 @@ export const ApproveRaiseResponse = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
@@ -418,6 +424,7 @@ export const ClaimRaiseResponse = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
@@ -433,6 +440,7 @@ export const SubmitSoftCommitmentParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const submitSoftCommitmentBodyDemoReceiptRegExp = new RegExp('^[a-f0-9]{64}$');
 export const submitSoftCommitmentBodyIdMax = 80;
 
 export const submitSoftCommitmentBodyIdentifierMax = 80;
@@ -441,6 +449,7 @@ export const submitSoftCommitmentBodyIdentifierMax = 80;
 
 
 export const SubmitSoftCommitmentBody = zod.object({
+  "demoReceipt": zod.string().regex(submitSoftCommitmentBodyDemoReceiptRegExp).optional().describe('Optional investor capability for the separate demo settlement; never returned publicly.'),
   "id": zod.string().max(submitSoftCommitmentBodyIdMax).optional(),
   "identifier": zod.string().min(1).max(submitSoftCommitmentBodyIdentifierMax),
   "amount": zod.int().min(1)
@@ -463,6 +472,7 @@ export const SubmitSoftCommitmentResponse = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
@@ -501,6 +511,7 @@ export const UpdateRaiseCommitmentResponse = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
@@ -527,6 +538,174 @@ export const RequestDemoQuoteResponse = zod.object({
   "outputAmount": zod.string(),
   "quoteId": zod.string().nullable(),
   "quotedAt": zod.coerce.date()
+})
+
+
+export const GetDemoSettlementConfigResponse = zod.object({
+  "testnet": zod.string(),
+  "mainnet": zod.string()
+})
+
+
+/**
+ * Private to the sponsor or the investor holding the original demo receipt.
+ */
+export const GetDemoSettlementParams = zod.object({
+  "id": zod.coerce.string(),
+  "commitmentId": zod.coerce.string()
+})
+
+export const GetDemoSettlementResponse = zod.object({
+  "settlement": zod.object({
+  "id": zod.string(),
+  "network": zod.enum(['testnet', 'mainnet']),
+  "tokenContract": zod.string(),
+  "receiverAccount": zod.string(),
+  "reference": zod.string().optional(),
+  "signerAccount": zod.string().optional(),
+  "confirmations": zod.array(zod.object({
+  "role": zod.enum(['sponsor', 'investor']),
+  "timestamp": zod.coerce.date()
+})),
+  "status": zod.enum(['awaiting_investor', 'ready', 'prepared', 'success']),
+  "transferMemo": zod.string().optional(),
+  "transactionHash": zod.string().optional()
+}).optional(),
+  "maySend": zod.boolean().optional().describe('Returned only by preparation; true only for the request that first reserves this transfer.')
+})
+
+
+export const ConfigureDemoSettlementParams = zod.object({
+  "id": zod.coerce.string(),
+  "commitmentId": zod.coerce.string()
+})
+
+export const configureDemoSettlementBodyReceiverAccountMin = 2;
+export const configureDemoSettlementBodyReceiverAccountMax = 64;
+
+export const configureDemoSettlementBodyReferenceMax = 300;
+
+
+
+export const ConfigureDemoSettlementBody = zod.object({
+  "network": zod.enum(['testnet', 'mainnet']),
+  "receiverAccount": zod.string().min(configureDemoSettlementBodyReceiverAccountMin).max(configureDemoSettlementBodyReceiverAccountMax),
+  "reference": zod.string().max(configureDemoSettlementBodyReferenceMax).optional(),
+  "confirmed": zod.boolean()
+})
+
+export const ConfigureDemoSettlementResponse = zod.object({
+  "settlement": zod.object({
+  "id": zod.string(),
+  "network": zod.enum(['testnet', 'mainnet']),
+  "tokenContract": zod.string(),
+  "receiverAccount": zod.string(),
+  "reference": zod.string().optional(),
+  "signerAccount": zod.string().optional(),
+  "confirmations": zod.array(zod.object({
+  "role": zod.enum(['sponsor', 'investor']),
+  "timestamp": zod.coerce.date()
+})),
+  "status": zod.enum(['awaiting_investor', 'ready', 'prepared', 'success']),
+  "transferMemo": zod.string().optional(),
+  "transactionHash": zod.string().optional()
+}).optional(),
+  "maySend": zod.boolean().optional().describe('Returned only by preparation; true only for the request that first reserves this transfer.')
+})
+
+
+export const ConfirmDemoSettlementParams = zod.object({
+  "id": zod.coerce.string(),
+  "commitmentId": zod.coerce.string()
+})
+
+export const confirmDemoSettlementBodySignerAccountMin = 2;
+export const confirmDemoSettlementBodySignerAccountMax = 64;
+
+
+
+export const ConfirmDemoSettlementBody = zod.object({
+  "settlementId": zod.uuid(),
+  "signerAccount": zod.string().min(confirmDemoSettlementBodySignerAccountMin).max(confirmDemoSettlementBodySignerAccountMax),
+  "confirmed": zod.boolean()
+})
+
+export const ConfirmDemoSettlementResponse = zod.object({
+  "settlement": zod.object({
+  "id": zod.string(),
+  "network": zod.enum(['testnet', 'mainnet']),
+  "tokenContract": zod.string(),
+  "receiverAccount": zod.string(),
+  "reference": zod.string().optional(),
+  "signerAccount": zod.string().optional(),
+  "confirmations": zod.array(zod.object({
+  "role": zod.enum(['sponsor', 'investor']),
+  "timestamp": zod.coerce.date()
+})),
+  "status": zod.enum(['awaiting_investor', 'ready', 'prepared', 'success']),
+  "transferMemo": zod.string().optional(),
+  "transactionHash": zod.string().optional()
+}).optional(),
+  "maySend": zod.boolean().optional().describe('Returned only by preparation; true only for the request that first reserves this transfer.')
+})
+
+
+export const PrepareDemoSettlementParams = zod.object({
+  "id": zod.coerce.string(),
+  "commitmentId": zod.coerce.string()
+})
+
+export const PrepareDemoSettlementResponse = zod.object({
+  "settlement": zod.object({
+  "id": zod.string(),
+  "network": zod.enum(['testnet', 'mainnet']),
+  "tokenContract": zod.string(),
+  "receiverAccount": zod.string(),
+  "reference": zod.string().optional(),
+  "signerAccount": zod.string().optional(),
+  "confirmations": zod.array(zod.object({
+  "role": zod.enum(['sponsor', 'investor']),
+  "timestamp": zod.coerce.date()
+})),
+  "status": zod.enum(['awaiting_investor', 'ready', 'prepared', 'success']),
+  "transferMemo": zod.string().optional(),
+  "transactionHash": zod.string().optional()
+}).optional(),
+  "maySend": zod.boolean().optional().describe('Returned only by preparation; true only for the request that first reserves this transfer.')
+})
+
+
+export const VerifyDemoSettlementParams = zod.object({
+  "id": zod.coerce.string(),
+  "commitmentId": zod.coerce.string()
+})
+
+export const verifyDemoSettlementBodyTransactionHashMin = 40;
+export const verifyDemoSettlementBodyTransactionHashMax = 50;
+
+
+
+export const VerifyDemoSettlementBody = zod.object({
+  "transactionHash": zod.string().min(verifyDemoSettlementBodyTransactionHashMin).max(verifyDemoSettlementBodyTransactionHashMax)
+})
+
+export const VerifyDemoSettlementResponse = zod.object({
+  "settlement": zod.object({
+  "id": zod.string(),
+  "network": zod.enum(['testnet', 'mainnet']),
+  "tokenContract": zod.string(),
+  "receiverAccount": zod.string(),
+  "reference": zod.string().optional(),
+  "signerAccount": zod.string().optional(),
+  "confirmations": zod.array(zod.object({
+  "role": zod.enum(['sponsor', 'investor']),
+  "timestamp": zod.coerce.date()
+})),
+  "status": zod.enum(['awaiting_investor', 'ready', 'prepared', 'success']),
+  "transferMemo": zod.string().optional(),
+  "transactionHash": zod.string().optional()
+}).optional(),
+  "maySend": zod.boolean().optional().describe('Returned only by preparation; true only for the request that first reserves this transfer.')
 })
 
 

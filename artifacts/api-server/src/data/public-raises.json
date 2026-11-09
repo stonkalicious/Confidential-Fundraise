@@ -1,0 +1,22 @@
+[
+  {
+    "name": "NEAR Agent Commerce",
+    "thesis": "Agents coordinate cross-chain purchases through NEAR Intents with clear payment approval and settlement paths.",
+    "stage": "Demo concept",
+    "range": {
+      "min": 250000,
+      "max": 750000
+    },
+    "sourceLink": "https://near.org/"
+  },
+  {
+    "name": "Developer Workflow Copilot",
+    "thesis": "A focused coding assistant helps small teams move from issue triage to tested pull requests.",
+    "stage": "Demo concept",
+    "range": {
+      "min": 500000,
+      "max": 1000000
+    },
+    "sourceLink": "https://www.ycombinator.com/companies"
+  }
+]

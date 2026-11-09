@@ -1,6 +1,7 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db, raiseStateTable } from "@workspace/db";
+import publicRaiseSeedData from "../data/public-raises.json";
 import {
   GetPendingRaisesResponse,
   GetPrivateRaiseResponse,
@@ -31,7 +32,9 @@ type RaiseRecord = {
   range: RaiseRange;
   status: "approved" | "pending";
   publicStatus?: "open" | "paused" | "closed";
+  sourceLink?: string;
   agentClaimTokenHash?: string;
+  demoInvestorReceiptHashes?: Record<string, string>;
   claim?: {
     founderName: string;
     email: string;
@@ -45,7 +48,7 @@ type RaiseRecord = {
 const seedData: Omit<RaiseRecord, "position">[] = [
   {
     id: DEFAULT_RAISE_ID,
-    name: "Confidential Fundraise Thesis",
+    name: "Privacy Token Fund",
     thesis: "Fund-wide thesis for private money and confidential cross-chain settlement.",
     stage: "Fundraise",
     range: { min: 2_000_000, max: 5_000_000 },
@@ -105,6 +108,114 @@ const seededRaises: RaiseRecord[] = seedData.map((raise, position) => ({
   position,
 }));
 
+export type PublicRaiseSeed = {
+  name: string;
+  thesis: string;
+  stage: string;
+  range: RaiseRange;
+  sourceLink?: string;
+};
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function slugify(name: string): string {
+  return name
+    .normalize("NFKD")
+    .toLowerCase()
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 48) || "raise";
+}
+
+export function publicRaiseId(name: string): string {
+  const normalizedName = name.trim().normalize("NFKC").toLowerCase();
+  const suffix = createHash("sha256").update(normalizedName).digest("hex").slice(0, 8);
+  return `public-${slugify(name)}-${suffix}`;
+}
+
+export function parsePublicRaiseSeeds(value: unknown): PublicRaiseSeed[] {
+  if (!Array.isArray(value)) {
+    throw new Error("Public raise seed data must be a JSON array.");
+  }
+
+  const parsedSeeds: PublicRaiseSeed[] = [];
+  const seenIds = new Set<string>();
+  for (const [index, entry] of value.entries()) {
+    const label = `Public raise seed entry ${index + 1}`;
+    if (!isPlainRecord(entry)) throw new Error(`${label} must be an object.`);
+
+    const name = typeof entry.name === "string" ? entry.name.trim() : "";
+    const thesis = typeof entry.thesis === "string" ? entry.thesis.trim() : "";
+    const stage = typeof entry.stage === "string" ? entry.stage.trim() : "";
+    if (name.length < 2 || name.length > 120) {
+      throw new Error(`${label} must have a name between 2 and 120 characters.`);
+    }
+    if (
+      thesis.length < 10 ||
+      thesis.length > 280 ||
+      /[\r\n]/.test(thesis)
+    ) {
+      throw new Error(`${label} must have a one-line thesis between 10 and 280 characters.`);
+    }
+    if (stage.length < 1 || stage.length > 60) {
+      throw new Error(`${label} must have a stage between 1 and 60 characters.`);
+    }
+    if (
+      !isPlainRecord(entry.range) ||
+      !Number.isSafeInteger(entry.range.min) ||
+      !Number.isSafeInteger(entry.range.max) ||
+      (entry.range.min as number) <= 0 ||
+      (entry.range.max as number) < (entry.range.min as number)
+    ) {
+      throw new Error(`${label} must have positive integer range bounds with max at least min.`);
+    }
+
+    let sourceLink: string | undefined;
+    if (entry.sourceLink !== undefined) {
+      if (typeof entry.sourceLink !== "string" || !entry.sourceLink.trim()) {
+        throw new Error(`${label} sourceLink must be an HTTP(S) URL when provided.`);
+      }
+      sourceLink = entry.sourceLink.trim();
+      let url: URL;
+      try {
+        url = new URL(sourceLink);
+      } catch {
+        throw new Error(`${label} sourceLink must be an HTTP(S) URL when provided.`);
+      }
+      if ((url.protocol !== "http:" && url.protocol !== "https:") || !url.hostname) {
+        throw new Error(`${label} sourceLink must be an HTTP(S) URL when provided.`);
+      }
+    }
+
+    const id = publicRaiseId(name);
+    if (seenIds.has(id)) continue;
+    seenIds.add(id);
+    parsedSeeds.push({
+      name,
+      thesis,
+      stage,
+      range: { min: entry.range.min as number, max: entry.range.max as number },
+      ...(sourceLink ? { sourceLink } : {}),
+    });
+  }
+  return parsedSeeds;
+}
+
+const publicSeededRaises: RaiseRecord[] = parsePublicRaiseSeeds(publicRaiseSeedData).map(
+  (seed, index) => ({
+    id: publicRaiseId(seed.name),
+    position: seededRaises.length + index,
+    ...seed,
+    status: "approved",
+    commitments: [],
+    softTotal: 0,
+    hardTotal: 0,
+  }),
+);
+
 let raises = seededRaises.map(cloneRaise);
 let nextPosition = seededRaises.length;
 let storeInitialized = false;
@@ -115,6 +226,9 @@ function cloneRaise(raise: RaiseRecord): RaiseRecord {
     ...raise,
     range: { ...raise.range },
     ...(raise.claim ? { claim: { ...raise.claim } } : {}),
+    ...(raise.demoInvestorReceiptHashes
+      ? { demoInvestorReceiptHashes: { ...raise.demoInvestorReceiptHashes } }
+      : {}),
     commitments: raise.commitments.map((commitment) => ({ ...commitment })),
   };
 }
@@ -177,6 +291,10 @@ function raiseFromDatabase(state: unknown, position: number): RaiseRecord {
     ...(typeof storedState.agentClaimTokenHash === "string"
       ? { agentClaimTokenHash: storedState.agentClaimTokenHash }
       : {}),
+    ...(isPlainRecord(storedState.demoInvestorReceiptHashes)
+      ? { demoInvestorReceiptHashes: storedState.demoInvestorReceiptHashes as Record<string, string> }
+      : {}),
+    ...(typeof storedState.sourceLink === "string" ? { sourceLink: storedState.sourceLink } : {}),
     ...(parsed.claim ? { claim: parsed.claim } : {}),
     commitments: parsed.commitments,
     softTotal: parsed.softTotal,
@@ -211,14 +329,21 @@ function cacheRaise(raise: RaiseRecord): void {
 }
 
 export function initializeRaiseStore(
-  seedRows: readonly RaiseRecord[] = seededRaises,
+  seedRows: readonly RaiseRecord[] = [...seededRaises, ...publicSeededRaises],
 ): Promise<void> {
   return withWriteQueue(async () => {
     const existingRows = await db
-      .select({ id: raiseStateTable.id })
+      .select({ id: raiseStateTable.id, position: raiseStateTable.position })
       .from(raiseStateTable);
     const existingIds = new Set(existingRows.map((row) => row.id));
-    const missingSeeds = seedRows.filter((raise) => !existingIds.has(raise.id));
+    let seedPosition =
+      existingRows.reduce((maximum, row) => Math.max(maximum, row.position), -1) + 1;
+    const missingSeeds: RaiseRecord[] = [];
+    for (const raise of seedRows) {
+      if (existingIds.has(raise.id)) continue;
+      existingIds.add(raise.id);
+      missingSeeds.push({ ...raise, position: seedPosition++ });
+    }
 
     if (missingSeeds.length > 0) {
       await db
@@ -253,6 +378,7 @@ function publicSnapshot(raise: RaiseRecord): RaiseSummary {
     thesis: raise.thesis,
     stage: raise.stage,
     range: raise.range,
+    ...(raise.sourceLink ? { sourceLink: raise.sourceLink } : {}),
     claimed: Boolean(raise.claim || raise.agentClaimTokenHash),
     status: raise.publicStatus ?? "open",
     ...(raise.claim
@@ -322,16 +448,6 @@ export function getPendingRaises(): PendingRaise[] {
         status: "pending" as const,
       })),
   );
-}
-
-function slugify(name: string): string {
-  return name
-    .normalize("NFKD")
-    .toLowerCase()
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 48) || "raise";
 }
 
 export function submitRaiseRecord(
@@ -489,10 +605,11 @@ export function submitSoftCommitmentRecord(
       return { kind: "success", raise: publicSnapshot(raise), created: false };
     }
 
+    const commitmentId = input.id || randomUUID();
     const commitments = [
       ...raise.commitments,
       {
-        id: input.id || randomUUID(),
+        id: commitmentId,
         identifier,
         amount: input.amount,
         hard: false,
@@ -502,10 +619,39 @@ export function submitSoftCommitmentRecord(
     const totals = calculateTotals(commitments);
     if (!totals) return { kind: "amountOutOfRange" };
 
-    const updatedRaise = { ...raise, commitments, ...totals };
+    const updatedRaise = {
+      ...raise, commitments, ...totals,
+      ...(input.demoReceipt ? {
+        demoInvestorReceiptHashes: {
+          ...raise.demoInvestorReceiptHashes,
+          [commitmentId]: tokenHash(input.demoReceipt),
+        },
+      } : {}),
+    };
     await persistRaise(updatedRaise);
     return { kind: "success", raise: publicSnapshot(updatedRaise), created: true };
   });
+}
+
+// Fresh database reads keep optional payment authorization independent of the
+// process-local public raise cache. Never return the receipt hash to clients.
+export async function getDemoCommitmentAccess(
+  id: string, commitmentId: string, receipt?: string,
+): Promise<{ exists: boolean; investor: boolean }> {
+  const [row] = await db.select().from(raiseStateTable).where(eq(raiseStateTable.id, id));
+  const raise = row ? raiseFromDatabase(row.state, row.position) : undefined;
+  if (!raise || raise.status !== "approved" ||
+      !raise.commitments.some((item) => item.id === commitmentId)) {
+    return { exists: false, investor: false };
+  }
+  const expected = raise.demoInvestorReceiptHashes?.[commitmentId];
+  const supplied = receipt && /^[a-f0-9]{64}$/.test(receipt) ? tokenHash(receipt) : "";
+  return {
+    exists: true,
+    investor: Boolean(expected && supplied &&
+      expected.length === supplied.length &&
+      timingSafeEqual(Buffer.from(expected), Buffer.from(supplied))),
+  };
 }
 
 export function updateRaiseCommitmentRecord(

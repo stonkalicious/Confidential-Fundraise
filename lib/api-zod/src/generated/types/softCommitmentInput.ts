@@ -7,6 +7,11 @@
  */
 
 export interface SoftCommitmentInput {
+  /**
+     * Optional investor capability for the separate demo settlement; never returned publicly.
+     * @pattern ^[a-f0-9]{64}$
+     */
+  demoReceipt?: string;
   /** @maxLength 80 */
   id?: string;
   /**

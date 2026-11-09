@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "Confidential Fundraise Desk - Powered by NEAR"
+title = "Confidential Fundraising"
 description = "A synthetic-data demo for one sponsor and one prospect to record soft commitments, mark a commitment hard, prepare a NEAR Intents 1Click quote request, and share aggregate-only progress."
 version = "1.0.0"
 id = "artifacts/confidential-fundraise-desk"

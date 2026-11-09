@@ -5,6 +5,99 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface DemoSettlementConfig {
+  testnet: string;
+  mainnet: string;
+}
+
+export type DemoSettlementInputNetwork = typeof DemoSettlementInputNetwork[keyof typeof DemoSettlementInputNetwork];
+
+
+export const DemoSettlementInputNetwork = {
+  testnet: 'testnet',
+  mainnet: 'mainnet',
+} as const;
+
+export interface DemoSettlementInput {
+  network: DemoSettlementInputNetwork;
+  /**
+     * @minLength 2
+     * @maxLength 64
+     */
+  receiverAccount: string;
+  /** @maxLength 300 */
+  reference?: string;
+  confirmed: boolean;
+}
+
+export interface DemoSettlementConfirmationInput {
+  settlementId: string;
+  /**
+     * @minLength 2
+     * @maxLength 64
+     */
+  signerAccount: string;
+  confirmed: boolean;
+}
+
+export interface DemoSettlementVerificationInput {
+  /**
+     * @minLength 40
+     * @maxLength 50
+     */
+  transactionHash: string;
+}
+
+export type DemoSettlementConfirmationRole = typeof DemoSettlementConfirmationRole[keyof typeof DemoSettlementConfirmationRole];
+
+
+export const DemoSettlementConfirmationRole = {
+  sponsor: 'sponsor',
+  investor: 'investor',
+} as const;
+
+export interface DemoSettlementConfirmation {
+  role: DemoSettlementConfirmationRole;
+  timestamp: string;
+}
+
+export type DemoSettlementNetwork = typeof DemoSettlementNetwork[keyof typeof DemoSettlementNetwork];
+
+
+export const DemoSettlementNetwork = {
+  testnet: 'testnet',
+  mainnet: 'mainnet',
+} as const;
+
+export type DemoSettlementStatus = typeof DemoSettlementStatus[keyof typeof DemoSettlementStatus];
+
+
+export const DemoSettlementStatus = {
+  awaiting_investor: 'awaiting_investor',
+  ready: 'ready',
+  prepared: 'prepared',
+  success: 'success',
+} as const;
+
+export interface DemoSettlement {
+  id: string;
+  network: DemoSettlementNetwork;
+  tokenContract: string;
+  receiverAccount: string;
+  reference?: string;
+  signerAccount?: string;
+  confirmations: DemoSettlementConfirmation[];
+  status: DemoSettlementStatus;
+  transferMemo?: string;
+  transactionHash?: string;
+}
+
+export interface DemoSettlementState {
+  settlement?: DemoSettlement;
+  /** Returned only by preparation; true only for the request that first reserves this transfer. */
+  maySend?: boolean;
+}
+
 export type NearIntentsSignedDataPayload = {
   /** @minLength 1 */
   recipient: string;
@@ -93,6 +186,7 @@ export interface RaiseSummary {
   thesis: string;
   stage: string;
   range: RaiseRange;
+  sourceLink?: string;
   claimed: boolean;
   status?: RaiseSummaryStatus;
   /** @nullable */
@@ -200,6 +294,11 @@ export interface RaiseSubmissionInput {
 }
 
 export interface SoftCommitmentInput {
+  /**
+     * Optional investor capability for the separate demo settlement; never returned publicly.
+     * @pattern ^[a-f0-9]{64}$
+     */
+  demoReceipt?: string;
   /** @maxLength 80 */
   id?: string;
   /**
@@ -252,4 +351,9 @@ export interface DemoIntentsQuote {
 export interface ErrorMessage {
   error: string;
 }
+
+/**
+ * Invalid input, unauthorized role, missing commitment, confirmation conflict, or unavailable NEAR verification. Never treat this as success or automatically resend a payment.
+ */
+export type DemoSettlementErrorResponse = ErrorMessage;
 
