@@ -304,18 +304,8 @@ function raiseFromDatabase(state: unknown, position: number): RaiseRecord {
 
 async function persistRaise(raise: RaiseRecord): Promise<void> {
   if (storeInitialized) {
-    const row = databaseRow(raise);
-    await db
-      .insert(raiseStateTable)
-      .values(row)
-      .onConflictDoUpdate({
-        target: raiseStateTable.id,
-        set: {
-          position: row.position,
-          state: row.state,
-          updatedAt: new Date(),
-        },
-      });
+    // New raises are insert-only. Existing rows must go through mutateRaise.
+    await db.insert(raiseStateTable).values(databaseRow(raise));
   }
 
   cacheRaise(raise);
@@ -473,12 +463,10 @@ export function submitRaiseRecord(
 }
 
 export function approveRaiseRecord(id: string): Promise<RaiseSummary | undefined> {
-  return withWriteQueue(async () => {
-    const raise = raises.find((item) => item.id === id && item.status === "pending");
-    if (!raise) return undefined;
+  return mutateRaise<RaiseSummary | undefined>(id, (raise) => {
+    if (raise?.status !== "pending") return { result: undefined };
     const approvedRaise = { ...raise, status: "approved" as const };
-    await persistRaise(approvedRaise);
-    return publicSnapshot(approvedRaise);
+    return { updated: approvedRaise, result: publicSnapshot(approvedRaise) };
   });
 }
 
@@ -486,10 +474,11 @@ export function claimRaiseRecord(
   id: string,
   input: ClaimRaiseInput,
 ): Promise<RaiseStoreResult> {
-  return withWriteQueue(async () => {
-    const raise = findApprovedRaise(id);
-    if (!raise) return { kind: "notFound" };
-    if (raise.claim || raise.agentClaimTokenHash) return { kind: "alreadyClaimed" };
+  return mutateRaise<RaiseStoreResult>(id, (raise) => {
+    if (raise?.status !== "approved") return { result: { kind: "notFound" } };
+    if (raise.claim || raise.agentClaimTokenHash) {
+      return { result: { kind: "alreadyClaimed" } };
+    }
 
     const signatureOrAccount = input.signatureOrAccount?.trim();
     const claimedRaise: RaiseRecord = {
@@ -500,8 +489,10 @@ export function claimRaiseRecord(
         ...(signatureOrAccount ? { signatureOrAccount } : {}),
       },
     };
-    await persistRaise(claimedRaise);
-    return { kind: "success", raise: publicSnapshot(claimedRaise) };
+    return {
+      updated: claimedRaise,
+      result: { kind: "success", raise: publicSnapshot(claimedRaise) },
+    };
   });
 }
 
@@ -509,40 +500,53 @@ type AgentStoreResult =
   | { kind: "success"; raise: RaiseSummary; claimToken?: string }
   | { kind: "notFound" | "alreadyClaimed" | "unauthorized" };
 
-type AgentMutation = {
-  result: AgentStoreResult;
+type RaiseMutation<T> = {
+  result: T;
   updated?: RaiseRecord;
 };
 
-// Lock the persisted row so simultaneous agent claims cannot both reserve it.
-function mutateAgentRaise(
+// Every existing-row writer must read and change state under the same database
+// row lock. The process-local queue/cache alone cannot protect other instances.
+function mutateRaise<T>(
   id: string,
-  change: (raise: RaiseRecord) => AgentMutation,
-): Promise<AgentStoreResult> {
+  change: (raise: RaiseRecord | undefined) => RaiseMutation<T>,
+): Promise<T> {
   return withWriteQueue(async () => {
-    const apply = (raise: RaiseRecord | undefined): AgentMutation =>
-      raise?.status === "approved"
-        ? change(raise)
-        : { result: { kind: "notFound" } };
-
     const outcome = storeInitialized
       ? await db.transaction(async (tx) => {
           const [row] = await tx.select().from(raiseStateTable)
             .where(eq(raiseStateTable.id, id)).for("update");
-          const mutation = apply(row ? raiseFromDatabase(row.state, row.position) : undefined);
+          const current = row ? raiseFromDatabase(row.state, row.position) : undefined;
+          const mutation = change(current);
           if (mutation.updated) {
             await tx.update(raiseStateTable).set({
               state: databaseRow(mutation.updated).state,
               updatedAt: new Date(),
             }).where(eq(raiseStateTable.id, id));
           }
-          return mutation;
+          return { ...mutation, current };
         })
-      : apply(findApprovedRaise(id));
+      : (() => {
+          const current = raises.find((raise) => raise.id === id);
+          return { ...change(current), current };
+        })();
 
-    if (outcome.updated) cacheRaise(outcome.updated);
+    // Publish to this instance's cache only after the transaction commits.
+    const latest = outcome.updated ?? outcome.current;
+    if (latest) cacheRaise(latest);
     return outcome.result;
   });
+}
+
+function mutateAgentRaise(
+  id: string,
+  change: (raise: RaiseRecord) => RaiseMutation<AgentStoreResult>,
+): Promise<AgentStoreResult> {
+  return mutateRaise<AgentStoreResult>(id, (raise) =>
+    raise?.status === "approved"
+      ? change(raise)
+      : { result: { kind: "notFound" } },
+  );
 }
 
 function tokenHash(token: string): string {
@@ -590,9 +594,8 @@ export function submitSoftCommitmentRecord(
   id: string,
   input: SoftCommitmentInput,
 ): Promise<RaiseStoreResult> {
-  return withWriteQueue(async () => {
-    const raise = findApprovedRaise(id);
-    if (!raise) return { kind: "notFound" };
+  return mutateRaise<RaiseStoreResult>(id, (raise) => {
+    if (raise?.status !== "approved") return { result: { kind: "notFound" } };
 
     const identifier = input.identifier.trim();
     const existing = input.id
@@ -600,9 +603,9 @@ export function submitSoftCommitmentRecord(
       : undefined;
     if (existing) {
       if (existing.identifier !== identifier || existing.amount !== input.amount) {
-        return { kind: "conflict" };
+        return { result: { kind: "conflict" } };
       }
-      return { kind: "success", raise: publicSnapshot(raise), created: false };
+      return { result: { kind: "success", raise: publicSnapshot(raise), created: false } };
     }
 
     const commitmentId = input.id || randomUUID();
@@ -617,7 +620,7 @@ export function submitSoftCommitmentRecord(
       },
     ];
     const totals = calculateTotals(commitments);
-    if (!totals) return { kind: "amountOutOfRange" };
+    if (!totals) return { result: { kind: "amountOutOfRange" } };
 
     const updatedRaise = {
       ...raise, commitments, ...totals,
@@ -628,8 +631,10 @@ export function submitSoftCommitmentRecord(
         },
       } : {}),
     };
-    await persistRaise(updatedRaise);
-    return { kind: "success", raise: publicSnapshot(updatedRaise), created: true };
+    return {
+      updated: updatedRaise,
+      result: { kind: "success", raise: publicSnapshot(updatedRaise), created: true },
+    };
   });
 }
 
@@ -659,22 +664,23 @@ export function updateRaiseCommitmentRecord(
   commitmentId: string,
   input: CommitmentStatusInput,
 ): Promise<RaiseStoreResult> {
-  return withWriteQueue(async () => {
-    const raise = findApprovedRaise(id);
-    if (!raise) return { kind: "notFound" };
-    if (input.verified && !input.hard) return { kind: "invalidStatus" };
+  return mutateRaise<RaiseStoreResult>(id, (raise) => {
+    if (raise?.status !== "approved") return { result: { kind: "notFound" } };
+    if (input.verified && !input.hard) return { result: { kind: "invalidStatus" } };
 
     const commitment = raise.commitments.find((item) => item.id === commitmentId);
-    if (!commitment) return { kind: "commitmentNotFound" };
+    if (!commitment) return { result: { kind: "commitmentNotFound" } };
 
     const commitments = raise.commitments.map((item) =>
       item.id === commitmentId ? { ...item, ...input } : item,
     );
     const totals = calculateTotals(commitments);
-    if (!totals) return { kind: "amountOutOfRange" };
+    if (!totals) return { result: { kind: "amountOutOfRange" } };
 
     const updatedRaise = { ...raise, commitments, ...totals };
-    await persistRaise(updatedRaise);
-    return { kind: "success", raise: publicSnapshot(updatedRaise) };
+    return {
+      updated: updatedRaise,
+      result: { kind: "success", raise: publicSnapshot(updatedRaise) },
+    };
   });
 }
