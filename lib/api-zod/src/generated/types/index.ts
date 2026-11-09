@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './agentRaiseClaim';
+export * from './agentRaiseUpdate';
+export * from './agentRaiseUpdateStatus';
 export * from './claimRaiseInput';
 export * from './commitmentStatusInput';
 export * from './demoIntentsQuote';
@@ -26,4 +29,5 @@ export * from './raiseSubmissionInput';
 export * from './raiseSubmissionReceipt';
 export * from './raiseSubmissionReceiptStatus';
 export * from './raiseSummary';
+export * from './raiseSummaryStatus';
 export * from './softCommitmentInput';

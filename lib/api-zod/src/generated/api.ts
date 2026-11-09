@@ -101,6 +101,7 @@ export const GetRaisesResponseItem = zod.object({
   "max": zod.int().min(1)
 }),
   "claimed": zod.boolean(),
+  "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
   "softTotal": zod.int().min(getRaisesResponseSoftTotalMin),
   "hardTotal": zod.int().min(getRaisesResponseHardTotalMin)
@@ -130,6 +131,62 @@ export const GetPendingRaisesResponse = zod.array(GetPendingRaisesResponseItem)
 
 
 /**
+ * The bearer token grants page ownership only, not company verification or access to private data. Approval status cannot be changed.
+ * @summary Update public page fields using this raise's agent claim token
+ */
+export const UpdateAgentRaiseParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateAgentRaiseHeader = zod.object({
+  "Authorization": zod.string()
+})
+
+export const updateAgentRaiseBodyThesisMin = 10;
+export const updateAgentRaiseBodyThesisMax = 280;
+
+export const updateAgentRaiseBodyStageMax = 60;
+
+
+
+
+
+export const UpdateAgentRaiseBody = zod.object({
+  "thesis": zod.string().min(updateAgentRaiseBodyThesisMin).max(updateAgentRaiseBodyThesisMax).optional(),
+  "stage": zod.string().min(1).max(updateAgentRaiseBodyStageMax).optional(),
+  "range": zod.object({
+  "min": zod.int().min(1),
+  "max": zod.int().min(1)
+}).optional(),
+  "status": zod.enum(['open', 'paused', 'closed']).optional()
+})
+
+
+
+export const updateAgentRaiseResponseSoftTotalMin = 0;
+
+export const updateAgentRaiseResponseHardTotalMin = 0;
+
+
+
+export const UpdateAgentRaiseResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "thesis": zod.string(),
+  "stage": zod.string(),
+  "range": zod.object({
+  "min": zod.int().min(1),
+  "max": zod.int().min(1)
+}),
+  "claimed": zod.boolean(),
+  "status": zod.enum(['open', 'paused', 'closed']).optional(),
+  "claimantName": zod.string().nullish(),
+  "softTotal": zod.int().min(updateAgentRaiseResponseSoftTotalMin),
+  "hardTotal": zod.int().min(updateAgentRaiseResponseHardTotalMin)
+})
+
+
+/**
  * @summary Get one approved public raise and its aggregate totals
  */
 export const GetRaiseByIdParams = zod.object({
@@ -154,9 +211,46 @@ export const GetRaiseByIdResponse = zod.object({
   "max": zod.int().min(1)
 }),
   "claimed": zod.boolean(),
+  "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
   "softTotal": zod.int().min(getRaiseByIdResponseSoftTotalMin),
   "hardTotal": zod.int().min(getRaiseByIdResponseHardTotalMin)
+})
+
+
+/**
+ * No company verification is performed. Save the returned token; it is returned only once and authorizes public-field updates on this raise only.
+ * @summary Reserve an unclaimed raise page for an agent
+ */
+export const ReserveAgentRaiseParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+export const reserveAgentRaiseResponseRaiseSoftTotalMin = 0;
+
+export const reserveAgentRaiseResponseRaiseHardTotalMin = 0;
+
+
+
+export const ReserveAgentRaiseResponse = zod.object({
+  "claimToken": zod.string(),
+  "raise": zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "thesis": zod.string(),
+  "stage": zod.string(),
+  "range": zod.object({
+  "min": zod.int().min(1),
+  "max": zod.int().min(1)
+}),
+  "claimed": zod.boolean(),
+  "status": zod.enum(['open', 'paused', 'closed']).optional(),
+  "claimantName": zod.string().nullish(),
+  "softTotal": zod.int().min(reserveAgentRaiseResponseRaiseSoftTotalMin),
+  "hardTotal": zod.int().min(reserveAgentRaiseResponseRaiseHardTotalMin)
+})
 })
 
 
@@ -186,6 +280,7 @@ export const GetPrivateRaiseResponse = zod.object({
   "max": zod.int().min(1)
 }),
   "claimed": zod.boolean(),
+  "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
   "softTotal": zod.int().min(getPrivateRaiseResponseOneSoftTotalMin),
   "hardTotal": zod.int().min(getPrivateRaiseResponseOneHardTotalMin)
@@ -230,6 +325,7 @@ export const ApproveRaiseResponse = zod.object({
   "max": zod.int().min(1)
 }),
   "claimed": zod.boolean(),
+  "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
   "softTotal": zod.int().min(approveRaiseResponseSoftTotalMin),
   "hardTotal": zod.int().min(approveRaiseResponseHardTotalMin)
@@ -275,6 +371,7 @@ export const ClaimRaiseResponse = zod.object({
   "max": zod.int().min(1)
 }),
   "claimed": zod.boolean(),
+  "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
   "softTotal": zod.int().min(claimRaiseResponseSoftTotalMin),
   "hardTotal": zod.int().min(claimRaiseResponseHardTotalMin)
@@ -319,6 +416,7 @@ export const SubmitSoftCommitmentResponse = zod.object({
   "max": zod.int().min(1)
 }),
   "claimed": zod.boolean(),
+  "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
   "softTotal": zod.int().min(submitSoftCommitmentResponseSoftTotalMin),
   "hardTotal": zod.int().min(submitSoftCommitmentResponseHardTotalMin)
@@ -356,6 +454,7 @@ export const UpdateRaiseCommitmentResponse = zod.object({
   "max": zod.int().min(1)
 }),
   "claimed": zod.boolean(),
+  "status": zod.enum(['open', 'paused', 'closed']).optional(),
   "claimantName": zod.string().nullish(),
   "softTotal": zod.int().min(updateRaiseCommitmentResponseSoftTotalMin),
   "hardTotal": zod.int().min(updateRaiseCommitmentResponseHardTotalMin)

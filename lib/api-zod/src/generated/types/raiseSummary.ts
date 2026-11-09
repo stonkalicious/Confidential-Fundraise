@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { RaiseRange } from './raiseRange';
+import type { RaiseSummaryStatus } from './raiseSummaryStatus';
 
 export interface RaiseSummary {
   id: string;
@@ -14,6 +15,7 @@ export interface RaiseSummary {
   stage: string;
   range: RaiseRange;
   claimed: boolean;
+  status?: RaiseSummaryStatus;
   /** @nullable */
   claimantName?: string | null;
   /** @minimum 0 */

@@ -25,6 +25,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AgentRaiseClaim,
+  AgentRaiseUpdate,
   ClaimRaiseInput,
   CommitmentStatusInput,
   DemoIntentsQuote,
@@ -648,6 +650,96 @@ export function useGetPendingRaises<TData = Awaited<ReturnType<typeof getPending
 
 
 
+export const getUpdateAgentRaiseUrl = (id: string,) => {
+
+
+
+
+  return `/api/raises/${id}`
+}
+
+/**
+ * The bearer token grants page ownership only, not company verification or access to private data. Approval status cannot be changed.
+ * @summary Update public page fields using this raise's agent claim token
+ */
+export const updateAgentRaise = async (id: string,
+    agentRaiseUpdate: AgentRaiseUpdate, options?: Parameters<typeof customFetch>[1]): Promise<RaiseSummary> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<RaiseSummary>(getUpdateAgentRaiseUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(agentRaiseUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateAgentRaiseMutationKey = () => ['updateAgentRaise'] as const;
+
+export const getUpdateAgentRaiseMutationOptions = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAgentRaise>>, TError,UpdateAgentRaiseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAgentRaise>>, TError,UpdateAgentRaiseMutationVariables, TContext> => {
+
+const mutationKey = getUpdateAgentRaiseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAgentRaise>>, UpdateAgentRaiseMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateAgentRaise(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAgentRaiseMutationResult = NonNullable<Awaited<ReturnType<typeof updateAgentRaise>>>
+    export type UpdateAgentRaiseMutationBody = BodyType<AgentRaiseUpdate>
+    export type UpdateAgentRaiseMutationError = ErrorType<ErrorMessage>
+    export type UpdateAgentRaiseMutationVariables = {id: string;data: BodyType<AgentRaiseUpdate>}
+
+    /**
+ * @summary Update public page fields using this raise's agent claim token
+ */
+export const useUpdateAgentRaise = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAgentRaise>>, TError,UpdateAgentRaiseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateAgentRaise>>,
+        TError,
+        UpdateAgentRaiseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateAgentRaiseMutationOptions(options), queryClient);
+    }
+
 export const getGetRaiseByIdUrl = (id: string,) => {
 
 
@@ -748,6 +840,81 @@ export function useGetRaiseById<TData = Awaited<ReturnType<typeof getRaiseById>>
 
 
 
+
+export const getReserveAgentRaiseUrl = (id: string,) => {
+
+
+
+
+  return `/api/raises/${id}/agent-claim`
+}
+
+/**
+ * No company verification is performed. Save the returned token; it is returned only once and authorizes public-field updates on this raise only.
+ * @summary Reserve an unclaimed raise page for an agent
+ */
+export const reserveAgentRaise = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<AgentRaiseClaim> => {
+
+  return customFetch<AgentRaiseClaim>(getReserveAgentRaiseUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getReserveAgentRaiseMutationKey = () => ['reserveAgentRaise'] as const;
+
+export const getReserveAgentRaiseMutationOptions = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reserveAgentRaise>>, TError,ReserveAgentRaiseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reserveAgentRaise>>, TError,ReserveAgentRaiseMutationVariables, TContext> => {
+
+const mutationKey = getReserveAgentRaiseMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reserveAgentRaise>>, ReserveAgentRaiseMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  reserveAgentRaise(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReserveAgentRaiseMutationResult = NonNullable<Awaited<ReturnType<typeof reserveAgentRaise>>>
+
+    export type ReserveAgentRaiseMutationError = ErrorType<ErrorMessage>
+    export type ReserveAgentRaiseMutationVariables = {id: string}
+
+    /**
+ * @summary Reserve an unclaimed raise page for an agent
+ */
+export const useReserveAgentRaise = <TError = ErrorType<ErrorMessage>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reserveAgentRaise>>, TError,ReserveAgentRaiseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reserveAgentRaise>>,
+        TError,
+        ReserveAgentRaiseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReserveAgentRaiseMutationOptions(options), queryClient);
+    }
 
 export const getGetPrivateRaiseUrl = (id: string,) => {
 

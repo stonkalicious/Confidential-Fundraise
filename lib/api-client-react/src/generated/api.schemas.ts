@@ -46,6 +46,15 @@ export interface RaiseRange {
   max: number;
 }
 
+export type RaiseSummaryStatus = typeof RaiseSummaryStatus[keyof typeof RaiseSummaryStatus];
+
+
+export const RaiseSummaryStatus = {
+  open: 'open',
+  paused: 'paused',
+  closed: 'closed',
+} as const;
+
 export interface RaiseSummary {
   id: string;
   name: string;
@@ -53,12 +62,42 @@ export interface RaiseSummary {
   stage: string;
   range: RaiseRange;
   claimed: boolean;
+  status?: RaiseSummaryStatus;
   /** @nullable */
   claimantName?: string | null;
   /** @minimum 0 */
   softTotal: number;
   /** @minimum 0 */
   hardTotal: number;
+}
+
+export interface AgentRaiseClaim {
+  claimToken: string;
+  raise: RaiseSummary;
+}
+
+export type AgentRaiseUpdateStatus = typeof AgentRaiseUpdateStatus[keyof typeof AgentRaiseUpdateStatus];
+
+
+export const AgentRaiseUpdateStatus = {
+  open: 'open',
+  paused: 'paused',
+  closed: 'closed',
+} as const;
+
+export interface AgentRaiseUpdate {
+  /**
+     * @minLength 10
+     * @maxLength 280
+     */
+  thesis?: string;
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  stage?: string;
+  range?: RaiseRange;
+  status?: AgentRaiseUpdateStatus;
 }
 
 export interface RaiseClaim {

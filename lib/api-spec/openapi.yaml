@@ -141,6 +141,53 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
   /raises/{id}:
+    patch:
+      operationId: updateAgentRaise
+      tags: [raises]
+      summary: Update public page fields using this raise's agent claim token
+      description: The bearer token grants page ownership only, not company verification or access to private data. Approval status cannot be changed.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentRaiseUpdate"
+      responses:
+        "200":
+          description: Updated public raise summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RaiseSummary"
+        "400":
+          description: Invalid or disallowed public fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "401":
+          description: Missing or invalid per-raise claim token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "404":
+          description: Raise not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
     get:
       operationId: getRaiseById
       tags: [raises]
@@ -160,6 +207,37 @@ paths:
                 $ref: "#/components/schemas/RaiseSummary"
         "404":
           description: Raise not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+  /raises/{id}/agent-claim:
+    post:
+      operationId: reserveAgentRaise
+      tags: [raises]
+      summary: Reserve an unclaimed raise page for an agent
+      description: No company verification is performed. Save the returned token; it is returned only once and authorizes public-field updates on this raise only.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Page reserved; includes the one-time claim token and public summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentRaiseClaim"
+        "404":
+          description: Raise not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "409":
+          description: Page already claimed
           content:
             application/json:
               schema:
@@ -503,6 +581,32 @@ components:
       required:
         - founderName
         - email
+    AgentRaiseClaim:
+      type: object
+      properties:
+        claimToken:
+          type: string
+        raise:
+          $ref: "#/components/schemas/RaiseSummary"
+      required: [claimToken, raise]
+    AgentRaiseUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        thesis:
+          type: string
+          minLength: 10
+          maxLength: 280
+        stage:
+          type: string
+          minLength: 1
+          maxLength: 60
+        range:
+          $ref: "#/components/schemas/RaiseRange"
+        status:
+          type: string
+          enum: [open, paused, closed]
     RaiseSummary:
       type: object
       properties:
@@ -518,6 +622,9 @@ components:
           $ref: "#/components/schemas/RaiseRange"
         claimed:
           type: boolean
+        status:
+          type: string
+          enum: [open, paused, closed]
         claimantName:
           type: [string, "null"]
         softTotal:

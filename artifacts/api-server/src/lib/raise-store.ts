@@ -1,4 +1,5 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { eq } from "drizzle-orm";
 import { db, raiseStateTable } from "@workspace/db";
 import {
   GetPendingRaisesResponse,
@@ -7,6 +8,7 @@ import {
   GetRaisesResponse,
   SubmitRaiseResponse,
   type ClaimRaiseInput,
+  type AgentRaiseUpdate,
   type CommitmentStatusInput,
   type PendingRaise,
   type PrivateRaiseDetails,
@@ -28,6 +30,8 @@ type RaiseRecord = {
   stage: string;
   range: RaiseRange;
   status: "approved" | "pending";
+  publicStatus?: "open" | "paused" | "closed";
+  agentClaimTokenHash?: string;
   claim?: {
     founderName: string;
     email: string;
@@ -151,6 +155,7 @@ function raiseFromDatabase(state: unknown, position: number): RaiseRecord {
   const claim = storedState.claim;
   const parsed = GetPrivateRaiseResponse.parse({
     ...storedState,
+    status: storedState.publicStatus ?? "open",
     claimed: Boolean(claim),
     ...(typeof claim === "object" &&
     claim !== null &&
@@ -168,6 +173,10 @@ function raiseFromDatabase(state: unknown, position: number): RaiseRecord {
     stage: parsed.stage,
     range: parsed.range,
     status: storedState.status,
+    publicStatus: parsed.status ?? "open",
+    ...(typeof storedState.agentClaimTokenHash === "string"
+      ? { agentClaimTokenHash: storedState.agentClaimTokenHash }
+      : {}),
     ...(parsed.claim ? { claim: parsed.claim } : {}),
     commitments: parsed.commitments,
     softTotal: parsed.softTotal,
@@ -191,6 +200,10 @@ async function persistRaise(raise: RaiseRecord): Promise<void> {
       });
   }
 
+  cacheRaise(raise);
+}
+
+function cacheRaise(raise: RaiseRecord): void {
   const index = raises.findIndex((item) => item.id === raise.id);
   const saved = cloneRaise(raise);
   if (index < 0) raises.push(saved);
@@ -240,8 +253,11 @@ function publicSnapshot(raise: RaiseRecord): RaiseSummary {
     thesis: raise.thesis,
     stage: raise.stage,
     range: raise.range,
-    claimed: Boolean(raise.claim),
-    ...(raise.claim ? { claimantName: raise.claim.founderName } : {}),
+    claimed: Boolean(raise.claim || raise.agentClaimTokenHash),
+    status: raise.publicStatus ?? "open",
+    ...(raise.claim
+      ? { claimantName: raise.claim.founderName }
+      : raise.agentClaimTokenHash ? { claimantName: "agent" } : {}),
     softTotal: raise.softTotal,
     hardTotal: raise.hardTotal,
   });
@@ -357,7 +373,7 @@ export function claimRaiseRecord(
   return withWriteQueue(async () => {
     const raise = findApprovedRaise(id);
     if (!raise) return { kind: "notFound" };
-    if (raise.claim) return { kind: "alreadyClaimed" };
+    if (raise.claim || raise.agentClaimTokenHash) return { kind: "alreadyClaimed" };
 
     const signatureOrAccount = input.signatureOrAccount?.trim();
     const claimedRaise: RaiseRecord = {
@@ -370,6 +386,87 @@ export function claimRaiseRecord(
     };
     await persistRaise(claimedRaise);
     return { kind: "success", raise: publicSnapshot(claimedRaise) };
+  });
+}
+
+type AgentStoreResult =
+  | { kind: "success"; raise: RaiseSummary; claimToken?: string }
+  | { kind: "notFound" | "alreadyClaimed" | "unauthorized" };
+
+type AgentMutation = {
+  result: AgentStoreResult;
+  updated?: RaiseRecord;
+};
+
+// Lock the persisted row so simultaneous agent claims cannot both reserve it.
+function mutateAgentRaise(
+  id: string,
+  change: (raise: RaiseRecord) => AgentMutation,
+): Promise<AgentStoreResult> {
+  return withWriteQueue(async () => {
+    const apply = (raise: RaiseRecord | undefined): AgentMutation =>
+      raise?.status === "approved"
+        ? change(raise)
+        : { result: { kind: "notFound" } };
+
+    const outcome = storeInitialized
+      ? await db.transaction(async (tx) => {
+          const [row] = await tx.select().from(raiseStateTable)
+            .where(eq(raiseStateTable.id, id)).for("update");
+          const mutation = apply(row ? raiseFromDatabase(row.state, row.position) : undefined);
+          if (mutation.updated) {
+            await tx.update(raiseStateTable).set({
+              state: databaseRow(mutation.updated).state,
+              updatedAt: new Date(),
+            }).where(eq(raiseStateTable.id, id));
+          }
+          return mutation;
+        })
+      : apply(findApprovedRaise(id));
+
+    if (outcome.updated) cacheRaise(outcome.updated);
+    return outcome.result;
+  });
+}
+
+function tokenHash(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+export function reserveAgentRaiseRecord(id: string): Promise<AgentStoreResult> {
+  return mutateAgentRaise(id, (raise) => {
+    if (raise.claim || raise.agentClaimTokenHash) {
+      return { result: { kind: "alreadyClaimed" } };
+    }
+    const claimToken = randomBytes(32).toString("base64url");
+    const updated = { ...raise, agentClaimTokenHash: tokenHash(claimToken) };
+    return {
+      updated,
+      result: { kind: "success", raise: publicSnapshot(updated), claimToken },
+    };
+  });
+}
+
+export function updateAgentRaiseRecord(
+  id: string,
+  token: string,
+  input: AgentRaiseUpdate,
+): Promise<AgentStoreResult> {
+  return mutateAgentRaise(id, (raise) => {
+    const supplied = Buffer.from(tokenHash(token), "hex");
+    const expected = Buffer.from(raise.agentClaimTokenHash ?? "", "hex");
+    if (expected.length !== supplied.length || !timingSafeEqual(expected, supplied)) {
+      return { result: { kind: "unauthorized" } };
+    }
+    // Explicit allowlist: neither private records nor approval can be changed.
+    const updated: RaiseRecord = {
+      ...raise,
+      ...(input.thesis !== undefined ? { thesis: input.thesis.trim() } : {}),
+      ...(input.stage !== undefined ? { stage: input.stage.trim() } : {}),
+      ...(input.range !== undefined ? { range: { ...input.range } } : {}),
+      ...(input.status !== undefined ? { publicStatus: input.status } : {}),
+    };
+    return { updated, result: { kind: "success", raise: publicSnapshot(updated) } };
   });
 }
 
