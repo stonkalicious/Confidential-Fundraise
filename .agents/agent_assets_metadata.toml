@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "4agXT_zZG3bBhG1Giv2eI"
+uri = "file://docs/hackathon-submission.md"
+type = "text"
+title = "Hackathon submission pack"
+description = "Recording script, X post draft, submission description, track recommendation, and readiness checklist. Nothing has been published or submitted."
+logical_id = "ca893219-6032-4ac4-b4b7-5fe538637483"
+content_hash = "sha256:5d1acd3cd4b98169f7c051707661e6837c453fc7e6ce807596f53403b32e4b53"
+size = 11033
+mtime_ms = 1794226372126
+storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:85f370ce-7616-4218-a0bb-4a518cb308c3/ca893219-6032-4ac4-b4b7-5fe538637483/231677e9-ac10-44d8-a3ce-5ea64c91fd24"
+storage_version_token = "1794226431593886"
+content_type = "text/markdown"
