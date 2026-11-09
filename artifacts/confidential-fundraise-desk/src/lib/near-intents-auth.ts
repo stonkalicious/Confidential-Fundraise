@@ -1,5 +1,6 @@
 import { base58, base64, hex } from '@scure/base';
 import { NearConnector } from '@hot-labs/near-connect';
+import { createNearSessionRefresher, type NearUserSession } from './near-session-refresh';
 import {
   authenticateNearIntentsSession as createNearIntentsSessionApi,
   disconnectNearIntentsSession as clearNearIntentsSessionApi,
@@ -12,11 +13,7 @@ const INTENTS_ACCOUNT_ID = 'intents.near';
 const VERSIONED_NONCE_PREFIX = Uint8Array.from([0x56, 0x28, 0xf6, 0xc6, 0]);
 type SignedData = NearIntentsSessionInput['signedData'];
 
-export type NearUserSession = {
-  accountId: string;
-  accessToken: string;
-  expiresAt: number;
-};
+export type { NearUserSession } from './near-session-refresh';
 
 export class NearIntentsKeyRegistrationRequiredError extends Error {
   readonly accountId: string;
@@ -252,11 +249,4 @@ export async function disconnectNearWallet(): Promise<void> {
   }
 }
 
-export async function refreshNearWalletSession(): Promise<NearUserSession> {
-  const session = await refreshNearIntentsSessionApi();
-  return {
-    accountId: session.accountId,
-    accessToken: session.accessToken,
-    expiresAt: Date.now() + session.expiresIn * 1_000,
-  };
-}
+export const refreshNearWalletSession = createNearSessionRefresher(refreshNearIntentsSessionApi);
