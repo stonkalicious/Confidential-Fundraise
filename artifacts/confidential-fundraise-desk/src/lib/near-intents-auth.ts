@@ -20,11 +20,15 @@ export type NearUserSession = {
 
 export class NearIntentsKeyRegistrationRequiredError extends Error {
   readonly accountId: string;
+  readonly publicKey: string;
+  readonly signedData: SignedData;
 
-  constructor(accountId: string) {
+  constructor(accountId: string, publicKey: string, signedData: SignedData) {
     super(`The public key for ${accountId} is not registered with NEAR Intents.`);
     this.name = 'NearIntentsKeyRegistrationRequiredError';
     this.accountId = accountId;
+    this.publicKey = publicKey;
+    this.signedData = signedData;
   }
 }
 
@@ -134,25 +138,25 @@ function toEd25519Value(value: string, encoding: 'base58' | 'base64'): string {
   return `ed25519:${encoded}`;
 }
 
-async function authenticateConnectedWallet(
+async function createSignedIntentProof(
   wallet: Awaited<ReturnType<NearConnector['connect']>>,
-  account: { accountId: string; publicKey?: string },
-): Promise<NearUserSession> {
+  accountId: string,
+): Promise<SignedData> {
   const deadline = new Date(Date.now() + 5 * 60_000);
   const nonce = createVersionedNonce(await getCurrentSalt(), deadline);
   const message = JSON.stringify({
     deadline: deadline.toISOString(),
     intents: [],
-    signer_id: account.accountId,
+    signer_id: accountId,
   });
   const walletSignature = await wallet.signMessage({
     message,
     recipient: INTENTS_ACCOUNT_ID,
     nonce: base64.decode(nonce),
     network: 'mainnet',
-    signerId: account.accountId,
+    signerId: accountId,
   });
-  const signedData: SignedData = {
+  return {
     standard: 'nep413',
     payload: {
       recipient: INTENTS_ACCOUNT_ID,
@@ -162,7 +166,9 @@ async function authenticateConnectedWallet(
     public_key: toEd25519Value(walletSignature.publicKey, 'base58'),
     signature: toEd25519Value(walletSignature.signature, 'base64'),
   };
+}
 
+async function authenticateSignedIntent(signedData: SignedData): Promise<NearUserSession> {
   const session = await createNearIntentsSessionApi({ signedData });
 
   return {
@@ -178,25 +184,30 @@ export async function authenticateNearWallet(): Promise<NearUserSession> {
   if (!account?.accountId) {
     throw new Error('The connected NEAR wallet did not provide an account.');
   }
-  if (!(await hasRegisteredKey(account.accountId, account.publicKey))) {
-    throw new NearIntentsKeyRegistrationRequiredError(account.accountId);
+  // Some wallets omit the account public key from getAccounts(). The signed
+  // NEP-413 proof supplies the wallet's key, which we still verify on-chain
+  // before exchanging it for an Intents session or offering key registration.
+  const signedData = await createSignedIntentProof(wallet, account.accountId);
+  if (!(await hasRegisteredKey(account.accountId, signedData.public_key))) {
+    throw new NearIntentsKeyRegistrationRequiredError(
+      account.accountId,
+      signedData.public_key,
+      signedData,
+    );
   }
-  return authenticateConnectedWallet(wallet, account);
+  return authenticateSignedIntent(signedData);
 }
 
 export async function registerNearIntentsKeyAndAuthenticate(
-  expectedAccountId: string,
+  challenge: NearIntentsKeyRegistrationRequiredError,
 ): Promise<NearUserSession> {
   const { wallet, accounts } = await getConnector().getConnectedWallet();
-  const account = accounts.find(({ accountId }) => accountId === expectedAccountId);
+  const account = accounts.find(({ accountId }) => accountId === challenge.accountId);
   if (!account) {
     throw new Error('The connected NEAR wallet account changed. Connect it again to continue.');
   }
-  if (!account.publicKey) {
-    throw new Error('This NEAR wallet did not provide a public key to register.');
-  }
 
-  const isAlreadyRegistered = await hasRegisteredKey(account.accountId, account.publicKey);
+  const isAlreadyRegistered = await hasRegisteredKey(account.accountId, challenge.publicKey);
   if (!isAlreadyRegistered) {
     const outcome = await wallet.signAndSendTransaction({
       network: 'mainnet',
@@ -207,7 +218,7 @@ export async function registerNearIntentsKeyAndAuthenticate(
           type: 'FunctionCall',
           params: {
             methodName: 'add_public_key',
-            args: { public_key: toEd25519Value(account.publicKey, 'base58') },
+            args: { public_key: toEd25519Value(challenge.publicKey, 'base58') },
             gas: '100000000000000',
             deposit: '1',
           },
@@ -223,10 +234,10 @@ export async function registerNearIntentsKeyAndAuthenticate(
     }
   }
 
-  if (!(await hasRegisteredKey(account.accountId, account.publicKey))) {
+  if (!(await hasRegisteredKey(account.accountId, challenge.publicKey))) {
     throw new Error('NEAR Intents did not confirm that the wallet key was registered.');
   }
-  return authenticateConnectedWallet(wallet, account);
+  return authenticateSignedIntent(challenge.signedData);
 }
 
 export async function disconnectNearWallet(): Promise<void> {

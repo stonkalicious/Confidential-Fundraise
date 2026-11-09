@@ -185,7 +185,8 @@ function AppDesk({
   const [nearSession, setNearSession] = useState<NearUserSession | null>(null);
   const [nearAuthLoading, setNearAuthLoading] = useState(false);
   const [nearAuthError, setNearAuthError] = useState('');
-  const [nearRegistrationAccountId, setNearRegistrationAccountId] = useState<string | null>(null);
+  const [nearKeyRegistration, setNearKeyRegistration] =
+    useState<NearIntentsKeyRegistrationRequiredError | null>(null);
   const quotedCommitment = quoteState
     ? commitments.find((item) => item.id === quoteState.commitmentId && item.hard)
     : undefined;
@@ -222,7 +223,7 @@ function AppDesk({
       setQuoteState(null);
       setNearSession(null);
       setNearAuthError('');
-      setNearRegistrationAccountId(null);
+      setNearKeyRegistration(null);
       setSponsorError('');
     }
   }, [view]);
@@ -256,7 +257,7 @@ function AppDesk({
       setQuoteState(null);
       setNearSession(null);
       setNearAuthError('');
-      setNearRegistrationAccountId(null);
+      setNearKeyRegistration(null);
       setSponsorError('');
       setSponsorLoading(false);
     };
@@ -391,7 +392,7 @@ function AppDesk({
     const sessionVersion = sponsorSessionVersion.current;
     setNearAuthLoading(true);
     setNearAuthError('');
-    setNearRegistrationAccountId(null);
+    setNearKeyRegistration(null);
     try {
       const session = await authenticateNearWallet();
       if (sessionVersion === sponsorSessionVersion.current) {
@@ -400,7 +401,7 @@ function AppDesk({
     } catch (error) {
       if (sessionVersion === sponsorSessionVersion.current) {
         if (error instanceof NearIntentsKeyRegistrationRequiredError) {
-          setNearRegistrationAccountId(error.accountId);
+          setNearKeyRegistration(error);
         } else {
           setNearAuthError(
             requestErrorMessage(error, 'NEAR wallet authentication did not complete. No funds moved.'),
@@ -415,14 +416,14 @@ function AppDesk({
   }
 
   async function registerNearWalletKey() {
-    if (!nearRegistrationAccountId) return;
+    if (!nearKeyRegistration) return;
     const sessionVersion = sponsorSessionVersion.current;
     setNearAuthLoading(true);
     setNearAuthError('');
     try {
-      const session = await registerNearIntentsKeyAndAuthenticate(nearRegistrationAccountId);
+      const session = await registerNearIntentsKeyAndAuthenticate(nearKeyRegistration);
       if (sessionVersion === sponsorSessionVersion.current) {
-        setNearRegistrationAccountId(null);
+        setNearKeyRegistration(null);
         setNearSession(session);
       }
     } catch (error) {
@@ -443,7 +444,7 @@ function AppDesk({
     try {
       await disconnectNearWallet();
       setNearSession(null);
-      setNearRegistrationAccountId(null);
+      setNearKeyRegistration(null);
     } catch (error) {
       setNearAuthError(
         requestErrorMessage(error, 'The NEAR wallet session could not be cleared. Try again.'),
@@ -779,7 +780,7 @@ function AppDesk({
                       >
                         Disconnect NEAR wallet
                       </button>
-                    ) : !nearRegistrationAccountId ? (
+                    ) : !nearKeyRegistration ? (
                       <button
                         className="primary-button"
                         data-testid="button-authenticate-near-wallet"
@@ -796,7 +797,7 @@ function AppDesk({
                       {nearAuthError}
                     </p>
                   )}
-                  {nearRegistrationAccountId && !nearSession && (
+                  {nearKeyRegistration && !nearSession && (
                     <div className="quote-result" role="status" data-testid="status-near-key-registration">
                       <p>
                         This named NEAR account has not registered its current public key with NEAR Intents.
@@ -821,7 +822,7 @@ function AppDesk({
                           className="quiet-button"
                           data-testid="button-decline-near-key-registration"
                           type="button"
-                          onClick={() => setNearRegistrationAccountId(null)}
+                          onClick={() => setNearKeyRegistration(null)}
                           disabled={nearAuthLoading}
                         >
                           Decline
@@ -842,7 +843,7 @@ function AppDesk({
                         </button>
                       </div>
                     )}
-                  {quoteState.status === 'ready' && !nearSession && !nearRegistrationAccountId && (
+                  {quoteState.status === 'ready' && !nearSession && !nearKeyRegistration && (
                     <p className="quote-result" role="status" data-testid="status-near-auth-required">
                       Authenticate with a NEAR wallet before requesting this confidential quote.
                     </p>
