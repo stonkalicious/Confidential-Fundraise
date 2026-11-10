@@ -279,12 +279,12 @@ test("demo settlement gates, exact USDC verification, persistence and core-flow 
   assert.equal((await request(path, { receipt: investorLinkToken })).data.settlement.transactionHash, hash, "investor link survives rehydration");
   assert.equal((await request(path, { receipt })).data.settlement.transactionHash, hash, "original receipt still works after rehydration");
   assert.equal((await request(`/raises/${id}`)).data.confirmedTestnetTransfers, 1, "public count survives rehydration");
-  assert.equal(getRaise(id).softTotal, 1234);
-  assert.equal(getRaise(id).hardTotal, 0);
-  assert.equal(getPrivateRaise(id).commitments[0].hard, false);
-  assert.ok(!JSON.stringify(getPrivateRaise(id)).includes(receipt));
-  assert.ok(!JSON.stringify(getPrivateRaise(id)).includes("demoInvestorReceiptHashes"));
-  assert.ok(!JSON.stringify(getRaise(id)).includes(hash), "public aggregates do not leak a payment-to-investor link");
+  assert.equal((await getRaise(id)).softTotal, 1234);
+  assert.equal((await getRaise(id)).hardTotal, 0);
+  assert.equal((await getPrivateRaise(id)).commitments[0].hard, false);
+  assert.ok(!JSON.stringify(await getPrivateRaise(id)).includes(receipt));
+  assert.ok(!JSON.stringify(await getPrivateRaise(id)).includes("demoInvestorReceiptHashes"));
+  assert.ok(!JSON.stringify(await getRaise(id)).includes(hash), "public aggregates do not leak a payment-to-investor link");
   const retried = await request(`/raises/${id}/commitments`, {
     method: "POST", body: { id: cid, identifier: "Private demo investor", amount: 1234, demoReceipt: "f".repeat(64) },
   });

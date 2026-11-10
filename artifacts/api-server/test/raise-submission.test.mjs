@@ -28,8 +28,8 @@ test('submission route validates fields and queues valid raises only in isolated
     assert.equal(response.headers.get('cache-control'), 'no-store');
     return data;
   }
-  const publicBefore = getRaises();
-  const pendingBefore = getPendingRaises();
+  const publicBefore = await getRaises();
+  const pendingBefore = await getPendingRaises();
   async function invalid(body, fields) {
     const result = await post(body, 400);
     assert.deepEqual(Object.keys(result.fieldErrors), fields);
@@ -39,7 +39,7 @@ test('submission route validates fields and queues valid raises only in isolated
       assert.equal(typeof message, 'string');
       assert.ok(message.length > 0 && message.length <= 160);
     }
-    assert.deepEqual(getPendingRaises(), pendingBefore);
+    assert.deepEqual(await getPendingRaises(), pendingBefore);
     return result;
   }
   const reproduced = await invalid(screenshot, ['thesis']);
@@ -84,10 +84,10 @@ test('submission route validates fields and queues valid raises only in isolated
   ]) {
     const receipt = await post(input, 201);
     assert.deepEqual(receipt, { id: receipt.id, status: 'pending' });
-    const pending = getPendingRaises().find((raise) => raise.id === receipt.id);
+    const pending = (await getPendingRaises()).find((raise) => raise.id === receipt.id);
     assert.deepEqual(pending, { id: receipt.id, status: 'pending',
       name: input.name.trim(), thesis: input.thesis.trim(), stage: input.stage.trim(), range: input.range });
-    assert.deepEqual(getRaises(), publicBefore);
+    assert.deepEqual(await getRaises(), publicBefore);
     assert.equal((await fetch(`${base}/${receipt.id}`)).status, 404);
     assert.equal((await fetch(`${base}/pending`)).status, 401);
     const response = await fetch(`${base}/pending`, {

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { fork } from "node:child_process";
 import { once } from "node:events";
+import { setTimeout as delay } from "node:timers/promises";
 import test, { after } from "node:test";
 import { eq } from "drizzle-orm";
 import { db, pool, raiseStateTable } from "@workspace/db";
@@ -10,6 +11,7 @@ import {
   claimRaiseRecord,
   getPrivateRaise,
   getRaise,
+  RAISE_READ_MAX_AGE_MS,
   initializeRaiseStore,
   submitRaiseRecord,
   submitSoftCommitmentRecord,
@@ -70,7 +72,7 @@ test("raise fields, claims, and private commitments survive store reinitializati
     hardTotal: 0,
   }]);
 
-  const publicRaise = getRaise(raiseId);
+  const publicRaise = await getRaise(raiseId);
   assert.ok(publicRaise);
   assert.equal(publicRaise.name, name);
   assert.equal(publicRaise.thesis, "Synthetic persistence test data.");
@@ -83,7 +85,7 @@ test("raise fields, claims, and private commitments survive store reinitializati
   assert.equal("email" in publicRaise, false);
   assert.equal("claim" in publicRaise, false);
 
-  const privateRaise = getPrivateRaise(raiseId);
+  const privateRaise = await getPrivateRaise(raiseId);
   assert.ok(privateRaise);
   assert.equal(privateRaise.claim?.founderName, "Synthetic Founder");
   assert.equal(privateRaise.claim?.email, "founder@example.invalid");
@@ -134,6 +136,110 @@ async function startInstance(t) {
     child.send({ requestId, operation, args });
   });
 }
+
+test("independent processes refresh all raise GET paths within the cache-age bound", {
+  timeout: 30_000,
+}, async (t) => {
+  await initializeRaiseStore();
+  const ids = [];
+  t.after(async () => {
+    for (const id of ids) await db.delete(raiseStateTable).where(eq(raiseStateTable.id, id));
+  });
+  const create = async () => {
+    const { id } = await submitRaiseRecord({
+      name: `Freshness ${randomUUID().slice(0, 8)}`,
+      thesis: "Synthetic cross-process read freshness data.",
+      stage: "Seed", range: { min: 1, max: 50_000 },
+    });
+    ids.push(id);
+    return id;
+  };
+  const id = await create();
+  const agentId = await create();
+  await approveRaiseRecord(id);
+  await approveRaiseRecord(agentId);
+  const [writer, reader] = await Promise.all([startInstance(t), startInstance(t)]);
+  const token = "isolated-freshness-approval";
+  const read = async (path, status = 200, authorized = false) => {
+    const result = await reader("request", path, authorized ? { token } : {});
+    assert.equal(result.status, status, JSON.stringify(result.body));
+    assert.equal(result.cache, "no-store");
+    return result.body;
+  };
+  const expire = () => delay(RAISE_READ_MAX_AGE_MS + 25);
+  const noPrivateFields = (value) => {
+    const serialized = JSON.stringify(value);
+    for (const forbidden of [
+      "commitments", "email", "claim\"", "agentClaimTokenHash",
+      "demoInvestorReceiptHashes", "secret-investor", "founder@example.invalid",
+    ]) assert.ok(!serialized.includes(forbidden), `Public data included ${forbidden}`);
+  };
+  await read(`/raises/${id}`);
+  await read(`/raises/${id}/private`, 401);
+  await read("/raises/pending", 401);
+
+  // This pending record did not exist when either child initialized.
+  const pendingId = await create();
+  await expire();
+  assert.ok((await read("/raises/pending", 200, true)).some((r) => r.id === pendingId));
+  await read(`/raises/${pendingId}`, 404);
+  assert.ok(!(await read("/raises")).some((r) => r.id === pendingId));
+  await writer("approveRaiseRecord", pendingId);
+  await writer("claimRaiseRecord", id, {
+    founderName: "Synthetic Founder", email: "founder@example.invalid",
+  });
+  await writer("submitSoftCommitmentRecord", id, {
+    id: "freshness-investor", identifier: "secret-investor", amount: 1250,
+    demoReceipt: "a".repeat(64),
+  });
+  const agent = await writer("reserveAgentRaiseRecord", agentId);
+  await writer("updateAgentRaiseRecord", agentId, agent.claimToken, {
+    thesis: "Updated cross-instance thesis.", stage: "Growth",
+    range: { min: 20, max: 60_000 }, status: "paused",
+  });
+  await expire();
+  const [detail, list, pending, privateDetail, agentDetail] = await Promise.all([
+    read(`/raises/${id}`), read("/raises"), read("/raises/pending", 200, true),
+    read(`/raises/${id}/private`, 200, true), read(`/raises/${agentId}`),
+  ]);
+  assert.equal(detail.claimed, true);
+  assert.equal(detail.claimantName, "Synthetic Founder");
+  assert.equal(detail.softTotal, 1250);
+  assert.equal(detail.hardTotal, 0);
+  assert.equal(list.find((r) => r.id === id).softTotal, 1250);
+  assert.ok(list.some((r) => r.id === pendingId));
+  assert.ok(!pending.some((r) => r.id === pendingId));
+  assert.equal(privateDetail.claim.email, "founder@example.invalid");
+  assert.equal(privateDetail.commitments[0].identifier, "secret-investor");
+  assert.equal(agentDetail.claimed, true);
+  assert.equal(agentDetail.status, "paused");
+  assert.equal(agentDetail.stage, "Growth");
+  assert.equal(agentDetail.thesis, "Updated cross-instance thesis.");
+  assert.deepEqual(agentDetail.range, { min: 20, max: 60_000 });
+  assert.equal(list.find((r) => r.id === agentId).status, "paused");
+  noPrivateFields(detail);
+  noPrivateFields(list);
+  noPrivateFields(agentDetail);
+  assert.ok(!JSON.stringify(agentDetail).includes(agent.claimToken));
+  assert.ok(!JSON.stringify(privateDetail).includes("demoInvestorReceiptHashes"));
+
+  // Start a known cache window before checking that local writes cannot renew it.
+  await expire();
+  await read(`/raises/${id}`);
+  await writer("updateRaiseCommitmentRecord", id, "freshness-investor", { hard: true, verified: true });
+  // A local write must not advance the global cache clock and mask remote edits.
+  await delay(750);
+  await reader("submitSoftCommitmentRecord", agentId, {
+    id: "local", identifier: "local-synthetic", amount: 1,
+  });
+  await delay(300);
+  const hardened = await read(`/raises/${id}/private`, 200, true);
+  assert.equal(hardened.softTotal, 0);
+  assert.equal(hardened.hardTotal, 1250);
+  assert.equal(hardened.commitments[0].verified, true);
+  assert.equal((await read(`/raises/${id}`)).hardTotal, 1250);
+  assert.equal((await read("/raises")).find((r) => r.id === id).hardTotal, 1250);
+});
 
 test("separate API processes mutate the latest persisted state without lost updates", {
   timeout: 30_000,

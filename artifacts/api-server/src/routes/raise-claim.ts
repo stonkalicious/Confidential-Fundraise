@@ -12,8 +12,8 @@ import {
 
 const router: IRouter = Router();
 
-router.get("/raise-claim", (_req, res) => {
-  const raise = getRaise(DEFAULT_RAISE_ID);
+router.get("/raise-claim", async (_req, res): Promise<void> => {
+  const raise = await getRaise(DEFAULT_RAISE_ID);
   res.set("Cache-Control", "no-store").json(
     GetRaiseClaimResponse.parse({
       claimed: raise?.claimed ?? false,

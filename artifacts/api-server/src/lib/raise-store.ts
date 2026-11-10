@@ -1,4 +1,5 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { performance } from "node:perf_hooks";
 import { and, count, eq, inArray, isNotNull } from "drizzle-orm";
 import { db, demoSettlementsTable, raiseStateTable } from "@workspace/db";
 import publicRaiseSeedData from "../data/public-raises.json";
@@ -219,6 +220,15 @@ const publicSeededRaises: RaiseRecord[] = parsePublicRaiseSeeds(publicRaiseSeedD
 let raises = seededRaises.map(cloneRaise);
 let nextPosition = seededRaises.length;
 let storeInitialized = false;
+// After this age, reads block on a refresh instead of serving stale state.
+export const RAISE_READ_MAX_AGE_MS = 1_000;
+export class RaiseSnapshotUnavailableError extends Error {
+  constructor() {
+    super("Raise details are temporarily unavailable. Try again shortly.");
+  }
+}
+let snapshotReadStartedAt = -Infinity;
+let refreshInFlight: Promise<void> | undefined;
 let writeQueue: Promise<void> = Promise.resolve();
 
 function cloneRaise(raise: RaiseRecord): RaiseRecord {
@@ -342,14 +352,46 @@ export function initializeRaiseStore(
         .onConflictDoNothing({ target: raiseStateTable.id });
     }
 
-    const storedRows = await db.select().from(raiseStateTable);
-    raises = storedRows
-      .map((row) => raiseFromDatabase(row.state, row.position))
-      .sort((left, right) => left.position - right.position || left.id.localeCompare(right.id));
-    nextPosition =
-      raises.reduce((maximum, raise) => Math.max(maximum, raise.position), -1) + 1;
+    await reloadRaiseSnapshot();
     storeInitialized = true;
   });
+}
+
+async function reloadRaiseSnapshot(): Promise<void> {
+  // Start the clock before the query: a slow query must not extend cache life.
+  const startedAt = performance.now();
+  const storedRows = await db.select().from(raiseStateTable);
+  const snapshot = storedRows
+    .map((row) => raiseFromDatabase(row.state, row.position))
+    .sort((left, right) => left.position - right.position || left.id.localeCompare(right.id));
+  // Publish only a complete, validated snapshot. A failed read remains expired.
+  raises = snapshot;
+  nextPosition =
+    raises.reduce((maximum, raise) => Math.max(maximum, raise.position), -1) + 1;
+  snapshotReadStartedAt = startedAt;
+}
+
+async function refreshRaiseSnapshot(): Promise<void> {
+  // Uninitialized stores are used by isolated in-memory tests, never by the server.
+  if (!storeInitialized) return;
+  const oldestAllowedStart = performance.now() - RAISE_READ_MAX_AGE_MS;
+  while (snapshotReadStartedAt <= oldestAllowedStart) {
+    if (!refreshInFlight) {
+      // Serialize publication with local writes, so a refresh cannot replace a
+      // newly committed local mutation with an older database snapshot.
+      refreshInFlight = withWriteQueue(reloadRaiseSnapshot)
+        .catch(() => {
+          // All waiting readers get the same safe error, never expired data.
+          throw new RaiseSnapshotUnavailableError();
+        })
+        .finally(() => {
+          refreshInFlight = undefined;
+        });
+    }
+    await refreshInFlight;
+    // A late reader may have joined a slow query started before its allowed
+    // freshness window. That reader must wait for another (shared) refresh.
+  }
 }
 
 export type RaiseStoreResult =
@@ -409,13 +451,15 @@ function findApprovedRaise(id: string): RaiseRecord | undefined {
   return raises.find((raise) => raise.id === id && raise.status === "approved");
 }
 
-export function getRaises(): RaiseSummary[] {
+export async function getRaises(): Promise<RaiseSummary[]> {
+  await refreshRaiseSnapshot();
   return GetRaisesResponse.parse(
     raises.filter((raise) => raise.status === "approved").map(publicSnapshot),
   );
 }
 
-export function getRaise(id: string): RaiseSummary | undefined {
+export async function getRaise(id: string): Promise<RaiseSummary | undefined> {
+  await refreshRaiseSnapshot();
   const raise = findApprovedRaise(id);
   return raise ? publicSnapshot(raise) : undefined;
 }
@@ -439,11 +483,11 @@ async function withConfirmedTestnetCounts(summaries: RaiseSummary[]): Promise<Ra
 }
 
 export async function getRaisesWithConfirmedTestnetCounts(): Promise<RaiseSummary[]> {
-  return withConfirmedTestnetCounts(getRaises());
+  return withConfirmedTestnetCounts(await getRaises());
 }
 
 export async function getRaiseWithConfirmedTestnetCount(id: string): Promise<RaiseSummary | undefined> {
-  const raise = getRaise(id);
+  const raise = await getRaise(id);
   if (!raise) return undefined;
   const [row] = await db
     .select({ total: count() })
@@ -456,12 +500,14 @@ export async function getRaiseWithConfirmedTestnetCount(id: string): Promise<Rai
   return { ...raise, confirmedTestnetTransfers: row?.total ?? 0 };
 }
 
-export function getPrivateRaise(id: string): PrivateRaiseDetails | undefined {
+export async function getPrivateRaise(id: string): Promise<PrivateRaiseDetails | undefined> {
+  await refreshRaiseSnapshot();
   const raise = findApprovedRaise(id);
   return raise ? privateSnapshot(raise) : undefined;
 }
 
-export function getPendingRaises(): PendingRaise[] {
+export async function getPendingRaises(): Promise<PendingRaise[]> {
+  await refreshRaiseSnapshot();
   return GetPendingRaisesResponse.parse(
     raises
       .filter((raise) => raise.status === "pending")

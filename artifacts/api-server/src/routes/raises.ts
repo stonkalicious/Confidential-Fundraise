@@ -33,9 +33,7 @@ import {
   claimRaiseRecord,
   getPendingRaises,
   getPrivateRaise,
-  getRaise,
   getRaiseWithConfirmedTestnetCount,
-  getRaises,
   getRaisesWithConfirmedTestnetCounts,
   submitRaiseRecord,
   submitSoftCommitmentRecord,
@@ -330,9 +328,9 @@ router.get("/raises", async (_req, res): Promise<void> => {
   noStore(res).json(GetRaisesResponse.parse(await getRaisesWithConfirmedTestnetCounts()));
 });
 
-router.get("/raises/pending", (req, res): void => {
+router.get("/raises/pending", async (req, res): Promise<void> => {
   if (!requireApprovalCode(req, res)) return;
-  noStore(res).json(GetPendingRaisesResponse.parse(getPendingRaises()));
+  noStore(res).json(GetPendingRaisesResponse.parse(await getPendingRaises()));
 });
 
 router.get("/raises/:id", async (req, res): Promise<void> => {
@@ -351,7 +349,7 @@ router.get("/raises/:id", async (req, res): Promise<void> => {
   noStore(res).json(GetRaiseByIdResponse.parse(raise));
 });
 
-router.get("/raises/:id/private", (req, res): void => {
+router.get("/raises/:id/private", async (req, res): Promise<void> => {
   if (!requireApprovalCode(req, res)) return;
   const params = GetPrivateRaiseParams.safeParse(req.params);
   if (!params.success) {
@@ -359,7 +357,7 @@ router.get("/raises/:id/private", (req, res): void => {
     return;
   }
 
-  const raise = getPrivateRaise(params.data.id);
+  const raise = await getPrivateRaise(params.data.id);
   if (!raise) {
     noStore(res).status(404).json({ error: `Raise '${params.data.id}' not found.` });
     return;
@@ -548,7 +546,7 @@ router.post(
       return;
     }
 
-    const raise = getPrivateRaise(params.data.id);
+    const raise = await getPrivateRaise(params.data.id);
     if (!raise) {
       noStore(res).status(404).json({ error: `Raise '${params.data.id}' not found.` });
       return;

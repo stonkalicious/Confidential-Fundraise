@@ -55,7 +55,7 @@ test("agent page ownership stays per-raise, durable, public-only, and distinct f
     identifier: "private-investor@example.invalid",
     amount: 1200,
   });
-  const privateBefore = getPrivateRaise(id).commitments;
+  const privateBefore = (await getPrivateRaise(id)).commitments;
 
   const results = await Promise.all([
     request(`${path}/agent-claim`, "POST"),
@@ -122,7 +122,7 @@ test("agent page ownership stays per-raise, durable, public-only, and distinct f
   assert.equal((await request(path, "PATCH", { status: "closed" }, token)).status, 200);
   assert.equal((await request(path, "PATCH", { status: "open" }, token)).status, 200);
   assert.equal((await request(`${path}/agent-claim`, "POST")).status, 409);
-  assert.deepEqual(getPrivateRaise(id).commitments, privateBefore);
+  assert.deepEqual((await getPrivateRaise(id)).commitments, privateBefore);
   for (const publicResponse of [
     claimed.body.raise, updated.body, reloaded.body, (await request("/raises")).body,
   ]) {

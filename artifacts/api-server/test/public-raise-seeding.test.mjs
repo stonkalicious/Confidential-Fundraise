@@ -81,7 +81,7 @@ test("public raise seed entries validate, insert once, expose attribution, and p
 
   await initializeRaiseStore();
   for (const bundledName of ["NEAR Agent Commerce", "Developer Workflow Copilot"]) {
-    const bundledRaise = getRaises().find((raise) => raise.name === bundledName);
+    const bundledRaise = (await getRaises()).find((raise) => raise.name === bundledName);
     assert.ok(bundledRaise, `${bundledName} should be seeded on startup`);
     assert.equal(bundledRaise.claimed, false);
     assert.equal(bundledRaise.softTotal, 0);
@@ -90,7 +90,7 @@ test("public raise seed entries validate, insert once, expose attribution, and p
   }
 
   await initializeRaiseStore([seed, { ...seed, name: "Duplicate input must be ignored." }]);
-  const initialPublic = getRaise(id);
+  const initialPublic = await getRaise(id);
   assert.ok(initialPublic);
   assert.equal(initialPublic.claimed, false);
   assert.equal(initialPublic.softTotal, 0);
@@ -135,15 +135,15 @@ test("public raise seed entries validate, insert once, expose attribution, and p
     hardTotal: 0,
   };
   await initializeRaiseStore([staleSeed, seed]);
-  const preserved = getRaise(id);
+  const preserved = await getRaise(id);
   assert.ok(preserved);
   assert.equal(preserved.name, name);
   assert.equal(preserved.sourceLink, sourceLink);
   assert.equal(preserved.claimed, true);
   assert.equal(preserved.softTotal, 12_500);
   assert.equal(preserved.hardTotal, 0);
-  assert.equal(getPrivateRaise(id)?.claim?.email, "founder@example.invalid");
-  assert.equal(getPrivateRaise(id)?.commitments[0]?.identifier, "Synthetic Investor");
+  assert.equal((await getPrivateRaise(id))?.claim?.email, "founder@example.invalid");
+  assert.equal((await getPrivateRaise(id))?.commitments[0]?.identifier, "Synthetic Investor");
 
   const [rowsAfterRestart] = await Promise.all([
     db.select().from(raiseStateTable).where(eq(raiseStateTable.id, id)),

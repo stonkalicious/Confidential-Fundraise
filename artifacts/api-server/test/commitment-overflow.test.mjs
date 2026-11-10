@@ -29,18 +29,18 @@ function add(id, commitmentId, amount) {
   });
 }
 
-function assertReadable(id, softTotal, hardTotal) {
-  assert.equal(getRaise(id).softTotal, softTotal);
-  assert.equal(getRaise(id).hardTotal, hardTotal);
-  assert.ok(getRaises().some((raise) => raise.id === id));
+async function assertReadable(id, softTotal, hardTotal) {
+  assert.equal((await getRaise(id)).softTotal, softTotal);
+  assert.equal((await getRaise(id)).hardTotal, hardTotal);
+  assert.ok((await getRaises()).some((raise) => raise.id === id));
 }
 
 test("two individually valid amounts cannot overflow soft totals or corrupt reads", async () => {
   const id = await newRaise();
   assert.equal((await add(id, "first", Number.MAX_SAFE_INTEGER)).kind, "success");
   assert.equal((await add(id, "second", Number.MAX_SAFE_INTEGER)).kind, "amountOutOfRange");
-  assert.equal(getPrivateRaise(id).commitments.length, 1);
-  assertReadable(id, Number.MAX_SAFE_INTEGER, 0);
+  assert.equal((await getPrivateRaise(id)).commitments.length, 1);
+  await assertReadable(id, Number.MAX_SAFE_INTEGER, 0);
   // Retrying an existing commitment remains idempotent at the boundary.
   const retry = await add(id, "first", Number.MAX_SAFE_INTEGER);
   assert.equal(retry.kind, "success");
@@ -57,10 +57,10 @@ test("hardening cannot overflow hard totals or partially change a commitment", a
   assert.equal((await updateRaiseCommitmentRecord(id, "second", {
     hard: true, verified: true,
   })).kind, "amountOutOfRange");
-  const second = getPrivateRaise(id).commitments.find((c) => c.id === "second");
+  const second = (await getPrivateRaise(id)).commitments.find((c) => c.id === "second");
   assert.equal(second.hard, false);
   assert.equal(second.verified, false);
-  assertReadable(id, 1, Number.MAX_SAFE_INTEGER);
+  await assertReadable(id, 1, Number.MAX_SAFE_INTEGER);
 });
 
 test("softening cannot overflow soft totals and leaves the previous state intact", async () => {
@@ -71,8 +71,8 @@ test("softening cannot overflow soft totals and leaves the previous state intact
   assert.equal((await updateRaiseCommitmentRecord(id, "first", {
     hard: false, verified: false,
   })).kind, "amountOutOfRange");
-  const first = getPrivateRaise(id).commitments.find((c) => c.id === "first");
+  const first = (await getPrivateRaise(id)).commitments.find((c) => c.id === "first");
   assert.equal(first.hard, true);
   assert.equal(first.verified, true);
-  assertReadable(id, Number.MAX_SAFE_INTEGER, 1);
+  await assertReadable(id, Number.MAX_SAFE_INTEGER, 1);
 });
