@@ -1,33 +1,24 @@
 import { base58, base64, hex } from '@scure/base';
 import { NearConnector } from '@hot-labs/near-connect';
-import { createNearSessionRefresher, type NearUserSession } from './near-session-refresh';
+import { createNearSessionRefresher, type NearUserSession } from './near-session-refresh.ts';
 import {
   authenticateNearIntentsSession as createNearIntentsSessionApi,
   disconnectNearIntentsSession as clearNearIntentsSessionApi,
   refreshNearIntentsSession as refreshNearIntentsSessionApi,
   type NearIntentsSessionInput,
 } from '@workspace/api-client-react';
+import {
+  NearIntentsKeyRegistrationRequiredError,
+  registerNearIntentsKeyAndAuthenticateWith,
+} from './near-intents-key-registration.ts';
 
 const NEAR_RPC_URL = 'https://rpc.mainnet.near.org';
 const INTENTS_ACCOUNT_ID = 'intents.near';
 const VERSIONED_NONCE_PREFIX = Uint8Array.from([0x56, 0x28, 0xf6, 0xc6, 0]);
 type SignedData = NearIntentsSessionInput['signedData'];
 
-export type { NearUserSession } from './near-session-refresh';
-
-export class NearIntentsKeyRegistrationRequiredError extends Error {
-  readonly accountId: string;
-  readonly publicKey: string;
-  readonly signedData: SignedData;
-
-  constructor(accountId: string, publicKey: string, signedData: SignedData) {
-    super(`The public key for ${accountId} is not registered with NEAR Intents.`);
-    this.name = 'NearIntentsKeyRegistrationRequiredError';
-    this.accountId = accountId;
-    this.publicKey = publicKey;
-    this.signedData = signedData;
-  }
-}
+export type { NearUserSession } from './near-session-refresh.ts';
+export { NearIntentsKeyRegistrationRequiredError } from './near-intents-key-registration.ts';
 
 let connector: NearConnector | null = null;
 
@@ -198,43 +189,11 @@ export async function authenticateNearWallet(): Promise<NearUserSession> {
 export async function registerNearIntentsKeyAndAuthenticate(
   challenge: NearIntentsKeyRegistrationRequiredError,
 ): Promise<NearUserSession> {
-  const { wallet, accounts } = await getConnector().getConnectedWallet();
-  const account = accounts.find(({ accountId }) => accountId === challenge.accountId);
-  if (!account) {
-    throw new Error('The connected NEAR wallet account changed. Connect it again to continue.');
-  }
-
-  const isAlreadyRegistered = await hasRegisteredKey(account.accountId, challenge.publicKey);
-  if (!isAlreadyRegistered) {
-    const outcome = await wallet.signAndSendTransaction({
-      network: 'mainnet',
-      signerId: account.accountId,
-      receiverId: INTENTS_ACCOUNT_ID,
-      actions: [
-        {
-          type: 'FunctionCall',
-          params: {
-            methodName: 'add_public_key',
-            args: { public_key: toEd25519Value(challenge.publicKey, 'base58') },
-            gas: '100000000000000',
-            deposit: '1',
-          },
-        },
-      ],
-    });
-    if (
-      !outcome.status ||
-      typeof outcome.status !== 'object' ||
-      'Failure' in outcome.status
-    ) {
-      throw new Error('NEAR Intents key registration did not complete successfully.');
-    }
-  }
-
-  if (!(await hasRegisteredKey(account.accountId, challenge.publicKey))) {
-    throw new Error('NEAR Intents did not confirm that the wallet key was registered.');
-  }
-  return authenticateSignedIntent(challenge.signedData);
+  return registerNearIntentsKeyAndAuthenticateWith(challenge, {
+    getConnectedWallet: () => getConnector().getConnectedWallet(),
+    hasRegisteredKey,
+    authenticateSignedIntent,
+  });
 }
 
 export async function disconnectNearWallet(): Promise<void> {
