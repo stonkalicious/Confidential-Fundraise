@@ -5,3 +5,4 @@
 - [Native Node tests](native-node-tests.md) — In this workspace, Node 24 can run `node:test` files that import TypeScript source without `tsx`.
 - [Raise concurrency](raise-concurrency.md) — Cross-server write safety uses database row locks; read-cache freshness is a separate concern.
 - [Quote timestamp policy](quote-timestamps.md) — Reject invalid provider date strings rather than inventing a replacement quote time.
+- [Demo settlement recovery](demo-settlement-recovery.md) — Release reservations only after investor no-broadcast attestation plus founder approval; preserve immutable details and confirmations.

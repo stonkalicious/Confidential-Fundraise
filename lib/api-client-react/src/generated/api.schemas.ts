@@ -46,6 +46,16 @@ export interface DemoSettlementVerificationInput {
   transactionHash: string;
 }
 
+export interface DemoSettlementRecoveryRequest {
+  /** Investor explicitly confirms the wallet rejected the transfer before submission. */
+  confirmedNoBroadcast: boolean;
+}
+
+export interface DemoSettlementRecoveryApproval {
+  /** Sponsor explicitly approves another attempt for the unchanged transfer details. */
+  confirmed: boolean;
+}
+
 export interface DemoSettlementInvestorLink {
   /** @pattern ^[a-f0-9]{64}$ */
   token: string;
@@ -83,6 +93,14 @@ export const DemoSettlementStatus = {
   success: 'success',
 } as const;
 
+export type DemoSettlementRecoveryStatus = typeof DemoSettlementRecoveryStatus[keyof typeof DemoSettlementRecoveryStatus];
+
+
+export const DemoSettlementRecoveryStatus = {
+  awaiting_sponsor: 'awaiting_sponsor',
+  approved: 'approved',
+} as const;
+
 export interface DemoSettlement {
   id: string;
   network: DemoSettlementNetwork;
@@ -94,6 +112,9 @@ export interface DemoSettlement {
   status: DemoSettlementStatus;
   transferMemo?: string;
   transactionHash?: string;
+  recoveryStatus?: DemoSettlementRecoveryStatus;
+  recoveryRequestedAt?: string;
+  recoveryApprovedAt?: string;
 }
 
 export interface DemoSettlementState {

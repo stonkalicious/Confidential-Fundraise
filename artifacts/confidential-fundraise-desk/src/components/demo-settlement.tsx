@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import {
   getDemoSettlement, getDemoSettlementConfig, configureDemoSettlement,
   createDemoSettlementInvestorLink, confirmDemoSettlement, prepareDemoSettlement, verifyDemoSettlement,
+  requestDemoSettlementRecovery, approveDemoSettlementRecovery,
   type DemoSettlement, type DemoSettlementConfig,
 } from '@workspace/api-client-react';
 import {
   connectSettlementWallet, sendDemoUsdc, demoReceipts, rememberDemoReceipt,
-  savedDemoAttempt, saveDemoAttempt, type InvestorDemoReceipt,
+  savedDemoAttempt, saveDemoAttempt, clearDemoAttempt, DefinitePreBroadcastRejectionError,
+  type InvestorDemoReceipt,
 } from '@/lib/demo-settlement-wallet';
 
 const CONFIRMATION = 'I confirm I have reviewed the terms of this transfer and understand this is a demo settlement.';
@@ -79,12 +81,14 @@ export function DemoSettlementCard({
   const [receiver, setReceiver] = useState('');
   const [reference, setReference] = useState('');
   const [confirmed, setConfirmed] = useState(false);
+  const [recoveryConfirmed, setRecoveryConfirmed] = useState(false);
   const [account, setAccount] = useState('');
   const [hash, setHash] = useState('');
   const [investorLink, setInvestorLink] = useState('');
   const [linkExpiresAt, setLinkExpiresAt] = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
   const [attempted, setAttempted] = useState(false);
+  const [rejectionEligible, setRejectionEligible] = useState(false);
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
   const [error, setError] = useState('');
@@ -97,7 +101,16 @@ export function DemoSettlementCard({
     if (next) {
       const saved = savedDemoAttempt(next);
       setAttempted(Boolean(saved) || next.status === 'prepared' || next.status === 'success');
-      if (saved && saved !== 'unknown') setHash(saved);
+      if (saved && saved !== 'unknown' && saved !== 'rejected') setHash(saved);
+      setRejectionEligible(saved === 'rejected');
+      if (next.recoveryStatus === 'approved' && next.status === 'ready') {
+        clearDemoAttempt(next);
+        setAttempted(false);
+        setRejectionEligible(false);
+        setHash('');
+        setConfirmed(false);
+        setRecoveryConfirmed(false);
+      }
     }
   }
 
@@ -158,7 +171,16 @@ export function DemoSettlementCard({
     }
     saveDemoAttempt(next);
     setAttempted(true);
-    const txHash = await sendDemoUsdc(next);
+    let txHash: string;
+    try {
+      txHash = await sendDemoUsdc(next);
+    } catch (e) {
+      if (e instanceof DefinitePreBroadcastRejectionError) {
+        try { saveDemoAttempt(next, 'rejected'); } catch { /* The in-memory recovery action remains available. */ }
+        setRejectionEligible(true);
+      }
+      throw e;
+    }
     setHash(txHash);
     try { saveDemoAttempt(next, txHash); } catch { /* The durable "unknown" guard already prevents another send. */ }
     const verified = await verifyDemoSettlement(raiseId, commitmentId, { transactionHash: txHash }, options());
@@ -184,6 +206,22 @@ export function DemoSettlementCard({
       setLinkCopied(false);
       setError('Copy was unavailable. Select the investor link and copy it manually.');
     }
+  }
+  async function requestRecovery() {
+    if (!settlement || !recoveryConfirmed || !rejectionEligible) return;
+    const result = await requestDemoSettlementRecovery(raiseId, commitmentId, {
+      confirmedNoBroadcast: true,
+    }, options());
+    apply(result.settlement);
+    setRecoveryConfirmed(false);
+  }
+  async function approveRecovery() {
+    if (!recoveryConfirmed) return;
+    const result = await approveDemoSettlementRecovery(raiseId, commitmentId, {
+      confirmed: true,
+    }, options());
+    apply(result.settlement);
+    setRecoveryConfirmed(false);
   }
 
   if (!exists) return null;
@@ -253,8 +291,26 @@ export function DemoSettlementCard({
             </p>
           ) : !sponsor && settlement.network !== 'testnet' ? (
             <p className="side-copy" role="status">Mainnet sending is disabled. No transfer can be initiated from this demo.</p>
+          ) : settlement.recoveryStatus === 'awaiting_sponsor' && sponsor ? (
+            <div className="demo-recovery" data-testid="demo-recovery-approval">
+              <p className="side-copy" role="status">The investor reports that the wallet rejected this transfer before submission. Approving releases only that reserved attempt; the network, token, recipient, amount, and both original confirmations stay unchanged.</p>
+              <label className="demo-confirm">
+                <input type="checkbox" checked={recoveryConfirmed} disabled={busy}
+                  data-testid="checkbox-approve-demo-recovery"
+                  onChange={(e) => setRecoveryConfirmed(e.target.checked)} />
+                <span>I approve another attempt for these unchanged transfer details.</span>
+              </label>
+              <button type="button" className="mark-button" disabled={busy || !recoveryConfirmed}
+                data-testid="button-approve-demo-recovery" onClick={() => void run(approveRecovery)}>
+                Approve recovery and release reservation
+              </button>
+            </div>
           ) : !sponsor && <>
             <p className="side-copy">You need 1 test USDC and test NEAR for gas. Both reviews apply to the fixed details above. The wallet asks for your approval; the app never holds your keys.</p>
+            {settlement.recoveryStatus === 'awaiting_sponsor' &&
+              <p className="side-copy" role="status" data-testid="demo-recovery-pending">Your recovery request is waiting for the founder’s approval. Do not send again while it is pending.</p>}
+            {settlement.recoveryStatus === 'approved' && settlement.status === 'ready' &&
+              <p className="side-copy" role="status" data-testid="demo-recovery-approved">The founder approved releasing the rejected reservation. Review and confirm the same transfer again before sending.</p>}
             {!attempted && <>
               <button type="button" className="quiet-button" disabled={busy}
                 data-testid="button-connect-demo-wallet" onClick={() => void run(connect)}>
@@ -271,7 +327,21 @@ export function DemoSettlementCard({
               </button>
             </>}
             {attempted && <>
-              <p className="side-copy">A wallet transfer may already have been requested. Do not send again. Check your wallet, then verify its transaction hash below. If you rejected it, no funds were sent.</p>
+              {rejectionEligible && settlement.recoveryStatus !== 'awaiting_sponsor' &&
+                <div className="demo-recovery" data-testid="demo-recovery-request">
+                  <p className="side-copy">The wallet reported an explicit rejection before submission. A new send is not available until the founder approves releasing this reservation. If the wallet outcome was uncertain, do not request recovery; reconcile by transaction hash instead.</p>
+                  <label className="demo-confirm">
+                    <input type="checkbox" checked={recoveryConfirmed} disabled={busy}
+                      data-testid="checkbox-confirm-demo-rejection"
+                      onChange={(e) => setRecoveryConfirmed(e.target.checked)} />
+                    <span>I confirm the wallet rejected before submission and no transaction was sent.</span>
+                  </label>
+                  <button type="button" className="mark-button" disabled={busy || !recoveryConfirmed}
+                    data-testid="button-request-demo-recovery" onClick={() => void run(requestRecovery)}>
+                    Request founder approval to retry
+                  </button>
+                </div>}
+              <p className="side-copy">A wallet transfer may already have been requested. Do not send again unless the founder approves a confirmed pre-submission rejection. Check your wallet, then verify its transaction hash below.</p>
               <label className="field-label">Demo transaction hash
                 <input className="field" value={hash} maxLength={50}
                   data-testid="input-demo-transaction-hash" onChange={(e) => setHash(e.target.value.trim())} />
@@ -283,7 +353,11 @@ export function DemoSettlementCard({
                 })}>Check demo transaction</button>
             </>}
           </>}
-          {sponsor && settlement.status !== 'success' && <p className="side-copy">Waiting for the investor to confirm and complete the demo transfer from their original browser.</p>}
+          {sponsor && settlement.status !== 'success' && (
+            <p className="side-copy">{settlement.recoveryStatus === 'awaiting_sponsor'
+              ? 'Review the investor’s rejection report above before approving any new attempt.'
+              : 'Waiting for the investor to confirm and complete the demo transfer from their original browser.'}</p>
+          )}
           {sponsor && settlement.status !== 'success' && (
             <div className="demo-investor-link" data-testid="demo-investor-link">
               <p className="side-copy">

@@ -23,20 +23,44 @@ export async function sendDemoUsdc(settlement: DemoSettlement): Promise<string> 
   if (!accounts.some(({ accountId }) => accountId === signerAccount)) {
     throw new Error('The connected wallet changed. Reconnect the confirmed sending account.');
   }
-  const outcome = await wallet.signAndSendTransaction({
-    network, signerId: signerAccount, receiverId: tokenContract,
-    actions: [{
-      type: 'FunctionCall',
-      params: {
-        methodName: 'ft_transfer',
-        args: { receiver_id: receiverAccount, amount: '1000000', memo: transferMemo },
-        gas: '30000000000000', deposit: '1',
-      },
-    }],
-  });
+  let outcome;
+  try {
+    outcome = await wallet.signAndSendTransaction({
+      network, signerId: signerAccount, receiverId: tokenContract,
+      actions: [{
+        type: 'FunctionCall',
+        params: {
+          methodName: 'ft_transfer',
+          args: { receiver_id: receiverAccount, amount: '1000000', memo: transferMemo },
+          gas: '30000000000000', deposit: '1',
+        },
+      }],
+    });
+  } catch (error) {
+    if (isDefinitePreBroadcastRejection(error)) {
+      throw new DefinitePreBroadcastRejectionError();
+    }
+    throw error;
+  }
   // The server independently checks finality and token transfer receipts.
   if (!outcome.transaction?.hash) throw new Error('No transaction hash returned. Check your wallet before sending again.');
   return outcome.transaction.hash;
+}
+
+export class DefinitePreBroadcastRejectionError extends Error {
+  constructor() {
+    super('The wallet explicitly rejected this transfer before submission.');
+    this.name = 'DefinitePreBroadcastRejectionError';
+  }
+}
+
+export function isDefinitePreBroadcastRejection(error: unknown): boolean {
+  if (typeof error === 'string') return error.trim() === 'User rejected';
+  if (!error || typeof error !== 'object') return false;
+  const value = error as { code?: unknown; name?: unknown; message?: unknown };
+  return value.code === 'USER_REJECTED' || value.code === 'UserRejected' ||
+    value.name === 'UserRejectedError' || value.name === 'UserRejected' ||
+    value.message === 'User rejected';
 }
 
 export type InvestorDemoReceipt = { commitmentId: string; token: string; persisted: boolean };
@@ -74,4 +98,8 @@ export function savedDemoAttempt(settlement: DemoSettlement): string | null {
 export function saveDemoAttempt(settlement: DemoSettlement, hash = 'unknown'): void {
   // Refuse to send when we cannot durably guard against a reload/double payment.
   localStorage.setItem(attemptKey(settlement), hash);
+}
+
+export function clearDemoAttempt(settlement: DemoSettlement): void {
+  try { localStorage.removeItem(attemptKey(settlement)); } catch { /* Server state remains authoritative. */ }
 }

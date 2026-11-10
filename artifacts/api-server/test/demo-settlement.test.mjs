@@ -3,7 +3,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { createServer } from "node:http";
 import test from "node:test";
 import { eq } from "drizzle-orm";
-import { db, pool, demoSettlementsTable, raiseStateTable } from "@workspace/db";
+import { db, pool, demoSettlementRecoveriesTable, demoSettlementsTable, raiseStateTable } from "@workspace/db";
 import app from "../src/app.ts";
 import {
   initializeRaiseStore, submitRaiseRecord, approveRaiseRecord,
@@ -153,7 +153,70 @@ test("demo settlement gates, exact USDC verification, persistence and core-flow 
   assert.equal(preparations.filter((r) => r.data.maySend).length, 1, "only one request can initiate wallet sending");
   settlement = preparations[0].data.settlement;
   assert.equal(settlement.status, "prepared");
+  const originalTransfer = {
+    network: settlement.network, tokenContract: settlement.tokenContract, receiverAccount: settlement.receiverAccount,
+  };
   assert.equal((await request(path + "/prepare", { method: "POST", receipt: investorLinkToken })).data.maySend, false);
+  const firstMemo = settlement.transferMemo;
+  const recoveryPath = path + "/recovery-request";
+  assert.equal((await request(recoveryPath, {
+    method: "POST", sponsor: true, body: { confirmedNoBroadcast: true },
+  })).status, 403, "sponsor access cannot make an investor rejection report");
+  assert.equal((await request(recoveryPath, {
+    method: "POST", receipt, body: { confirmedNoBroadcast: false },
+  })).status, 400, "investor must explicitly confirm no broadcast");
+  const recoveryRequested = await request(recoveryPath, {
+    method: "POST", receipt: investorLinkToken, body: { confirmedNoBroadcast: true },
+  });
+  assert.equal(recoveryRequested.status, 200);
+  assert.equal(recoveryRequested.data.settlement.recoveryStatus, "awaiting_sponsor");
+  assert.equal(recoveryRequested.data.settlement.status, "prepared");
+  assert.deepEqual(recoveryRequested.data.settlement.confirmations, confirmations);
+  assert.equal((await request(path + "/prepare", { method: "POST", receipt: investorLinkToken })).data.maySend,
+    false, "requesting recovery does not release the reserved attempt");
+  assert.equal((await request(path + "/recovery-approve", {
+    method: "POST", body: { confirmed: true },
+  })).status, 401, "investor receipt cannot approve the recovery");
+  assert.equal((await request(path + "/recovery-approve", {
+    method: "POST", sponsor: true, body: { confirmed: false },
+  })).status, 400, "founder must explicitly approve the recovery");
+  const [beforeRecoveryApproval] = await db.select().from(demoSettlementsTable)
+    .where(eq(demoSettlementsTable.id, settlement.id));
+  await db.update(demoSettlementsTable)
+    .set({ investorConfirmedAt: null, signerAccount: null })
+    .where(eq(demoSettlementsTable.id, settlement.id));
+  assert.equal((await request(path + "/recovery-approve", {
+    method: "POST", sponsor: true, body: { confirmed: true },
+  })).status, 409, "recovery cannot bypass the investor's original confirmation");
+  await db.update(demoSettlementsTable)
+    .set({ investorConfirmedAt: beforeRecoveryApproval.investorConfirmedAt, signerAccount: beforeRecoveryApproval.signerAccount })
+    .where(eq(demoSettlementsTable.id, settlement.id));
+  const recoveryApproved = await request(path + "/recovery-approve", {
+    method: "POST", sponsor: true, body: { confirmed: true },
+  });
+  assert.equal(recoveryApproved.status, 200);
+  assert.equal(recoveryApproved.data.settlement.recoveryStatus, "approved");
+  assert.equal(recoveryApproved.data.settlement.status, "ready");
+  assert.deepEqual({
+    network: recoveryApproved.data.settlement.network,
+    tokenContract: recoveryApproved.data.settlement.tokenContract,
+    receiverAccount: recoveryApproved.data.settlement.receiverAccount,
+  }, originalTransfer, "recovery keeps the original network, token, and recipient");
+  assert.deepEqual(recoveryApproved.data.settlement.confirmations, confirmations,
+    "the original role-confirmation audit timestamps remain unchanged");
+  const [recoveryRecord] = await db.select().from(demoSettlementRecoveriesTable)
+    .where(eq(demoSettlementRecoveriesTable.settlementId, settlement.id));
+  assert.equal(recoveryRecord.transferMemo, firstMemo, "released attempt details remain auditable");
+  assert.ok(recoveryRecord.approvedAt);
+  const retry = await request(path + "/prepare", { method: "POST", receipt: investorLinkToken });
+  assert.equal(retry.status, 200);
+  assert.equal(retry.data.maySend, true, "a new reservation is available only after founder approval");
+  settlement = retry.data.settlement;
+  assert.notEqual(settlement.transferMemo, firstMemo);
+  assert.deepEqual({
+    network: settlement.network, tokenContract: settlement.tokenContract, receiverAccount: settlement.receiverAccount,
+  }, originalTransfer);
+  assert.deepEqual(settlement.confirmations, confirmations);
   const hash = "A".repeat(44);
   const args = { receiver_id: settlement.receiverAccount, amount: "1000000", memo: settlement.transferMemo };
   const transaction = {

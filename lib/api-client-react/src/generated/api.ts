@@ -35,6 +35,8 @@ import type {
   DemoSettlementErrorResponse,
   DemoSettlementInput,
   DemoSettlementInvestorLink,
+  DemoSettlementRecoveryApproval,
+  DemoSettlementRecoveryRequest,
   DemoSettlementState,
   DemoSettlementVerificationInput,
   ErrorMessage,
@@ -2280,5 +2282,181 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getVerifyDemoSettlementMutationOptions(options), queryClient);
+    }
+
+export const getRequestDemoSettlementRecoveryUrl = (id: string,
+    commitmentId: string,) => {
+
+
+
+
+  return `/api/raises/${id}/demo-settlements/${commitmentId}/recovery-request`
+}
+
+/**
+ * Investor reports a definite wallet rejection before broadcast. A sponsor must separately approve release of that exact reservation; uncertain outcomes remain reserved.
+ */
+export const requestDemoSettlementRecovery = async (id: string,
+    commitmentId: string,
+    demoSettlementRecoveryRequest: DemoSettlementRecoveryRequest, options?: Parameters<typeof customFetch>[1]): Promise<DemoSettlementState> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<DemoSettlementState>(getRequestDemoSettlementRecoveryUrl(id,commitmentId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(demoSettlementRecoveryRequest)
+  }
+);}
+
+
+
+
+
+export const getRequestDemoSettlementRecoveryMutationKey = () => ['requestDemoSettlementRecovery'] as const;
+
+export const getRequestDemoSettlementRecoveryMutationOptions = <TError = ErrorType<DemoSettlementErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestDemoSettlementRecovery>>, TError,RequestDemoSettlementRecoveryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof requestDemoSettlementRecovery>>, TError,RequestDemoSettlementRecoveryMutationVariables, TContext> => {
+
+const mutationKey = getRequestDemoSettlementRecoveryMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof requestDemoSettlementRecovery>>, RequestDemoSettlementRecoveryMutationVariables> = (props) => {
+          const {id,commitmentId,data} = props ?? {};
+
+          return  requestDemoSettlementRecovery(id,commitmentId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RequestDemoSettlementRecoveryMutationResult = NonNullable<Awaited<ReturnType<typeof requestDemoSettlementRecovery>>>
+    export type RequestDemoSettlementRecoveryMutationBody = BodyType<DemoSettlementRecoveryRequest>
+    export type RequestDemoSettlementRecoveryMutationError = ErrorType<DemoSettlementErrorResponse>
+    export type RequestDemoSettlementRecoveryMutationVariables = {id: string;commitmentId: string;data: BodyType<DemoSettlementRecoveryRequest>}
+
+    export const useRequestDemoSettlementRecovery = <TError = ErrorType<DemoSettlementErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestDemoSettlementRecovery>>, TError,RequestDemoSettlementRecoveryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof requestDemoSettlementRecovery>>,
+        TError,
+        RequestDemoSettlementRecoveryMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRequestDemoSettlementRecoveryMutationOptions(options), queryClient);
+    }
+
+export const getApproveDemoSettlementRecoveryUrl = (id: string,
+    commitmentId: string,) => {
+
+
+
+
+  return `/api/raises/${id}/demo-settlements/${commitmentId}/recovery-approve`
+}
+
+/**
+ * Sponsor approves releasing the reservation tied to the investor's reported rejection. Both original transfer confirmations and immutable payment details remain required.
+ */
+export const approveDemoSettlementRecovery = async (id: string,
+    commitmentId: string,
+    demoSettlementRecoveryApproval: DemoSettlementRecoveryApproval, options?: Parameters<typeof customFetch>[1]): Promise<DemoSettlementState> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<DemoSettlementState>(getApproveDemoSettlementRecoveryUrl(id,commitmentId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(demoSettlementRecoveryApproval)
+  }
+);}
+
+
+
+
+
+export const getApproveDemoSettlementRecoveryMutationKey = () => ['approveDemoSettlementRecovery'] as const;
+
+export const getApproveDemoSettlementRecoveryMutationOptions = <TError = ErrorType<DemoSettlementErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveDemoSettlementRecovery>>, TError,ApproveDemoSettlementRecoveryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveDemoSettlementRecovery>>, TError,ApproveDemoSettlementRecoveryMutationVariables, TContext> => {
+
+const mutationKey = getApproveDemoSettlementRecoveryMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveDemoSettlementRecovery>>, ApproveDemoSettlementRecoveryMutationVariables> = (props) => {
+          const {id,commitmentId,data} = props ?? {};
+
+          return  approveDemoSettlementRecovery(id,commitmentId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveDemoSettlementRecoveryMutationResult = NonNullable<Awaited<ReturnType<typeof approveDemoSettlementRecovery>>>
+    export type ApproveDemoSettlementRecoveryMutationBody = BodyType<DemoSettlementRecoveryApproval>
+    export type ApproveDemoSettlementRecoveryMutationError = ErrorType<DemoSettlementErrorResponse>
+    export type ApproveDemoSettlementRecoveryMutationVariables = {id: string;commitmentId: string;data: BodyType<DemoSettlementRecoveryApproval>}
+
+    export const useApproveDemoSettlementRecovery = <TError = ErrorType<DemoSettlementErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveDemoSettlementRecovery>>, TError,ApproveDemoSettlementRecoveryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof approveDemoSettlementRecovery>>,
+        TError,
+        ApproveDemoSettlementRecoveryMutationVariables,
+        TContext
+      > => {
+      return useMutation(getApproveDemoSettlementRecoveryMutationOptions(options), queryClient);
     }
 

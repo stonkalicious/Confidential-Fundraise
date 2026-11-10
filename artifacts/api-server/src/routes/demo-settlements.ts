@@ -1,11 +1,13 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
-import { and, eq } from "drizzle-orm";
-import { db, demoSettlementsTable, type DemoSettlementRecord } from "@workspace/db";
+import { and, desc, eq } from "drizzle-orm";
 import {
-  ConfigureDemoSettlementBody, ConfirmDemoSettlementBody,
+  db, demoSettlementRecoveriesTable, demoSettlementsTable, type DemoSettlementRecord,
+} from "@workspace/db";
+import {
+  ApproveDemoSettlementRecoveryBody, ConfigureDemoSettlementBody, ConfirmDemoSettlementBody,
   VerifyDemoSettlementBody, GetDemoSettlementResponse,
   GetDemoSettlementConfigResponse, GetDemoSettlementParams,
-  CreateDemoSettlementInvestorLinkResponse,
+  CreateDemoSettlementInvestorLinkResponse, RequestDemoSettlementRecoveryBody,
 } from "@workspace/api-zod";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { getDemoCommitmentAccess } from "../lib/raise-store";
@@ -23,8 +25,13 @@ function tokenHash(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
-function snapshot(row?: DemoSettlementRecord) {
-  return GetDemoSettlementResponse.parse(row ? { settlement: {
+async function snapshot(row?: DemoSettlementRecord) {
+  if (!row) return GetDemoSettlementResponse.parse({});
+  const [recovery] = await db.select().from(demoSettlementRecoveriesTable)
+    .where(eq(demoSettlementRecoveriesTable.settlementId, row.id))
+    .orderBy(desc(demoSettlementRecoveriesTable.requestedAt), desc(demoSettlementRecoveriesTable.id))
+    .limit(1);
+  return GetDemoSettlementResponse.parse({ settlement: {
     id: row.id, network: row.network,
     tokenContract: USDC_CONTRACTS[row.network as SettlementNetwork],
     receiverAccount: row.receiverAccount,
@@ -37,7 +44,12 @@ function snapshot(row?: DemoSettlementRecord) {
     status: row.transactionHash ? "success" : row.preparedAt ? "prepared" : row.investorConfirmedAt ? "ready" : "awaiting_investor",
     ...(row.transferMemo ? { transferMemo: row.transferMemo } : {}),
     ...(row.transactionHash ? { transactionHash: row.transactionHash } : {}),
-  } } : {});
+    ...(recovery ? {
+      recoveryStatus: recovery.approvedAt ? "approved" : "awaiting_sponsor",
+      recoveryRequestedAt: recovery.requestedAt.toISOString(),
+      ...(recovery.approvedAt ? { recoveryApprovedAt: recovery.approvedAt.toISOString() } : {}),
+    } : {}),
+  } });
 }
 
 type Handler = (req: Request, res: Response, id: string, commitmentId: string) => Promise<void>;
@@ -81,7 +93,7 @@ router.get("/demo-settlement-config", (_req, res) => {
 });
 router.get(path, handle("either", async (_req, res, id, cid) => {
   const [row] = await db.select().from(demoSettlementsTable).where(whereCommitment(id, cid));
-  res.json(snapshot(row));
+  res.json(await snapshot(row));
 }));
 router.post(path, handle("sponsor", async (req, res, id, cid) => {
   const parsed = ConfigureDemoSettlementBody.safeParse(req.body);
@@ -100,7 +112,7 @@ router.post(path, handle("sponsor", async (req, res, id, cid) => {
   if (row.network !== input.network || row.receiverAccount !== input.receiverAccount || row.reference !== reference) {
     throw new SettlementError("The founder has already confirmed different details. Confirmed transfers cannot be changed.");
   }
-  res.json(snapshot(row));
+  res.json(await snapshot(row));
 }));
 router.post(`${path}/investor-link`, handle("sponsor", async (_req, res, id, cid) => {
   const issued = await db.transaction(async (tx) => {
@@ -139,7 +151,7 @@ router.post(`${path}/confirm`, handle("investor", async (req, res, id, cid) => {
       signerAccount: input.signerAccount, investorConfirmedAt: new Date(),
     }).where(eq(demoSettlementsTable.id, row.id));
   });
-  res.json(snapshot(await find(id, cid)));
+  res.json(await snapshot(await find(id, cid)));
 }));
 router.post(`${path}/prepare`, handle("investor", async (_req, res, id, cid) => {
   const row = await find(id, cid);
@@ -149,19 +161,75 @@ router.post(`${path}/prepare`, handle("investor", async (_req, res, id, cid) => 
   if (!row.sponsorConfirmedAt || !row.investorConfirmedAt || !row.signerAccount) {
     throw new SettlementError("Both the founder and investor must confirm before a transfer can be prepared.");
   }
-  if (row.transactionHash || row.preparedAt) { res.json({ ...snapshot(row), maySend: false }); return; }
+  if (row.transactionHash || row.preparedAt) { res.json({ ...(await snapshot(row)), maySend: false }); return; }
   await preflightSettlement(row);
   // A locked, single memo per commitment makes retries deterministic and
   // prevents a different payment from being reused as demo evidence.
   const maySend = await db.transaction(async (tx) => {
     const [current] = await tx.select().from(demoSettlementsTable).where(eq(demoSettlementsTable.id, row.id)).for("update");
-    if (!current || current.preparedAt) return false;
+    if (!current || current.transactionHash || current.preparedAt ||
+        !current.sponsorConfirmedAt || !current.investorConfirmedAt || !current.signerAccount) return false;
     await tx.update(demoSettlementsTable).set({
       preparedAt: new Date(), transferMemo: `demo-settlement:${randomUUID()}`,
     }).where(eq(demoSettlementsTable.id, row.id));
     return true;
   });
-  res.json({ ...snapshot(await find(id, cid)), maySend });
+  res.json({ ...(await snapshot(await find(id, cid))), maySend });
+}));
+router.post(`${path}/recovery-request`, handle("investor", async (req, res, id, cid) => {
+  const parsed = RequestDemoSettlementRecoveryBody.safeParse(req.body);
+  if (!parsed.success || parsed.data.confirmedNoBroadcast !== true) {
+    throw new SettlementError("The investor must confirm that the wallet rejected the transfer before submission.", 400);
+  }
+  await db.transaction(async (tx) => {
+    const [row] = await tx.select().from(demoSettlementsTable)
+      .where(whereCommitment(id, cid)).for("update");
+    if (!row || !row.sponsorConfirmedAt || !row.investorConfirmedAt || !row.signerAccount) {
+      throw new SettlementError("Both original transfer confirmations are required.");
+    }
+    if (row.network !== "testnet" || row.transactionHash || !row.preparedAt || !row.transferMemo) {
+      throw new SettlementError("Only an unresolved testnet reservation can be reviewed for recovery.");
+    }
+    const [latest] = await tx.select().from(demoSettlementRecoveriesTable)
+      .where(eq(demoSettlementRecoveriesTable.settlementId, row.id))
+      .orderBy(desc(demoSettlementRecoveriesTable.requestedAt), desc(demoSettlementRecoveriesTable.id))
+      .limit(1).for("update");
+    if (latest && !latest.approvedAt) return;
+    await tx.insert(demoSettlementRecoveriesTable).values({
+      settlementId: row.id, preparedAt: row.preparedAt, transferMemo: row.transferMemo,
+    });
+  });
+  res.json(await snapshot(await find(id, cid)));
+}));
+router.post(`${path}/recovery-approve`, handle("sponsor", async (req, res, id, cid) => {
+  const parsed = ApproveDemoSettlementRecoveryBody.safeParse(req.body);
+  if (!parsed.success || parsed.data.confirmed !== true) {
+    throw new SettlementError("The founder must explicitly approve a new attempt for the unchanged transfer.", 400);
+  }
+  await db.transaction(async (tx) => {
+    const [row] = await tx.select().from(demoSettlementsTable)
+      .where(whereCommitment(id, cid)).for("update");
+    if (!row || !row.sponsorConfirmedAt || !row.investorConfirmedAt || !row.signerAccount) {
+      throw new SettlementError("Both original transfer confirmations are required.");
+    }
+    const [recovery] = await tx.select().from(demoSettlementRecoveriesTable)
+      .where(eq(demoSettlementRecoveriesTable.settlementId, row.id))
+      .orderBy(desc(demoSettlementRecoveriesTable.requestedAt), desc(demoSettlementRecoveriesTable.id))
+      .limit(1).for("update");
+    if (!recovery || recovery.approvedAt) {
+      throw new SettlementError("There is no pending investor recovery request to approve.");
+    }
+    if (row.transactionHash || !row.preparedAt || !row.transferMemo ||
+        row.preparedAt.getTime() !== recovery.preparedAt.getTime() ||
+        row.transferMemo !== recovery.transferMemo) {
+      throw new SettlementError("The reservation changed or already settled; do not send another transfer.");
+    }
+    await tx.update(demoSettlementRecoveriesTable).set({ approvedAt: new Date() })
+      .where(eq(demoSettlementRecoveriesTable.id, recovery.id));
+    await tx.update(demoSettlementsTable).set({ preparedAt: null, transferMemo: null })
+      .where(eq(demoSettlementsTable.id, row.id));
+  });
+  res.json(await snapshot(await find(id, cid)));
 }));
 router.post(`${path}/verify`, handle("investor", async (req, res, id, cid) => {
   const parsed = VerifyDemoSettlementBody.safeParse(req.body);
@@ -175,15 +243,20 @@ router.post(`${path}/verify`, handle("investor", async (req, res, id, cid) => {
   }
   if (row.transactionHash) {
     if (row.transactionHash !== hash) throw new SettlementError("This demo transfer is already settled.");
-    res.json(snapshot(row)); return;
+    res.json(await snapshot(row)); return;
   }
   await verifySettlementTransaction(row, hash);
   await db.transaction(async (tx) => {
     const [current] = await tx.select().from(demoSettlementsTable).where(eq(demoSettlementsTable.id, row.id)).for("update");
     if (current?.transactionHash && current.transactionHash !== hash) throw new SettlementError("This transfer has already settled.");
+    if (!current?.preparedAt || !current.transferMemo ||
+        current.preparedAt.getTime() !== row.preparedAt?.getTime() ||
+        current.transferMemo !== row.transferMemo) {
+      throw new SettlementError("The transfer reservation changed while it was being checked. Refresh its status before continuing.");
+    }
     await tx.update(demoSettlementsTable).set({ transactionHash: hash }).where(eq(demoSettlementsTable.id, row.id));
   });
-  res.json(snapshot(await find(id, cid)));
+  res.json(await snapshot(await find(id, cid)));
 }));
 
 export default router;

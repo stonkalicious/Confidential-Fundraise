@@ -1,5 +1,5 @@
 import { createInsertSchema } from "drizzle-zod";
-import { pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { index, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { z } from "zod/v4";
 import { raiseStateTable } from "./raise-state";
 
@@ -24,6 +24,21 @@ export const demoSettlementsTable = pgTable("demo_settlements", {
   uniqueIndex("demo_settlements_transaction").on(table.network, table.transactionHash),
 ]);
 
+// Each recovery request records the exact reservation it asks to release.
+// This keeps prior rejected attempts auditable while allowing later retries.
+export const demoSettlementRecoveriesTable = pgTable("demo_settlement_recoveries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  settlementId: uuid("settlement_id").notNull()
+    .references(() => demoSettlementsTable.id, { onDelete: "cascade" }),
+  preparedAt: timestamp("prepared_at", { withTimezone: true }).notNull(),
+  transferMemo: text("transfer_memo").notNull(),
+  requestedAt: timestamp("requested_at", { withTimezone: true }).notNull().defaultNow(),
+  approvedAt: timestamp("approved_at", { withTimezone: true }),
+}, (table) => [
+  index("demo_settlement_recoveries_latest").on(table.settlementId, table.requestedAt),
+]);
+
 export const insertDemoSettlementSchema = createInsertSchema(demoSettlementsTable);
 export type InsertDemoSettlement = z.infer<typeof insertDemoSettlementSchema>;
 export type DemoSettlementRecord = typeof demoSettlementsTable.$inferSelect;
+export type DemoSettlementRecoveryRecord = typeof demoSettlementRecoveriesTable.$inferSelect;

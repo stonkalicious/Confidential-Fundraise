@@ -693,6 +693,46 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/DemoSettlementState" }
         default: { $ref: "#/components/responses/DemoSettlementError" }
+  /raises/{id}/demo-settlements/{commitmentId}/recovery-request:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+      - { name: commitmentId, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: requestDemoSettlementRecovery
+      description: Investor reports a definite wallet rejection before broadcast. A sponsor must separately approve release of that exact reservation; uncertain outcomes remain reserved.
+      security: [{ DemoReceipt: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DemoSettlementRecoveryRequest" }
+      responses:
+        "200":
+          description: Investor recovery request recorded for sponsor review.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DemoSettlementState" }
+        default: { $ref: "#/components/responses/DemoSettlementError" }
+  /raises/{id}/demo-settlements/{commitmentId}/recovery-approve:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+      - { name: commitmentId, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: approveDemoSettlementRecovery
+      description: Sponsor approves releasing the reservation tied to the investor's reported rejection. Both original transfer confirmations and immutable payment details remain required.
+      security: [{ ApprovalCode: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DemoSettlementRecoveryApproval" }
+      responses:
+        "200":
+          description: Sponsor approval recorded and the rejected reservation released.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DemoSettlementState" }
+        default: { $ref: "#/components/responses/DemoSettlementError" }
 components:
   responses:
     DemoSettlementError:
@@ -738,6 +778,20 @@ components:
       properties:
         transactionHash: { type: string, minLength: 40, maxLength: 50 }
       required: [transactionHash]
+    DemoSettlementRecoveryRequest:
+      type: object
+      properties:
+        confirmedNoBroadcast:
+          type: boolean
+          description: Investor explicitly confirms the wallet rejected the transfer before submission.
+      required: [confirmedNoBroadcast]
+    DemoSettlementRecoveryApproval:
+      type: object
+      properties:
+        confirmed:
+          type: boolean
+          description: Sponsor explicitly approves another attempt for the unchanged transfer details.
+      required: [confirmed]
     DemoSettlementInvestorLink:
       type: object
       properties:
@@ -765,6 +819,9 @@ components:
         status: { type: string, enum: [awaiting_investor, ready, prepared, success] }
         transferMemo: { type: string }
         transactionHash: { type: string }
+        recoveryStatus: { type: string, enum: [awaiting_sponsor, approved] }
+        recoveryRequestedAt: { type: string, format: date-time }
+        recoveryApprovedAt: { type: string, format: date-time }
       required: [id, network, tokenContract, receiverAccount, confirmations, status]
     DemoSettlementState:
       type: object

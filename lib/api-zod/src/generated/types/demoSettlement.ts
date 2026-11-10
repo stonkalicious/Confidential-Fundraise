@@ -7,6 +7,7 @@
  */
 import type { DemoSettlementConfirmation } from './demoSettlementConfirmation';
 import type { DemoSettlementNetwork } from './demoSettlementNetwork';
+import type { DemoSettlementRecoveryStatus } from './demoSettlementRecoveryStatus';
 import type { DemoSettlementStatus } from './demoSettlementStatus';
 
 export interface DemoSettlement {
@@ -20,4 +21,7 @@ export interface DemoSettlement {
   status: DemoSettlementStatus;
   transferMemo?: string;
   transactionHash?: string;
+  recoveryStatus?: DemoSettlementRecoveryStatus;
+  recoveryRequestedAt?: Date;
+  recoveryApprovedAt?: Date;
 }

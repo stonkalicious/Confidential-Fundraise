@@ -595,7 +595,10 @@ export const GetDemoSettlementResponse = zod.object({
 })),
   "status": zod.enum(['awaiting_investor', 'ready', 'prepared', 'success']),
   "transferMemo": zod.string().optional(),
-  "transactionHash": zod.string().optional()
+  "transactionHash": zod.string().optional(),
+  "recoveryStatus": zod.enum(['awaiting_sponsor', 'approved']).optional(),
+  "recoveryRequestedAt": zod.coerce.date().optional(),
+  "recoveryApprovedAt": zod.coerce.date().optional()
 }).optional(),
   "maySend": zod.boolean().optional().describe('Returned only by preparation; true only for the request that first reserves this transfer.')
 })
@@ -634,7 +637,10 @@ export const ConfigureDemoSettlementResponse = zod.object({
 })),
   "status": zod.enum(['awaiting_investor', 'ready', 'prepared', 'success']),
   "transferMemo": zod.string().optional(),
-  "transactionHash": zod.string().optional()
+  "transactionHash": zod.string().optional(),
+  "recoveryStatus": zod.enum(['awaiting_sponsor', 'approved']).optional(),
+  "recoveryRequestedAt": zod.coerce.date().optional(),
+  "recoveryApprovedAt": zod.coerce.date().optional()
 }).optional(),
   "maySend": zod.boolean().optional().describe('Returned only by preparation; true only for the request that first reserves this transfer.')
 })
@@ -687,7 +693,10 @@ export const ConfirmDemoSettlementResponse = zod.object({
 })),
   "status": zod.enum(['awaiting_investor', 'ready', 'prepared', 'success']),
   "transferMemo": zod.string().optional(),
-  "transactionHash": zod.string().optional()
+  "transactionHash": zod.string().optional(),
+  "recoveryStatus": zod.enum(['awaiting_sponsor', 'approved']).optional(),
+  "recoveryRequestedAt": zod.coerce.date().optional(),
+  "recoveryApprovedAt": zod.coerce.date().optional()
 }).optional(),
   "maySend": zod.boolean().optional().describe('Returned only by preparation; true only for the request that first reserves this transfer.')
 })
@@ -712,7 +721,10 @@ export const PrepareDemoSettlementResponse = zod.object({
 })),
   "status": zod.enum(['awaiting_investor', 'ready', 'prepared', 'success']),
   "transferMemo": zod.string().optional(),
-  "transactionHash": zod.string().optional()
+  "transactionHash": zod.string().optional(),
+  "recoveryStatus": zod.enum(['awaiting_sponsor', 'approved']).optional(),
+  "recoveryRequestedAt": zod.coerce.date().optional(),
+  "recoveryApprovedAt": zod.coerce.date().optional()
 }).optional(),
   "maySend": zod.boolean().optional().describe('Returned only by preparation; true only for the request that first reserves this transfer.')
 })
@@ -746,7 +758,80 @@ export const VerifyDemoSettlementResponse = zod.object({
 })),
   "status": zod.enum(['awaiting_investor', 'ready', 'prepared', 'success']),
   "transferMemo": zod.string().optional(),
-  "transactionHash": zod.string().optional()
+  "transactionHash": zod.string().optional(),
+  "recoveryStatus": zod.enum(['awaiting_sponsor', 'approved']).optional(),
+  "recoveryRequestedAt": zod.coerce.date().optional(),
+  "recoveryApprovedAt": zod.coerce.date().optional()
+}).optional(),
+  "maySend": zod.boolean().optional().describe('Returned only by preparation; true only for the request that first reserves this transfer.')
+})
+
+
+/**
+ * Investor reports a definite wallet rejection before broadcast. A sponsor must separately approve release of that exact reservation; uncertain outcomes remain reserved.
+ */
+export const RequestDemoSettlementRecoveryParams = zod.object({
+  "id": zod.coerce.string(),
+  "commitmentId": zod.coerce.string()
+})
+
+export const RequestDemoSettlementRecoveryBody = zod.object({
+  "confirmedNoBroadcast": zod.boolean().describe('Investor explicitly confirms the wallet rejected the transfer before submission.')
+})
+
+export const RequestDemoSettlementRecoveryResponse = zod.object({
+  "settlement": zod.object({
+  "id": zod.string(),
+  "network": zod.enum(['testnet', 'mainnet']),
+  "tokenContract": zod.string(),
+  "receiverAccount": zod.string(),
+  "reference": zod.string().optional(),
+  "signerAccount": zod.string().optional(),
+  "confirmations": zod.array(zod.object({
+  "role": zod.enum(['sponsor', 'investor']),
+  "timestamp": zod.coerce.date()
+})),
+  "status": zod.enum(['awaiting_investor', 'ready', 'prepared', 'success']),
+  "transferMemo": zod.string().optional(),
+  "transactionHash": zod.string().optional(),
+  "recoveryStatus": zod.enum(['awaiting_sponsor', 'approved']).optional(),
+  "recoveryRequestedAt": zod.coerce.date().optional(),
+  "recoveryApprovedAt": zod.coerce.date().optional()
+}).optional(),
+  "maySend": zod.boolean().optional().describe('Returned only by preparation; true only for the request that first reserves this transfer.')
+})
+
+
+/**
+ * Sponsor approves releasing the reservation tied to the investor's reported rejection. Both original transfer confirmations and immutable payment details remain required.
+ */
+export const ApproveDemoSettlementRecoveryParams = zod.object({
+  "id": zod.coerce.string(),
+  "commitmentId": zod.coerce.string()
+})
+
+export const ApproveDemoSettlementRecoveryBody = zod.object({
+  "confirmed": zod.boolean().describe('Sponsor explicitly approves another attempt for the unchanged transfer details.')
+})
+
+export const ApproveDemoSettlementRecoveryResponse = zod.object({
+  "settlement": zod.object({
+  "id": zod.string(),
+  "network": zod.enum(['testnet', 'mainnet']),
+  "tokenContract": zod.string(),
+  "receiverAccount": zod.string(),
+  "reference": zod.string().optional(),
+  "signerAccount": zod.string().optional(),
+  "confirmations": zod.array(zod.object({
+  "role": zod.enum(['sponsor', 'investor']),
+  "timestamp": zod.coerce.date()
+})),
+  "status": zod.enum(['awaiting_investor', 'ready', 'prepared', 'success']),
+  "transferMemo": zod.string().optional(),
+  "transactionHash": zod.string().optional(),
+  "recoveryStatus": zod.enum(['awaiting_sponsor', 'approved']).optional(),
+  "recoveryRequestedAt": zod.coerce.date().optional(),
+  "recoveryApprovedAt": zod.coerce.date().optional()
 }).optional(),
   "maySend": zod.boolean().optional().describe('Returned only by preparation; true only for the request that first reserves this transfer.')
 })
