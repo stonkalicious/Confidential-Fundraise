@@ -14,12 +14,12 @@ import {
   type RaiseSummary,
 } from '@workspace/api-client-react';
 import RaiseList from '@/components/raise-list';
+import { getSafeSourceLink, INITIAL_RAISES, type Raise } from '@/data/raises';
 import RoadmapPage from '@/components/roadmap-page';
 import WhyNearPage from '@/components/why-near-page';
 import SiteHeader from '@/components/site-header';
 import { DemoSettlementCard, InvestorDemoSettlements } from '@/components/demo-settlement';
 import { newDemoReceipt, rememberDemoReceipt } from '@/lib/demo-settlement-wallet';
-import { INITIAL_RAISES, type Raise } from '@/data/raises';
 import { loadRaises, saveRaises } from '@/data/raise-storage';
 import { createQuoteOutcomeReporter, getQuoteFailureOutcome } from '@/lib/analytics';
 import { startSponsorIdleLock } from '@/lib/sponsor-idle-lock';
@@ -616,6 +616,7 @@ function AppDesk({
     { id: 'thesis', label: 'Thesis' },
     { id: 'rules', label: 'Rules Calculator' },
   ];
+  const sourceLink = getSafeSourceLink(raise.sourceLink);
 
   return (
     <div className="app-shell">
@@ -626,6 +627,17 @@ function AppDesk({
         <h1 className="raise-heading">{raise.companyName}</h1>
         <p className="section-copy">{raise.thesis}</p>
         <div className="raise-details">{raise.stage} · {euro(raise.roundRange.min)} – {euro(raise.roundRange.max)}</div>
+        {sourceLink && (
+          <a
+            className="raise-source-link"
+            href={sourceLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Source for ${raise.companyName}`}
+          >
+            Source <span aria-hidden="true">↗</span>
+          </a>
+        )}
         <nav className="nav-row" aria-label="Fundraise views">
           {views.map((item) => (
             <button

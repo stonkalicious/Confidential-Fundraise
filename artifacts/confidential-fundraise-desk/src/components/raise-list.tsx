@@ -7,7 +7,7 @@ import {
   type RaiseSubmissionInput,
 } from '@workspace/api-client-react';
 import { Link } from 'wouter';
-import type { Raise } from '@/data/raises';
+import { getSafeSourceLink, type Raise } from '@/data/raises';
 import SiteHeader from '@/components/site-header';
 
 function errorMessage(error: unknown, fallback: string): string {
@@ -124,28 +124,42 @@ export default function RaiseList({
           <section className="raise-list-column">
             <h1 className="section-title">Active raises</h1>
             <ul className="raise-list" data-testid="raise-list">
-              {raises.map((raise) => (
-                <li key={raise.id}>
-                  <Link className="raise-list-item" href={`/raises/${raise.id}`} data-testid={`raise-${raise.id}`}>
-                    <div>
-                      <h2 className="section-title">{raise.companyName}</h2>
-                      <p className="section-copy">{raise.thesis}</p>
-                      <div className="raise-details">
-                        {raise.stage} · {format(raise.roundRange.min)} – {format(raise.roundRange.max)}
+              {raises.map((raise) => {
+                const sourceLink = getSafeSourceLink(raise.sourceLink);
+                return (
+                  <li key={raise.id}>
+                    <Link className="raise-list-item" href={`/raises/${raise.id}`} data-testid={`raise-${raise.id}`}>
+                      <div>
+                        <h2 className="section-title">{raise.companyName}</h2>
+                        <p className="section-copy">{raise.thesis}</p>
+                        <div className="raise-details">
+                          {raise.stage} · {format(raise.roundRange.min)} – {format(raise.roundRange.max)}
+                        </div>
+                        <div className="raise-details" data-testid={`raise-aggregate-${raise.id}`}>
+                          Soft {format(raise.softTotal ?? 0)} · Hard {format(raise.hardTotal ?? 0)} ·
+                          {' '}{raise.confirmedTestnetTransfers ?? 0} confirmed testnet transfers
+                        </div>
                       </div>
-                      <div className="raise-details" data-testid={`raise-aggregate-${raise.id}`}>
-                        Soft {format(raise.softTotal ?? 0)} · Hard {format(raise.hardTotal ?? 0)} ·
-                        {' '}{raise.confirmedTestnetTransfers ?? 0} confirmed testnet transfers
-                      </div>
-                    </div>
-                    <span className="raise-list-status">
-                      {raise.claimed
-                        ? `Claimed by ${raise.claimantName ?? raise.claim?.founderName ?? ''}`
-                        : 'Public raise overview'} <span aria-hidden="true">↗</span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
+                      <span className="raise-list-status">
+                        {raise.claimed
+                          ? `Claimed by ${raise.claimantName ?? raise.claim?.founderName ?? ''}`
+                          : 'Public raise overview'} <span aria-hidden="true">↗</span>
+                      </span>
+                    </Link>
+                    {sourceLink && (
+                      <a
+                        className="raise-source-link"
+                        href={sourceLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Source for ${raise.companyName}`}
+                      >
+                        Source <span aria-hidden="true">↗</span>
+                      </a>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </section>
 

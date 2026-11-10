@@ -277,6 +277,8 @@ button:focus-visible, input:focus-visible {
 .raise-list-item .section-copy { margin-bottom: 12px; }
 .raise-list-status { flex-shrink: 0; color: #9c5945; font: 11px var(--app-font-mono); }
 .raise-details { color: #777366; font: 11px/1.6 var(--app-font-mono); }
+.raise-source-link { display: inline-block; margin: 8px 0 0 2px; color: #9c5945; font: 11px/1.6 var(--app-font-mono); text-underline-offset: 3px; }
+.raise-source-link:focus-visible { outline: 2px solid #b86148; outline-offset: 3px; }
 .raise-back-link { display: inline-block; color: #777366; font-size: 12px; margin-bottom: 22px; }
 .raise-heading { margin: 0; font: 400 38px/1.1 var(--app-font-serif); }
 .footer { max-width: 1160px; margin: 0 auto; padding: 17px 32px 27px; border-top: 1px solid #ded9cc; color: #928c7f; font: 10px var(--app-font-mono); }

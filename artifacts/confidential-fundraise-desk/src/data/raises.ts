@@ -1,5 +1,16 @@
 export type Commitment = { id: string; identifier: string; amount: number; hard: boolean; verified?: boolean };
 
+export function getSafeSourceLink(sourceLink?: string): string | undefined {
+  if (!sourceLink) return undefined;
+
+  try {
+    const url = new URL(sourceLink);
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export type Raise = {
   id: string;
   companyName: string;
