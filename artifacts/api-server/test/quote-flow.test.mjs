@@ -277,6 +277,81 @@ test("quote requests stay authorized, hard-only, fixed-value, and sanitized", as
     }
   });
 
+  await t.test("invalid provider timestamp strings return a safe error", async (timestampTest) => {
+    for (const timestamp of [
+      "",
+      "   ",
+      "not-a-date-private-provider-diagnostic",
+      "2026-13-06T12:00:00.000Z",
+      "2026-11-06T25:00:00.000Z",
+      "2026-11-06T12:00:00.000Z-private-provider-diagnostic",
+    ]) {
+      await timestampTest.test(JSON.stringify(timestamp), async () => {
+        providerMock = async () =>
+          jsonResponse({
+            quote: { amountIn: "1000000", amountOut: "995000" },
+            timestamp,
+          });
+        const response = await request(quotePath, {
+          method: "POST",
+          headers: quoteHeaders,
+        });
+
+        assert.equal(response.status, 502);
+        assert.equal(response.headers.get("cache-control"), "no-store");
+        assert.deepEqual(response.body, {
+          error: "NEAR Intents returned an unreadable quote. No funds moved.",
+        });
+      });
+    }
+  });
+
+  await t.test("valid provider timestamps preserve the quoted instant", async (timestampTest) => {
+    for (const timestamp of [
+      "2026-11-06T12:00:00.000Z",
+      "2026-11-06T12:00:00Z",
+      "2026-11-06T14:30:00+02:30",
+    ]) {
+      await timestampTest.test(timestamp, async () => {
+        providerMock = async () =>
+          jsonResponse({
+            quote: { amountIn: "1000000", amountOut: "995000" },
+            timestamp,
+          });
+        const response = await request(quotePath, {
+          method: "POST",
+          headers: quoteHeaders,
+        });
+
+        assert.equal(response.status, 200);
+        assert.equal(response.headers.get("cache-control"), "no-store");
+        assert.equal(response.body.quotedAt, new Date(timestamp).toISOString());
+      });
+    }
+  });
+
+  await t.test("missing or non-string provider timestamps use receipt time", async (timestampTest) => {
+    for (const timestamp of [undefined, null, 123, true, {}]) {
+      await timestampTest.test(String(timestamp), async () => {
+        providerMock = async () =>
+          jsonResponse({
+            quote: { amountIn: "1000000", amountOut: "995000" },
+            ...(timestamp === undefined ? {} : { timestamp }),
+          });
+        const before = Date.now();
+        const response = await request(quotePath, {
+          method: "POST",
+          headers: quoteHeaders,
+        });
+        const after = Date.now();
+
+        assert.equal(response.status, 200);
+        const quotedTime = Date.parse(response.body.quotedAt);
+        assert.ok(quotedTime >= before && quotedTime <= after);
+      });
+    }
+  });
+
   await t.test("provider requests use synthetic values and successful responses are sanitized", async () => {
     providerMock = async () =>
       jsonResponse({

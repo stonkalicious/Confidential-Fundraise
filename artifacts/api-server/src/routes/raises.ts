@@ -639,10 +639,17 @@ router.post(
       isRecord(upstreamBody) && isRecord(upstreamBody.quote)
         ? upstreamBody.quote
         : undefined;
+    // Preserve the receipt-time fallback when no string timestamp is supplied,
+    // but reject invalid provider dates rather than silently replacing them.
+    const quotedAt =
+      isRecord(upstreamBody) && typeof upstreamBody.timestamp === "string"
+        ? upstreamBody.timestamp
+        : new Date().toISOString();
     if (
       !quote ||
       !isBaseUnitAmount(quote.amountIn) ||
-      !isBaseUnitAmount(quote.amountOut)
+      !isBaseUnitAmount(quote.amountOut) ||
+      !Number.isFinite(Date.parse(quotedAt))
     ) {
       req.log.warn(
         { upstreamStatus: upstreamResponse.status },
@@ -662,11 +669,6 @@ router.post(
         : isRecord(upstreamBody) && typeof upstreamBody.quoteId === "string"
           ? upstreamBody.quoteId
           : null;
-    const quotedAt =
-      isRecord(upstreamBody) && typeof upstreamBody.timestamp === "string"
-        ? upstreamBody.timestamp
-        : new Date().toISOString();
-
     noStore(res).json(
       RequestDemoQuoteResponse.parse({
         dry: true,

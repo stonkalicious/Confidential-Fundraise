@@ -4,3 +4,4 @@
 - [Codegen version inference](codegen-version-inference.md) — Orval may misdetect dependencies declared through the pnpm catalog.
 - [Native Node tests](native-node-tests.md) — In this workspace, Node 24 can run `node:test` files that import TypeScript source without `tsx`.
 - [Raise concurrency](raise-concurrency.md) — Cross-server write safety uses database row locks; read-cache freshness is a separate concern.
+- [Quote timestamp policy](quote-timestamps.md) — Reject invalid provider date strings rather than inventing a replacement quote time.
