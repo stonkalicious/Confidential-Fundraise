@@ -127,7 +127,7 @@ export default function RulesCalculator() {
             />
           </div>
           <div className="field-wrap">
-            <label className="field-label" htmlFor="rules-sponsor-carry">Carry split to sponsor (%)</label>
+            <label className="field-label" htmlFor="rules-sponsor-carry">Carry split to founder (%)</label>
             <input
               className="field"
               id="rules-sponsor-carry"
@@ -159,7 +159,7 @@ export default function RulesCalculator() {
             <strong data-testid="result-remainder">{currency.format(results.remainder)}</strong>
           </div>
           <div className="rules-result-row">
-            <span>Amount to sponsor (carry %)</span>
+            <span>Amount to founder (carry %)</span>
             <strong data-testid="result-sponsor-amount">{currency.format(results.sponsorAmount)}</strong>
           </div>
           <div className="rules-result-row">

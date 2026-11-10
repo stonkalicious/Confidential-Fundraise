@@ -83,7 +83,7 @@ export async function preflightSettlement(row: DemoSettlementRecord): Promise<vo
     throw new SettlementError("The configured USDC contract could not be verified.", 502);
   }
   if (!registration) {
-    throw new SettlementError("The sponsor must register the receiving account with this USDC contract first. No transfer was sent.");
+    throw new SettlementError("The founder must register the receiving account with this USDC contract first. No transfer was sent.");
   }
   if (typeof balance !== "string" || !/^\d+$/.test(balance) || BigInt(balance) < 1_000_000n) {
     throw new SettlementError(`The sending wallet needs at least 1 ${network === "testnet" ? "test " : ""}USDC, plus NEAR for gas.`);

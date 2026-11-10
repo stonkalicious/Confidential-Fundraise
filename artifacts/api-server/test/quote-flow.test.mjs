@@ -99,7 +99,7 @@ test("quote requests stay authorized, hard-only, fixed-value, and sanitized", as
         assert.equal(response.status, 503);
         assert.equal(response.headers.get("cache-control"), "no-store");
         assert.deepEqual(response.body, {
-          error: "Sponsor access is not configured.",
+          error: "Founder access is not configured.",
         });
         assert.equal(providerRequests.length, providerCallsBefore);
         const responseText = JSON.stringify(response.body);
@@ -118,7 +118,7 @@ test("quote requests stay authorized, hard-only, fixed-value, and sanitized", as
       method: "POST",
     });
     assert.equal(response.status, 401);
-    assert.match(response.body.error, /sponsor approval/i);
+    assert.match(response.body.error, /founder approval/i);
     assert.equal(providerRequests.length, 0);
   });
 

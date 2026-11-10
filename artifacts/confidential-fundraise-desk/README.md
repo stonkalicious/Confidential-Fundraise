@@ -8,7 +8,7 @@ wallet transactions.
 ## Optional “Settle $1” demo
 
 After a new soft commitment, its original browser can open **Settle $1 (demo)** on
-the raise page. A sponsor opens the same action under that commitment in Sponsor
+the raise page. A founder opens the same action under that commitment in Founder
 review, uses NEAR testnet, enters a receiving NEAR testnet account,
 optionally pastes an already-reviewed HTTP(S) link or document hash, and ticks the
 demo confirmation. The investor reviews the same immutable details, connects a
@@ -46,7 +46,7 @@ soft commitment. Retrying that commitment cannot replace its receipt. Existing
 legacy commitments remain unchanged; they do not gain investor authorization
 retroactively. Do not clear the original browser's storage before reconciliation.
 Private transfer details and hashes are visible on the raise page to that
-investor and the sponsor, not in public aggregate API responses. Demo payments
+investor and the founder, not in public aggregate API responses. Demo payments
 never change the commitment's amount, hard/verified status, or aggregate totals.
 Claiming, updating, and soft-committing still require no wallet connection.
 After confirmation, public progress can show an anonymous confirmed-testnet-
@@ -61,7 +61,7 @@ The test mocks chain responses; it never signs a transaction or spends tokens.
 
 1. Open an approved demo raise and submit a soft commitment using synthetic
    details only. This does not require a wallet.
-2. Open Sponsor and enter the configured sponsor approval code. Keep it off
+2. Open Founder and enter the configured founder approval code. Keep it off
    recordings.
 3. Mark the demo commitment hard and select it for a quote. The app requires a
    NEAR wallet session before requesting the confidential quote.

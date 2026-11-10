@@ -306,7 +306,7 @@ function AppDesk({
     event.preventDefault();
     setSponsorError('');
     if (!approvalCode) {
-      setSponsorError('Enter the sponsor approval code.');
+      setSponsorError('Enter the founder approval code.');
       return;
     }
     const sessionVersion = sponsorSessionVersion.current;
@@ -319,7 +319,7 @@ function AppDesk({
     } catch (error) {
       if (sessionVersion === sponsorSessionVersion.current) {
         setPrivateRaise(null);
-        setSponsorError(requestErrorMessage(error, 'Private sponsor details could not be loaded.'));
+        setSponsorError(requestErrorMessage(error, 'Private founder details could not be loaded.'));
       }
     } finally {
       if (sessionVersion === sponsorSessionVersion.current) {
@@ -612,7 +612,7 @@ function AppDesk({
     { id: 'progress', index: '01', label: 'Progress' },
     { id: 'how', index: '02', label: 'How this app works' },
     { id: 'prospect', label: 'Prospect' },
-    { id: 'sponsor', label: 'Sponsor' },
+    { id: 'sponsor', label: 'Founder' },
     { id: 'thesis', label: 'Thesis' },
     { id: 'rules', label: 'Rules Calculator' },
   ];
@@ -711,7 +711,7 @@ function AppDesk({
           <section className="view-content" key="sponsor">
             <div className="content-grid">
               <div>
-                <h2 className="section-title">Sponsor review</h2>
+                <h2 className="section-title">Founder review</h2>
                 {sponsorError && (
                   <p className="inline-error" data-testid="status-sponsor-error" role="alert">
                     {sponsorError}
@@ -720,7 +720,7 @@ function AppDesk({
                 {!privateRaise ? (
                   <form className="sponsor-unlock-form" onSubmit={unlockSponsor}>
                     <div className="field-wrap">
-                      <label className="field-label" htmlFor="sponsor-approval-code">Sponsor approval code</label>
+                      <label className="field-label" htmlFor="sponsor-approval-code">Founder approval code</label>
                       <input
                         className="field"
                         id="sponsor-approval-code"
@@ -732,7 +732,7 @@ function AppDesk({
                       />
                     </div>
                     <button className="primary-button" type="submit" disabled={sponsorLoading}>
-                      {sponsorLoading ? 'Loading…' : 'Unlock sponsor view'}
+                      {sponsorLoading ? 'Loading…' : 'Unlock founder view'}
                     </button>
                   </form>
                 ) : (
@@ -1112,7 +1112,7 @@ function AppDesk({
               <h1 className="how-title">How the app works</h1>
               <p>Confidential Fundraising is a minimal demo of fundraise coordination with shared server-held records.</p>
               <p>
-                A prospect submits a soft commitment, and a founder can claim a raise with contact details. New raises stay out of the public list until a sponsor approves them. The Sponsor view uses a shared approval code to access individual commitments and claim contact details. Marking a commitment hard enables a dry-run NEAR Intents quote with fixed synthetic values; the quote never executes a swap. Separately, the sponsor and investor can confirm an optional transfer of exactly 1 test USDC on NEAR testnet.
+                A prospect submits a soft commitment, and a founder can claim a raise with contact details. New raises stay out of the public list until a founder approves them. The Founder view uses a shared approval code to access individual commitments and claim contact details. Marking a commitment hard enables a dry-run NEAR Intents quote with fixed synthetic values; the quote never executes a swap. Separately, the founder and investor can confirm an optional transfer of exactly 1 test USDC on NEAR testnet.
               </p>
               <p>
                 Public pages and API responses show approved raise information, aggregate soft and hard EUR totals, and an anonymous count of confirmed testnet transfers. Individual commitment identifiers, amounts, and claim contact details are not included in public responses.

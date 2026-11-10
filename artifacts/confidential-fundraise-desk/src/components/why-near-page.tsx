@@ -75,7 +75,7 @@ export default function WhyNearPage() {
 
             <h2>What does this demo actually do?</h2>
             <p>
-              After marking a commitment hard and authenticating a NEAR wallet, a sponsor can request
+              After marking a commitment hard and authenticating a NEAR wallet, a founder can request
               a live quote using a fixed <strong>1 USDC example from Ethereum to Arbitrum</strong> and
               placeholder addresses. It does not use the investor’s commitment amount.{' '}
               <strong>No funds move.</strong>

@@ -27,7 +27,7 @@ submitting; these notes reflect its 9 November version.
 ## Recommended positioning
 
 **Primary recommendation: Privacy & Private AI (`privacy`).**
-The fit is private-finance coordination with sponsor-protected records and a
+The fit is private-finance coordination with founder-protected records and a
 confidential NEAR Intents quote path. There is no private-AI inference or TEE
 implementation in this app; do not imply one.
 
@@ -50,16 +50,16 @@ Keep these distinctions in the recording and description:
 ## Short recording script (about two minutes)
 
 Prepare a disposable demo database/raise and two browser sessions before
-recording. Do not display sponsor codes, bearer tokens, email addresses,
+recording. Do not display founder approval codes, bearer tokens, email addresses,
 wallet seed phrases, or private commitment data from real people.
 
 | Time | Show | Say / expected visible result |
 | --- | --- | --- |
 | 0:00–0:15 | Landing list, then a raise's Progress view | “Confidential Fundraising coordinates interest without publishing individual commitments. These are demo figures.” |
 | 0:15–0:35 | Prospect: submit `demo-investor-001`, EUR `10000` | “Submitting interest does not require a wallet.” Show the recorded result. |
-| 0:35–0:55 | Sponsor review, already unlocked off-camera | “The sponsor can review individual records privately.” Mark the synthetic record verified; show its demo status change. |
+| 0:35–0:55 | Founder review, already unlocked off-camera | “The founder can review individual records privately.” Mark the synthetic record verified; show its demo status change. |
 | 0:55–1:10 | Separate unauthenticated session: Progress, then public JSON | “Everyone else sees aggregate EUR totals, not the investor list.” Show the updated aggregate, then refresh. |
-| 1:10–1:35 | Sponsor quote panel, authenticated off-camera if approved | “NEAR Intents can quote a confidential cross-chain path. This request uses a fixed synthetic 1-USDC amount and never sends the investor identifier or commitment amount.” Show an actual successful live result only if obtained. Otherwise show the honest error and label the live success check outstanding. |
+| 1:10–1:35 | Founder quote panel, authenticated off-camera if approved | “NEAR Intents can quote a confidential cross-chain path. This request uses a fixed synthetic 1-USDC amount and never sends the investor identifier or commitment amount.” Show an actual successful live result only if obtained. Otherwise show the honest error and label the live success check outstanding. |
 | 1:35–1:50 | Agent public API result, with token output and request headers hidden | “An external agent can reserve a page and update only its public fields. This is page ownership, not company verification.” Show a public field changed through the API and then the same field on the page. |
 | 1:50–2:00 | Return to Progress | “Coordination, quotes, and test-token transfers remain separate. No legal investment settlement occurs.” |
 
@@ -73,7 +73,7 @@ performed the action.
 ### Optional testnet-transfer clip (only after actual verification)
 
 Use a new synthetic commitment with its original browser receipt and two
-user-controlled NEAR testnet accounts. The sponsor confirms immutable receiver
+user-controlled NEAR testnet accounts. The founder confirms immutable receiver
 details; the investor reviews and confirms separately. Show **Send 1 test USDC**,
 the wallet approval, the server-verified result, and unchanged EUR totals.
 Explain: “This is a public testnet transfer with valueless test tokens, separate
@@ -105,11 +105,11 @@ The following is within the required 20–2,000-character range. Review it
 against the actual recording and final code before submission:
 
 ```text
-Confidential Fundraising is a prototype for coordinating fundraising interest without publishing individual investor records. People and external agents can discover raises, reserve an unclaimed page, and submit synthetic soft commitments. A sponsor reviews individual records behind an approval code; public pages and JSON expose aggregate totals. Claims reserve page ownership, not company verification.
+Confidential Fundraising is a prototype for coordinating fundraising interest without publishing individual investor records. People and external agents can discover raises, reserve an unclaimed page, and submit synthetic soft commitments. A founder reviews individual records behind an approval code; public pages and JSON expose aggregate totals. Claims reserve page ownership, not company verification.
 
 NEAR Intents provides a wallet-authenticated, confidential dry-run quote path using a fixed synthetic 1-USDC amount and placeholder addresses. Investor identifiers and commitment amounts are not sent to the quote provider. The quote does not execute a swap or settle an investment.
 
-A separate optional demo asks an investor's wallet to transfer exactly 1 test USDC on NEAR testnet after sponsor and investor confirmations. This is a public token transfer, not confidential Intents settlement, and it does not change the EUR commitment totals.
+A separate optional demo asks an investor's wallet to transfer exactly 1 test USDC on NEAR testnet after founder and investor confirmations. This is a public token transfer, not confidential Intents settlement, and it does not change the EUR commitment totals.
 
 Raise state persists in PostgreSQL. Per-raise agent tokens allow public-field updates without granting access to private commitments. Commitment privacy relies on application access controls, not onchain storage or private-AI inference. The project uses synthetic commitments and is not an investment offer.
 ```

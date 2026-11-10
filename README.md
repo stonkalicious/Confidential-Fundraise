@@ -2,7 +2,7 @@
 
 A hackathon prototype for coordinating fundraising interest without publishing
 individual commitments. People or external agents can discover raises, reserve
-an unclaimed page, and submit synthetic soft commitments. A sponsor reviews
+an unclaimed page, and submit synthetic soft commitments. A founder reviews
 individual records behind a shared approval code; public pages show aggregate
 totals.
 
@@ -14,9 +14,9 @@ are different things; none is legal investment settlement.
 
 | Path | What it does | What it does not do |
 | --- | --- | --- |
-| Fundraising coordination | Stores raises, page claims, commitments, and totals in PostgreSQL. Sponsor endpoints require the shared approval code. | Does not put commitments onchain or encrypt the database with NEAR. Application operators can access stored data. |
+| Fundraising coordination | Stores raises, page claims, commitments, and totals in PostgreSQL. Founder endpoints require the shared approval code. | Does not put commitments onchain or encrypt the database with NEAR. Application operators can access stored data. |
 | NEAR Intents 1Click | Uses wallet authentication to request a live `dry: true` quote with `confidentiality: "basic"`, a fixed synthetic 1-USDC amount, and placeholder addresses. | Does not send investor identifiers or actual commitment amounts to NEAR, deposit tokens, execute a swap, or prove completed confidential settlement. |
-| Optional NEAR testnet transfer | With separate sponsor and investor confirmations, asks the investor's wallet to send exactly 1 test USDC using `ft_transfer`. The server verifies the finalized transaction. | Is not an Intents swap, is not confidential onchain, and does not fund the EUR commitment or change its hard/verified status. |
+| Optional NEAR testnet transfer | With separate founder and investor confirmations, asks the investor's wallet to send exactly 1 test USDC using `ft_transfer`. The server verifies the finalized transaction. | Is not an Intents swap, is not confidential onchain, and does not fund the EUR commitment or change its hard/verified status. |
 
 The Intents path uses **mainnet authentication**; there is no Intents testnet.
 An already-registered wallet signs an authentication message. A wallet whose
@@ -35,7 +35,7 @@ dollar value. See the [wallet walkthrough](artifacts/confidential-fundraise-desk
 
 - Node.js 24 and pnpm 10 (workspace preparation used pnpm 10.26.1).
 - PostgreSQL reachable through the server's `DATABASE_URL`.
-- A server-side `RAISE_APPROVAL_CODE` chosen by the operator for sponsor access.
+- A server-side `RAISE_APPROVAL_CODE` chosen by the operator for founder access.
 - Internet access to NEAR RPC and 1Click for optional wallet features.
 - A same-origin reverse proxy: `/api/*` goes to the API; everything else goes
   to the web server. Browser code uses relative API URLs.
@@ -121,7 +121,7 @@ has been completed.
    not investor identifiers or individual amounts. Seeded entries are demo
    listings, not evidence that a company is seeking funding or endorses the app.
 2. **Open Prospect and submit `demo-investor-001` with EUR `10000`** → the
-   commitment is recorded. The app switches to Sponsor; enter the operator's
+   commitment is recorded. The app switches to Founder; enter the operator's
    approval code to see the private record. Keep the code off recordings.
 3. **Choose “Mark verified (demo)” on that record** → its hard/verified status
    changes and hard EUR totals increase. This is a server-side demo status,
@@ -132,7 +132,7 @@ has been completed.
    restart the API and reload; the database-backed totals should still match.
 6. **Open `/api/raises`, then `/api/raises/ID` using a returned ID** → receive
    public JSON with aggregates. `/api/raises/does-not-exist` returns `404`.
-   `/api/raises/ID/private` without sponsor authorization is denied.
+   `/api/raises/ID/private` without founder authorization is denied.
 
 For the agent ownership path, on an **unclaimed approved demo raise**:
 

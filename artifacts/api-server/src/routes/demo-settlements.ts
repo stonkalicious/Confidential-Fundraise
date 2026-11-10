@@ -66,7 +66,7 @@ function whereCommitment(id: string, commitmentId: string) {
 }
 async function find(id: string, commitmentId: string): Promise<DemoSettlementRecord> {
   const [row] = await db.select().from(demoSettlementsTable).where(whereCommitment(id, commitmentId));
-  if (!row) throw new SettlementError("Waiting for the sponsor to confirm the demo transfer.");
+  if (!row) throw new SettlementError("Waiting for the founder to confirm the demo transfer.");
   return row;
 }
 
@@ -92,7 +92,7 @@ router.post(path, handle("sponsor", async (req, res, id, cid) => {
   }).onConflictDoNothing();
   const row = await find(id, cid);
   if (row.network !== input.network || row.receiverAccount !== input.receiverAccount || row.reference !== reference) {
-    throw new SettlementError("The sponsor has already confirmed different details. Confirmed transfers cannot be changed.");
+    throw new SettlementError("The founder has already confirmed different details. Confirmed transfers cannot be changed.");
   }
   res.json(snapshot(row));
 }));
@@ -104,8 +104,8 @@ router.post(`${path}/confirm`, handle("investor", async (req, res, id, cid) => {
   const input = parsed.data;
   await db.transaction(async (tx) => {
     const [row] = await tx.select().from(demoSettlementsTable).where(whereCommitment(id, cid)).for("update");
-    if (!row || row.id !== input.settlementId) throw new SettlementError("Review the sponsor's current transfer details first.");
-    if (input.signerAccount === row.receiverAccount) throw new SettlementError("Use different investor and sponsor receiving accounts.", 400);
+    if (!row || row.id !== input.settlementId) throw new SettlementError("Review the founder's current transfer details first.");
+    if (input.signerAccount === row.receiverAccount) throw new SettlementError("Use different investor and founder receiving accounts.", 400);
     if (row.investorConfirmedAt) {
       if (row.signerAccount !== input.signerAccount) throw new SettlementError("The investor already confirmed another sending account.");
       return;
@@ -122,7 +122,7 @@ router.post(`${path}/prepare`, handle("investor", async (_req, res, id, cid) => 
     throw new SettlementError("Demo transfers are limited to NEAR testnet.", 409);
   }
   if (!row.sponsorConfirmedAt || !row.investorConfirmedAt || !row.signerAccount) {
-    throw new SettlementError("Both sponsor and investor must confirm before a transfer can be prepared.");
+    throw new SettlementError("Both founder and investor must confirm before a transfer can be prepared.");
   }
   if (row.transactionHash || row.preparedAt) { res.json({ ...snapshot(row), maySend: false }); return; }
   await preflightSettlement(row);

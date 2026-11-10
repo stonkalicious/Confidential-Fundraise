@@ -83,7 +83,7 @@ export default function RaiseList({
     event.preventDefault();
     setPendingError('');
     if (!approvalCode) {
-      setPendingError('Enter the sponsor approval code.');
+      setPendingError('Enter the founder approval code.');
       return;
     }
     setLoadingPending(true);
@@ -264,7 +264,7 @@ export default function RaiseList({
             <details className="pending-review">
               <summary>Review pending raises</summary>
               <form className="pending-review-form" onSubmit={loadPendingRaises}>
-                <label className="field-label" htmlFor="raise-approval-code">Sponsor approval code</label>
+                <label className="field-label" htmlFor="raise-approval-code">Founder approval code</label>
                 <input
                   className="field"
                   id="raise-approval-code"

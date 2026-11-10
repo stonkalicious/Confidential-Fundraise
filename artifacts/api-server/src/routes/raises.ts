@@ -128,7 +128,7 @@ export function requireApprovalCode(req: Request, res: Response): boolean {
   const expected = process.env.RAISE_APPROVAL_CODE;
   if (!expected?.trim()) {
     noStore(res);
-    res.status(503).json({ error: "Sponsor access is not configured." });
+    res.status(503).json({ error: "Founder access is not configured." });
     return false;
   }
 
@@ -144,7 +144,7 @@ export function requireApprovalCode(req: Request, res: Response): boolean {
 
   if (!matches) {
     noStore(res);
-    res.status(401).json({ error: "Enter the sponsor approval code." });
+    res.status(401).json({ error: "Enter the founder approval code." });
     return false;
   }
   return true;

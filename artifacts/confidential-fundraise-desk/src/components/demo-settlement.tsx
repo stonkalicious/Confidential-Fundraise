@@ -146,7 +146,7 @@ export function DemoSettlementCard({
           <p className="side-copy demo-break">Token contract: {config?.testnet ?? 'Loading…'}</p>
           <label className="field-label">Receiving NEAR account
             <input className="field" value={receiver} maxLength={64} disabled={busy}
-              data-testid="input-demo-receiver" placeholder="sponsor.testnet"
+              data-testid="input-demo-receiver" placeholder="founder.testnet"
               onChange={(e) => { setReceiver(e.target.value); setConfirmed(false); }} />
           </label>
           <label className="field-label">Reviewed link or document hash (optional)
@@ -168,9 +168,9 @@ export function DemoSettlementCard({
                 confirmed: true,
               }, options());
               apply(result.settlement); setConfirmed(false);
-            })}>Confirm sponsor review</button>
+            })}>Confirm founder review</button>
         </>}
-        {!settlement && !sponsor && <p className="side-copy">Waiting for the sponsor to set the receiving account and confirm this demo transfer. Keep using the browser where you submitted your commitment.</p>}
+        {!settlement && !sponsor && <p className="side-copy">Waiting for the founder to set the receiving account and confirm this demo transfer. Keep using the browser where you submitted your commitment.</p>}
         {settlement && <>
           <p className="side-copy"><strong>{settlement.network === 'testnet'
             ? 'NEAR testnet — 1 test USDC, no real dollar value.'
@@ -186,7 +186,7 @@ export function DemoSettlementCard({
           }</p>}
           <ul className="demo-audit" data-testid="demo-confirmations">
             {settlement.confirmations.map((entry) =>
-              <li key={entry.role}>{entry.role === 'sponsor' ? 'Sponsor' : 'Investor'} confirmed: {new Date(entry.timestamp).toLocaleString()}</li>)}
+              <li key={entry.role}>{entry.role === 'sponsor' ? 'Founder' : 'Investor'} confirmed: {new Date(entry.timestamp).toLocaleString()}</li>)}
           </ul>
           {settlement.status === 'success' ? (
             <p className="side-copy demo-break" role="status" data-testid="demo-settlement-success">
