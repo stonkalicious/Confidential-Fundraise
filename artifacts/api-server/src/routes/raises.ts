@@ -56,6 +56,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function isBaseUnitAmount(value: unknown): value is string {
+  // Base units are unsigned decimal integers (zero and leading zeros allowed).
+  // Reject signs, fractions, exponents, alternate radices, and all whitespace.
+  // Keep strings intact so large amounts never lose precision through Number.
+  return typeof value === "string" && value.length > 0 && !/[^0-9]/.test(value);
+}
+
 function noStore(res: Response): Response {
   return res.set("Cache-Control", "no-store");
 }
@@ -634,10 +641,8 @@ router.post(
         : undefined;
     if (
       !quote ||
-      typeof quote.amountIn !== "string" ||
-      typeof quote.amountOut !== "string" ||
-      quote.amountIn.trim().length === 0 ||
-      quote.amountOut.trim().length === 0
+      !isBaseUnitAmount(quote.amountIn) ||
+      !isBaseUnitAmount(quote.amountOut)
     ) {
       req.log.warn(
         { upstreamStatus: upstreamResponse.status },

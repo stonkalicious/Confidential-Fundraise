@@ -78,7 +78,7 @@ test("quote requests stay authorized, hard-only, fixed-value, and sanitized", as
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
-    return { status: response.status, body: await response.json() };
+    return { status: response.status, headers: response.headers, body: await response.json() };
   }
 
   await t.test("missing sponsor configuration blocks quotes without exposing private details", async () => {
@@ -202,7 +202,7 @@ test("quote requests stay authorized, hard-only, fixed-value, and sanitized", as
     assert.ok(!JSON.stringify(response.body).includes(privateCommitment.identifier));
   });
 
-  await t.test("incomplete provider amounts return a safe error", async (invalidAmountTest) => {
+  await t.test("invalid provider amounts return a safe error", async (invalidAmountTest) => {
     const invalidQuotes = [
       ["missing amountIn", { amountOut: "995000" }],
       ["missing amountOut", { amountIn: "1000000" }],
@@ -214,6 +214,35 @@ test("quote requests stay authorized, hard-only, fixed-value, and sanitized", as
       ["non-string amountOut", { amountIn: "1000000", amountOut: 995_000 }],
     ];
 
+    const malformedAmounts = [
+      "not-an-amount",
+      "1.5",
+      "1000000.0",
+      "-1",
+      "-0",
+      "+1",
+      "1e6",
+      "0x10",
+      "0b10",
+      "1_000_000",
+      "1,000,000",
+      "NaN",
+      "Infinity",
+      " 1000000",
+      "1000000 ",
+      "1000000\n",
+      "100\n0000",
+      "１００００００",
+    ];
+    for (const value of malformedAmounts) {
+      for (const field of ["amountIn", "amountOut"]) {
+        invalidQuotes.push([
+          `${field} rejects ${JSON.stringify(value)}`,
+          { amountIn: "1000000", amountOut: "995000", [field]: value },
+        ]);
+      }
+    }
+
     for (const [name, quote] of invalidQuotes) {
       await invalidAmountTest.test(name, async () => {
         providerMock = async () => jsonResponse({ quote });
@@ -223,8 +252,27 @@ test("quote requests stay authorized, hard-only, fixed-value, and sanitized", as
         });
 
         assert.equal(response.status, 502);
-        assert.deepEqual(Object.keys(response.body), ["error"]);
-        assert.match(response.body.error, /unreadable quote/i);
+        assert.equal(response.headers.get("cache-control"), "no-store");
+        assert.deepEqual(response.body, {
+          error: "NEAR Intents returned an unreadable quote. No funds moved.",
+        });
+      });
+    }
+  });
+
+  await t.test("unsigned decimal base-unit amounts are preserved without precision loss", async (validAmountTest) => {
+    for (const amount of ["0", "1", "0001000000", "900719925474099312345678901234567890"]) {
+      await validAmountTest.test(amount, async () => {
+        providerMock = async () =>
+          jsonResponse({ quote: { amountIn: amount, amountOut: amount } });
+        const response = await request(quotePath, {
+          method: "POST",
+          headers: quoteHeaders,
+        });
+
+        assert.equal(response.status, 200);
+        assert.equal(response.body.inputAmount, amount);
+        assert.equal(response.body.outputAmount, amount);
       });
     }
   });
