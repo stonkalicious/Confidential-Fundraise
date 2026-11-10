@@ -97,6 +97,7 @@ test("quote requests stay authorized, hard-only, fixed-value, and sanitized", as
         });
 
         assert.equal(response.status, 503);
+        assert.equal(response.headers.get("cache-control"), "no-store");
         assert.deepEqual(response.body, {
           error: "Sponsor access is not configured.",
         });
