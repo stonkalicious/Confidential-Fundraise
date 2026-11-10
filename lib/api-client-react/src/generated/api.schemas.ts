@@ -46,6 +46,12 @@ export interface DemoSettlementVerificationInput {
   transactionHash: string;
 }
 
+export interface DemoSettlementInvestorLink {
+  /** @pattern ^[a-f0-9]{64}$ */
+  token: string;
+  expiresAt: string;
+}
+
 export type DemoSettlementConfirmationRole = typeof DemoSettlementConfirmationRole[keyof typeof DemoSettlementConfirmationRole];
 
 

@@ -95,6 +95,36 @@ test("demo settlement gates, exact USDC verification, persistence and core-flow 
   assert.equal(settlement.reference, input.reference);
   assert.deepEqual(settlement.confirmations.map((c) => c.role), ["sponsor"]);
   const sponsorTime = settlement.confirmations[0].timestamp;
+  assert.equal((await request(path + "/investor-link", { method: "POST" })).status, 401);
+  let issuedLink = await request(path + "/investor-link", { method: "POST", sponsor: true });
+  assert.equal(issuedLink.status, 200);
+  assert.match(issuedLink.data.token, /^[a-f0-9]{64}$/);
+  assert.ok(Date.parse(issuedLink.data.expiresAt) > Date.now());
+  let investorLinkToken = issuedLink.data.token;
+  assert.equal((await request(path, { receipt: investorLinkToken })).status, 200,
+    "the commitment-specific link authorizes investor access");
+  const [storedLink] = await db.select().from(demoSettlementsTable)
+    .where(eq(demoSettlementsTable.commitmentId, cid));
+  assert.notEqual(storedLink.investorLinkTokenHash, investorLinkToken,
+    "only a hash of the investor link is persisted");
+  const previousLinkToken = investorLinkToken;
+  issuedLink = await request(path + "/investor-link", { method: "POST", sponsor: true });
+  assert.equal(issuedLink.status, 200);
+  investorLinkToken = issuedLink.data.token;
+  assert.equal((await request(path, { receipt: previousLinkToken })).status, 401,
+    "reissuing an investor link invalidates the previous token");
+  assert.equal((await request(path, { receipt: investorLinkToken })).status, 200);
+  await db.update(demoSettlementsTable)
+    .set({ investorLinkExpiresAt: new Date(Date.now() - 1_000) })
+    .where(eq(demoSettlementsTable.commitmentId, cid));
+  assert.equal((await request(path, { receipt: investorLinkToken })).status, 401,
+    "expired investor links do not grant access");
+  issuedLink = await request(path + "/investor-link", { method: "POST", sponsor: true });
+  assert.equal(issuedLink.status, 200);
+  investorLinkToken = issuedLink.data.token;
+  assert.equal((await request(path, { receipt: investorLinkToken })).status, 200);
+  assert.equal((await request(path, { receipt })).status, 200,
+    "the original browser receipt remains valid after issuing an investor link");
   configured = await request(path, { method: "POST", sponsor: true, body: input });
   assert.equal(configured.data.settlement.confirmations[0].timestamp, sponsorTime);
   assert.equal((await request(path, { method: "POST", sponsor: true, body: { ...input, network: "mainnet" } })).status, 400);
@@ -103,27 +133,27 @@ test("demo settlement gates, exact USDC verification, persistence and core-flow 
   assert.equal((await request(path + "/confirm", { method: "POST", sponsor: true, body: confirmation })).status, 403);
   assert.equal((await request(path + "/confirm", { method: "POST", receipt, body: { ...confirmation, confirmed: false } })).status, 400);
   assert.equal((await request(path + "/confirm", { method: "POST", receipt, body: { ...confirmation, settlementId: randomUUID() } })).status, 409);
-  const confirmed = await request(path + "/confirm", { method: "POST", receipt, body: confirmation });
+  const confirmed = await request(path + "/confirm", { method: "POST", receipt: investorLinkToken, body: confirmation });
   assert.equal(confirmed.status, 200);
   assert.equal(confirmed.data.settlement.status, "ready");
   assert.deepEqual(confirmed.data.settlement.confirmations.map((c) => c.role), ["sponsor", "investor"]);
   const confirmations = confirmed.data.settlement.confirmations;
-  assert.deepEqual((await request(path + "/confirm", { method: "POST", receipt, body: confirmation })).data.settlement.confirmations, confirmations);
+  assert.deepEqual((await request(path + "/confirm", { method: "POST", receipt: investorLinkToken, body: confirmation })).data.settlement.confirmations, confirmations);
   assert.equal((await request(path + "/verify", { method: "POST", receipt, body: { transactionHash: "A".repeat(44) } })).status, 409);
   registered = false;
-  assert.equal((await request(path + "/prepare", { method: "POST", receipt })).status, 409);
+  assert.equal((await request(path + "/prepare", { method: "POST", receipt: investorLinkToken })).status, 409);
   registered = true; balance = "999999";
-  assert.equal((await request(path + "/prepare", { method: "POST", receipt })).status, 409);
+  assert.equal((await request(path + "/prepare", { method: "POST", receipt: investorLinkToken })).status, 409);
   balance = "1000000";
   const preparations = await Promise.all([
-    request(path + "/prepare", { method: "POST", receipt }),
-    request(path + "/prepare", { method: "POST", receipt }),
+    request(path + "/prepare", { method: "POST", receipt: investorLinkToken }),
+    request(path + "/prepare", { method: "POST", receipt: investorLinkToken }),
   ]);
   assert.ok(preparations.every((r) => r.status === 200));
   assert.equal(preparations.filter((r) => r.data.maySend).length, 1, "only one request can initiate wallet sending");
   settlement = preparations[0].data.settlement;
   assert.equal(settlement.status, "prepared");
-  assert.equal((await request(path + "/prepare", { method: "POST", receipt })).data.maySend, false);
+  assert.equal((await request(path + "/prepare", { method: "POST", receipt: investorLinkToken })).data.maySend, false);
   const hash = "A".repeat(44);
   const args = { receiver_id: settlement.receiverAccount, amount: "1000000", memo: settlement.transferMemo };
   const transaction = {
@@ -160,10 +190,10 @@ test("demo settlement gates, exact USDC verification, persistence and core-flow 
     assert.throws(() => validateSettlementTransaction(row, invalid));
   }
   rpcTx = structuredClone(validTx); rpcTx.status = { Failure: {} };
-  assert.equal((await request(path + "/verify", { method: "POST", receipt, body: { transactionHash: hash } })).status, 409);
-  assert.equal((await request(path, { receipt })).data.settlement.transactionHash, undefined);
+  assert.equal((await request(path + "/verify", { method: "POST", receipt: investorLinkToken, body: { transactionHash: hash } })).status, 409);
+  assert.equal((await request(path, { receipt: investorLinkToken })).data.settlement.transactionHash, undefined);
   rpcTx = validTx;
-  const success = await request(path + "/verify", { method: "POST", receipt, body: { transactionHash: hash } });
+  const success = await request(path + "/verify", { method: "POST", receipt: investorLinkToken, body: { transactionHash: hash } });
   assert.equal(success.status, 200);
   assert.equal(success.data.settlement.status, "success");
   assert.equal(success.data.settlement.transactionHash, hash);
@@ -180,10 +210,11 @@ test("demo settlement gates, exact USDC verification, persistence and core-flow 
   const listedRaise = publicList.data.find((raise) => raise.id === id);
   assert.equal(listedRaise.confirmedTestnetTransfers, 1);
   assert.ok(!JSON.stringify(publicList.data).includes("Private demo investor"));
-  assert.equal((await request(path + "/verify", { method: "POST", receipt, body: { transactionHash: hash } })).status, 200);
-  assert.equal((await request(path + "/verify", { method: "POST", receipt, body: { transactionHash: "B".repeat(44) } })).status, 409);
+  assert.equal((await request(path + "/verify", { method: "POST", receipt: investorLinkToken, body: { transactionHash: hash } })).status, 200);
+  assert.equal((await request(path + "/verify", { method: "POST", receipt: investorLinkToken, body: { transactionHash: "B".repeat(44) } })).status, 409);
   await initializeRaiseStore();
-  assert.equal((await request(path, { receipt })).data.settlement.transactionHash, hash, "receipt survives rehydration");
+  assert.equal((await request(path, { receipt: investorLinkToken })).data.settlement.transactionHash, hash, "investor link survives rehydration");
+  assert.equal((await request(path, { receipt })).data.settlement.transactionHash, hash, "original receipt still works after rehydration");
   assert.equal((await request(`/raises/${id}`)).data.confirmedTestnetTransfers, 1, "public count survives rehydration");
   assert.equal(getRaise(id).softTotal, 1234);
   assert.equal(getRaise(id).hardTotal, 0);

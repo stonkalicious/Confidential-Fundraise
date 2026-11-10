@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   getDemoSettlement, getDemoSettlementConfig, configureDemoSettlement,
-  confirmDemoSettlement, prepareDemoSettlement, verifyDemoSettlement,
+  createDemoSettlementInvestorLink, confirmDemoSettlement, prepareDemoSettlement, verifyDemoSettlement,
   type DemoSettlement, type DemoSettlementConfig,
 } from '@workspace/api-client-react';
 import {
-  connectSettlementWallet, sendDemoUsdc, demoReceipts,
+  connectSettlementWallet, sendDemoUsdc, demoReceipts, rememberDemoReceipt,
   savedDemoAttempt, saveDemoAttempt, type InvestorDemoReceipt,
 } from '@/lib/demo-settlement-wallet';
 
@@ -20,16 +20,48 @@ function errorText(error: unknown): string {
 
 export function InvestorDemoSettlements({ raiseId }: { raiseId: string }) {
   const [receipts, setReceipts] = useState(() => demoReceipts(raiseId));
+  const [inviteError, setInviteError] = useState('');
   useEffect(() => {
     const update = () => setReceipts(demoReceipts(raiseId));
     update();
     window.addEventListener('demo-receipts-changed', update);
     return () => window.removeEventListener('demo-receipts-changed', update);
   }, [raiseId]);
-  return <>{receipts.map((receipt) =>
-    <DemoSettlementCard key={receipt.commitmentId} raiseId={raiseId}
-      commitmentId={receipt.commitmentId} receipt={receipt} />,
-  )}</>;
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    if (params.get('demo') !== 'settlement') return;
+    const commitmentId = params.get('commitmentId') ?? '';
+    const token = params.get('token') ?? '';
+    window.history.replaceState(
+      window.history.state, '',
+      `${window.location.pathname}${window.location.search}`,
+    );
+    if (!/^[0-9a-f-]{36}$/i.test(commitmentId) || !/^[a-f0-9]{64}$/.test(token)) {
+      setInviteError('This investor link is invalid. Ask the founder for a new link.');
+      return;
+    }
+    setInviteError('');
+
+    let active = true;
+    void getDemoSettlement(raiseId, commitmentId, {
+      headers: { 'X-Demo-Receipt': token },
+    }).then((result) => {
+      if (!active || !result.settlement) throw new Error('The investor link is no longer available.');
+      rememberDemoReceipt(raiseId, commitmentId, token);
+    }).catch(() => {
+      if (active) setInviteError('This investor link is invalid or expired. Ask the founder to create a new one.');
+    });
+    return () => { active = false; };
+  }, [raiseId]);
+  return (
+    <>
+      {inviteError && <p className="inline-error" role="alert" data-testid="demo-investor-link-error">{inviteError}</p>}
+      {receipts.map((receipt) =>
+        <DemoSettlementCard key={receipt.commitmentId} raiseId={raiseId}
+          commitmentId={receipt.commitmentId} receipt={receipt} />,
+      )}
+    </>
+  );
 }
 
 export function DemoSettlementCard({
@@ -38,6 +70,7 @@ export function DemoSettlementCard({
   raiseId: string; commitmentId: string; approvalCode?: string; receipt?: InvestorDemoReceipt;
 }) {
   const sponsor = approvalCode !== undefined;
+  const privatePreview = window.location.hostname.endsWith('.replit.dev');
   const [open, setOpen] = useState(false);
   const [exists, setExists] = useState(sponsor);
   const [settlement, setSettlement] = useState<DemoSettlement>();
@@ -48,6 +81,9 @@ export function DemoSettlementCard({
   const [confirmed, setConfirmed] = useState(false);
   const [account, setAccount] = useState('');
   const [hash, setHash] = useState('');
+  const [investorLink, setInvestorLink] = useState('');
+  const [linkExpiresAt, setLinkExpiresAt] = useState('');
+  const [linkCopied, setLinkCopied] = useState(false);
   const [attempted, setAttempted] = useState(false);
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
@@ -128,6 +164,27 @@ export function DemoSettlementCard({
     const verified = await verifyDemoSettlement(raiseId, commitmentId, { transactionHash: txHash }, options());
     apply(verified.settlement);
   }
+  async function createInvestorLink() {
+    const issued = await createDemoSettlementInvestorLink(raiseId, commitmentId, options());
+    const shareUrl = new URL(window.location.href);
+    shareUrl.hash = new URLSearchParams({
+      demo: 'settlement',
+      commitmentId,
+      token: issued.token,
+    }).toString();
+    setInvestorLink(shareUrl.toString());
+    setLinkExpiresAt(issued.expiresAt);
+    setLinkCopied(false);
+  }
+  async function copyInvestorLink() {
+    try {
+      await navigator.clipboard.writeText(investorLink);
+      setLinkCopied(true);
+    } catch {
+      setLinkCopied(false);
+      setError('Copy was unavailable. Select the investor link and copy it manually.');
+    }
+  }
 
   if (!exists) return null;
   return (
@@ -146,7 +203,7 @@ export function DemoSettlementCard({
           <p className="side-copy demo-break">Token contract: {config?.testnet ?? 'Loading…'}</p>
           <label className="field-label">Receiving NEAR account
             <input className="field" value={receiver} maxLength={64} disabled={busy}
-              data-testid="input-demo-receiver" placeholder="founder.testnet"
+              data-testid="input-demo-receiver" placeholder="receiver.testnet"
               onChange={(e) => { setReceiver(e.target.value); setConfirmed(false); }} />
           </label>
           <label className="field-label">Reviewed link or document hash (optional)
@@ -227,6 +284,38 @@ export function DemoSettlementCard({
             </>}
           </>}
           {sponsor && settlement.status !== 'success' && <p className="side-copy">Waiting for the investor to confirm and complete the demo transfer from their original browser.</p>}
+          {sponsor && settlement.status !== 'success' && (
+            <div className="demo-investor-link" data-testid="demo-investor-link">
+              <p className="side-copy">
+                Create a private link for the investor to open in their own browser. Anyone with the link can access this commitment’s demo settlement. It expires after seven days; creating a new link invalidates the previous one.
+              </p>
+              {privatePreview ? (
+                <p className="side-copy demo-break" role="status"
+                  data-testid="status-investor-link-private-preview">
+                  Investor links must be created from the public app. This preview requires a Replit sign-in. The link feature will be available on the public app after this version is merged.
+                </p>
+              ) : (
+                <>
+                  <button type="button" className="mark-button" disabled={busy}
+                    data-testid="button-create-investor-link" onClick={() => void run(createInvestorLink)}>
+                    {investorLink ? 'Create a new investor link' : 'Create investor link'}
+                  </button>
+                  {investorLink && <>
+                    <label className="field-label">Investor link
+                      <input className="field" readOnly value={investorLink}
+                        data-testid="input-investor-link"
+                        onFocus={(event) => event.currentTarget.select()} />
+                    </label>
+                    <p className="side-copy">Expires {new Date(linkExpiresAt).toLocaleString()}</p>
+                    <button type="button" className="quiet-button" disabled={busy}
+                      data-testid="button-copy-investor-link" onClick={() => void run(copyInvestorLink)}>
+                      {linkCopied ? 'Link copied' : 'Copy investor link'}
+                    </button>
+                  </>}
+                </>
+              )}
+            </div>
+          )}
         </>}
         {error && <p className="inline-error" role="alert" data-testid="demo-settlement-error">{error}</p>}
       </div>}

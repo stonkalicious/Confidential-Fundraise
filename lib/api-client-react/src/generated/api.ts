@@ -34,6 +34,7 @@ import type {
   DemoSettlementConfirmationInput,
   DemoSettlementErrorResponse,
   DemoSettlementInput,
+  DemoSettlementInvestorLink,
   DemoSettlementState,
   DemoSettlementVerificationInput,
   ErrorMessage,
@@ -1787,7 +1788,7 @@ export const getGetDemoSettlementUrl = (id: string,
 }
 
 /**
- * Private to the sponsor or the investor holding the original demo receipt.
+ * Private to the sponsor or the investor holding the original demo receipt or a valid commitment-specific invite link.
  */
 export const getDemoSettlement = async (id: string,
     commitmentId: string, options?: Parameters<typeof customFetch>[1]): Promise<DemoSettlementState> => {
@@ -1966,6 +1967,79 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getConfigureDemoSettlementMutationOptions(options), queryClient);
+    }
+
+export const getCreateDemoSettlementInvestorLinkUrl = (id: string,
+    commitmentId: string,) => {
+
+
+
+
+  return `/api/raises/${id}/demo-settlements/${commitmentId}/investor-link`
+}
+
+/**
+ * Sponsor-only. Creates or replaces a private investor link for this commitment; the returned token is shown once and expires after seven days.
+ */
+export const createDemoSettlementInvestorLink = async (id: string,
+    commitmentId: string, options?: Parameters<typeof customFetch>[1]): Promise<DemoSettlementInvestorLink> => {
+
+  return customFetch<DemoSettlementInvestorLink>(getCreateDemoSettlementInvestorLinkUrl(id,commitmentId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateDemoSettlementInvestorLinkMutationKey = () => ['createDemoSettlementInvestorLink'] as const;
+
+export const getCreateDemoSettlementInvestorLinkMutationOptions = <TError = ErrorType<DemoSettlementErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDemoSettlementInvestorLink>>, TError,CreateDemoSettlementInvestorLinkMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDemoSettlementInvestorLink>>, TError,CreateDemoSettlementInvestorLinkMutationVariables, TContext> => {
+
+const mutationKey = getCreateDemoSettlementInvestorLinkMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDemoSettlementInvestorLink>>, CreateDemoSettlementInvestorLinkMutationVariables> = (props) => {
+          const {id,commitmentId} = props ?? {};
+
+          return  createDemoSettlementInvestorLink(id,commitmentId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDemoSettlementInvestorLinkMutationResult = NonNullable<Awaited<ReturnType<typeof createDemoSettlementInvestorLink>>>
+
+    export type CreateDemoSettlementInvestorLinkMutationError = ErrorType<DemoSettlementErrorResponse>
+    export type CreateDemoSettlementInvestorLinkMutationVariables = {id: string;commitmentId: string}
+
+    export const useCreateDemoSettlementInvestorLink = <TError = ErrorType<DemoSettlementErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDemoSettlementInvestorLink>>, TError,CreateDemoSettlementInvestorLinkMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createDemoSettlementInvestorLink>>,
+        TError,
+        CreateDemoSettlementInvestorLinkMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateDemoSettlementInvestorLinkMutationOptions(options), queryClient);
     }
 
 export const getConfirmDemoSettlementUrl = (id: string,

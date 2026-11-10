@@ -687,11 +687,26 @@ export async function getDemoCommitmentAccess(
   }
   const expected = raise.demoInvestorReceiptHashes?.[commitmentId];
   const supplied = receipt && /^[a-f0-9]{64}$/.test(receipt) ? tokenHash(receipt) : "";
+  const [settlement] = supplied ? await db.select({
+    investorLinkTokenHash: demoSettlementsTable.investorLinkTokenHash,
+    investorLinkExpiresAt: demoSettlementsTable.investorLinkExpiresAt,
+  }).from(demoSettlementsTable).where(and(
+    eq(demoSettlementsTable.raiseId, id),
+    eq(demoSettlementsTable.commitmentId, commitmentId),
+  )) : [];
+  const receiptMatches = Boolean(expected && supplied &&
+    expected.length === supplied.length &&
+    timingSafeEqual(Buffer.from(expected), Buffer.from(supplied)));
+  const inviteHash = settlement?.investorLinkTokenHash ?? "";
+  const inviteMatches = Boolean(
+    inviteHash && settlement?.investorLinkExpiresAt &&
+    settlement.investorLinkExpiresAt.getTime() > Date.now() &&
+    inviteHash.length === supplied.length &&
+    timingSafeEqual(Buffer.from(inviteHash), Buffer.from(supplied)),
+  );
   return {
     exists: true,
-    investor: Boolean(expected && supplied &&
-      expected.length === supplied.length &&
-      timingSafeEqual(Buffer.from(expected), Buffer.from(supplied))),
+    investor: receiptMatches || inviteMatches,
   };
 }
 

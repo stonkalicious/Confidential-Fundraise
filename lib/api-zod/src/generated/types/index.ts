@@ -23,6 +23,7 @@ export * from './demoSettlementConfirmationRole';
 export * from './demoSettlementErrorResponse';
 export * from './demoSettlementInput';
 export * from './demoSettlementInputNetwork';
+export * from './demoSettlementInvestorLink';
 export * from './demoSettlementNetwork';
 export * from './demoSettlementState';
 export * from './demoSettlementStatus';

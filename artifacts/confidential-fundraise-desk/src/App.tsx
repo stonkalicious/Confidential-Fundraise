@@ -737,6 +737,9 @@ function AppDesk({
                   </form>
                 ) : (
                   <>
+                    <p className="founder-review-guidance" data-testid="text-founder-review-guidance">
+                      Review each commitment. Mark it hard only after it is confirmed. Testnet transfers and quotes are optional demos; they do not change fundraising totals.
+                    </p>
                     {privateRaise.claim && (
                       <section className="claim-contact-card" data-testid="sponsor-claim-contact">
                         <div className="side-label">Claim contact</div>
@@ -750,8 +753,8 @@ function AppDesk({
                     {commitments.length > 0 ? (
                       <div data-testid="sponsor-commitment-list">
                         {commitments.map((item) => (
-                          <div key={item.id}>
-                          <div className="commitment-card" key={item.id} data-testid="commitment-row">
+                          <div className="founder-commitment" key={item.id}>
+                          <div className="commitment-card" data-testid="commitment-row">
                             <div className="commitment-meta">
                               <div className="record-line" data-testid="status-commitment">
                                 <span className={`status-dot${item.hard ? ' hard' : ''}`} />
@@ -783,6 +786,14 @@ function AppDesk({
                               >
                                 {item.hard ? 'Revert to soft' : 'Mark hard'}
                               </button>
+                            </div>
+                          </div>
+                          <section className="commitment-demos" aria-label={`Optional demos for ${item.identifier}`}>
+                            <div className="commitment-demos-heading">
+                              <div>
+                                <h3>Optional demos</h3>
+                                <p>Separate from commitment review; these do not change fundraising totals.</p>
+                              </div>
                               {item.hard && (
                                 <button
                                   className="quiet-button"
@@ -796,8 +807,8 @@ function AppDesk({
                                 </button>
                               )}
                             </div>
-                          </div>
-                          <DemoSettlementCard raiseId={raise.id} commitmentId={item.id} approvalCode={approvalCode} />
+                            <DemoSettlementCard raiseId={raise.id} commitmentId={item.id} approvalCode={approvalCode} />
+                          </section>
                           </div>
                         ))}
                       </div>

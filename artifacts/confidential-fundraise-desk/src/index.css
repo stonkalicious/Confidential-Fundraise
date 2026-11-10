@@ -248,6 +248,8 @@ button:focus-visible, input:focus-visible {
 .demo-settlement-body h3 { margin: 0 0 12px; font: 400 23px/1.2 var(--app-font-serif); }
 .demo-settlement-body .field-label { margin-top: 15px; }
 .demo-settlement-body .field { margin-top: 7px; }
+.demo-investor-link { margin-top: 18px; padding-top: 14px; border-top: 1px solid #e1dccf; }
+.demo-investor-link .field { font-size: 11px; }
 .demo-confirm { display: flex; align-items: flex-start; gap: 9px; margin: 18px 0; font-size: 12px; line-height: 1.6; }
 .demo-confirm input { width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; accent-color: #302a46; }
 .demo-break { overflow-wrap: anywhere; }
@@ -269,6 +271,15 @@ button:focus-visible, input:focus-visible {
 .pending-raise-item p { margin: 0 0 8px; color: #696556; font-size: 12px; line-height: 1.6; }
 .pending-raise-item .mark-button { margin-top: 12px; }
 .sponsor-unlock-form { max-width: 420px; }
+.founder-review-guidance { max-width: 68ch; margin: 16px 0 0; color: #5f5a68; font-size: 13px; line-height: 1.7; }
+.founder-commitment { margin-top: 24px; }
+.founder-commitment .commitment-card { margin-top: 0; }
+.commitment-demos { margin-top: 14px; padding: 16px 18px; border: 1px solid #e1dccf; border-radius: 5px; background: #f5f2e9; }
+.commitment-demos-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.commitment-demos-heading h3 { margin: 0; color: #39354a; font: 400 20px/1.15 var(--app-font-serif); }
+.commitment-demos-heading p { margin: 5px 0 0; color: #797568; font-size: 11px; line-height: 1.5; }
+.commitment-demos .demo-settlement { margin: 13px 0 0; }
+.commitment-demos .demo-settlement-body { max-width: none; }
 .claim-contact-card { margin: 20px 0; padding: 18px 20px; border: 1px solid #e1dccf; border-radius: 5px; background: #fbfaf6; }
 .raise-list { list-style: none; padding: 0; margin: 26px 0 0; display: grid; gap: 16px; }
 .raise-list-item { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 26px; border: 1px solid #e1dccf; border-radius: 5px; background: #fbfaf6; color: inherit; text-decoration: none; }
@@ -342,6 +353,7 @@ button:focus-visible, input:focus-visible {
   .rules-layout { grid-template-columns: 1fr; }
   .side-card { order: 2; }
   .commitment-card { align-items: flex-start; flex-direction: column; }
+  .commitment-demos-heading { align-items: flex-start; flex-direction: column; }
   .quote-heading { align-items: flex-start; flex-direction: column; gap: 7px; }
   .near-auth-row { align-items: flex-start; flex-direction: column; }
   .quote-json { font-size: 10px; }

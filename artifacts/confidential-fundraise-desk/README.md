@@ -7,14 +7,15 @@ wallet transactions.
 
 ## Optional “Settle $1” demo
 
-After a new soft commitment, its original browser can open **Settle $1 (demo)** on
-the raise page. A founder opens the same action under that commitment in Founder
-review, uses NEAR testnet, enters a receiving NEAR testnet account,
-optionally pastes an already-reviewed HTTP(S) link or document hash, and ticks the
-demo confirmation. The investor reviews the same immutable details, connects a
-NEAR wallet, and ticks their own confirmation before requesting wallet approval.
-Only the role and server timestamp are recorded for each confirmation; no terms
-or contract text is stored. References are not fetched, uploaded, or parsed.
+After a new soft commitment, the founder opens **Settle $1 (demo)** under that
+commitment in Founder review, enters a receiving NEAR testnet account, optionally
+pastes an already-reviewed HTTP(S) link or document hash, and ticks the demo
+confirmation. The founder can then create a private investor link to send to the
+investor. The investor opens it in their own browser, reviews the same immutable
+details, connects a NEAR wallet, and ticks their own confirmation before
+requesting wallet approval. Only the role and server timestamp are recorded for
+each confirmation; no terms or contract text is stored. References are not
+fetched, uploaded, or parsed.
 
 This sends exactly **1 USDC (1,000,000 base units)** directly on NEAR using
 `ft_transfer`. It is not a NEAR Intents swap or a legal investment settlement.
@@ -42,9 +43,15 @@ reserved after a wallet error or rejection; this intentionally requires
 reconciliation rather than risking a duplicate payment.
 
 Investor access uses an unguessable browser receipt minted with the original
-soft commitment. Retrying that commitment cannot replace its receipt. Existing
-legacy commitments remain unchanged; they do not gain investor authorization
-retroactively. Do not clear the original browser's storage before reconciliation.
+soft commitment, or a separate founder-issued link token scoped to that one
+commitment. Link tokens expire after seven days; creating a replacement
+invalidates the previous link. The server stores only the token hash. The token
+travels in the URL fragment, is removed from the address bar when opened, and is
+saved in that investor browser for settlement access. Anyone with the link can
+access that commitment's demo settlement, so share it privately. Retrying a
+commitment cannot replace its original receipt. Existing legacy commitments
+remain unchanged; they do not gain investor authorization retroactively. Keep
+the investor browser storage until reconciliation is complete.
 Private transfer details and hashes are visible on the raise page to that
 investor and the founder, not in public aggregate API responses. Demo payments
 never change the commitment's amount, hard/verified status, or aggregate totals.

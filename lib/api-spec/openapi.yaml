@@ -602,7 +602,7 @@ paths:
       - { name: commitmentId, in: path, required: true, schema: { type: string } }
     get:
       operationId: getDemoSettlement
-      description: Private to the sponsor or the investor holding the original demo receipt.
+      description: Private to the sponsor or the investor holding the original demo receipt or a valid commitment-specific invite link.
       security: [{ ApprovalCode: [] }, { DemoReceipt: [] }]
       responses:
         "200":
@@ -625,6 +625,21 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/DemoSettlementState" }
+        default: { $ref: "#/components/responses/DemoSettlementError" }
+  /raises/{id}/demo-settlements/{commitmentId}/investor-link:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+      - { name: commitmentId, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: createDemoSettlementInvestorLink
+      description: Sponsor-only. Creates or replaces a private investor link for this commitment; the returned token is shown once and expires after seven days.
+      security: [{ ApprovalCode: [] }]
+      responses:
+        "200":
+          description: New single-commitment investor access token and expiration.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DemoSettlementInvestorLink" }
         default: { $ref: "#/components/responses/DemoSettlementError" }
   /raises/{id}/demo-settlements/{commitmentId}/confirm:
     parameters:
@@ -723,6 +738,12 @@ components:
       properties:
         transactionHash: { type: string, minLength: 40, maxLength: 50 }
       required: [transactionHash]
+    DemoSettlementInvestorLink:
+      type: object
+      properties:
+        token: { type: string, pattern: "^[a-f0-9]{64}$" }
+        expiresAt: { type: string, format: date-time }
+      required: [token, expiresAt]
     DemoSettlementConfirmation:
       type: object
       properties:

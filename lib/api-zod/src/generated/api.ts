@@ -574,7 +574,7 @@ export const GetDemoSettlementConfigResponse = zod.object({
 
 
 /**
- * Private to the sponsor or the investor holding the original demo receipt.
+ * Private to the sponsor or the investor holding the original demo receipt or a valid commitment-specific invite link.
  */
 export const GetDemoSettlementParams = zod.object({
   "id": zod.coerce.string(),
@@ -637,6 +637,23 @@ export const ConfigureDemoSettlementResponse = zod.object({
   "transactionHash": zod.string().optional()
 }).optional(),
   "maySend": zod.boolean().optional().describe('Returned only by preparation; true only for the request that first reserves this transfer.')
+})
+
+
+/**
+ * Sponsor-only. Creates or replaces a private investor link for this commitment; the returned token is shown once and expires after seven days.
+ */
+export const CreateDemoSettlementInvestorLinkParams = zod.object({
+  "id": zod.coerce.string(),
+  "commitmentId": zod.coerce.string()
+})
+
+export const createDemoSettlementInvestorLinkResponseTokenRegExp = new RegExp('^[a-f0-9]{64}$');
+
+
+export const CreateDemoSettlementInvestorLinkResponse = zod.object({
+  "token": zod.string().regex(createDemoSettlementInvestorLinkResponseTokenRegExp),
+  "expiresAt": zod.coerce.date()
 })
 
 

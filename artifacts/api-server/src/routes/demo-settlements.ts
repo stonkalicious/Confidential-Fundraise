@@ -1,10 +1,11 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { db, demoSettlementsTable, type DemoSettlementRecord } from "@workspace/db";
 import {
   ConfigureDemoSettlementBody, ConfirmDemoSettlementBody,
   VerifyDemoSettlementBody, GetDemoSettlementResponse,
   GetDemoSettlementConfigResponse, GetDemoSettlementParams,
+  CreateDemoSettlementInvestorLinkResponse,
 } from "@workspace/api-zod";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { getDemoCommitmentAccess } from "../lib/raise-store";
@@ -16,6 +17,11 @@ import {
 
 const router: IRouter = Router();
 const path = "/raises/:id/demo-settlements/:commitmentId";
+const INVESTOR_LINK_TTL_MS = 7 * 24 * 60 * 60 * 1_000;
+
+function tokenHash(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
 
 function snapshot(row?: DemoSettlementRecord) {
   return GetDemoSettlementResponse.parse(row ? { settlement: {
@@ -96,6 +102,25 @@ router.post(path, handle("sponsor", async (req, res, id, cid) => {
   }
   res.json(snapshot(row));
 }));
+router.post(`${path}/investor-link`, handle("sponsor", async (_req, res, id, cid) => {
+  const issued = await db.transaction(async (tx) => {
+    const [row] = await tx.select().from(demoSettlementsTable)
+      .where(whereCommitment(id, cid)).for("update");
+    if (!row) throw new SettlementError("Confirm the founder transfer details before creating an investor link.");
+    if (row.transactionHash) throw new SettlementError("This demo transfer is already settled.");
+
+    const token = randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + INVESTOR_LINK_TTL_MS);
+    await tx.update(demoSettlementsTable).set({
+      investorLinkTokenHash: tokenHash(token),
+      investorLinkExpiresAt: expiresAt,
+    }).where(eq(demoSettlementsTable.id, row.id));
+    return { token, expiresAt };
+  });
+  res.json(CreateDemoSettlementInvestorLinkResponse.parse({
+    token: issued.token, expiresAt: issued.expiresAt.toISOString(),
+  }));
+}));
 router.post(`${path}/confirm`, handle("investor", async (req, res, id, cid) => {
   const parsed = ConfirmDemoSettlementBody.safeParse(req.body);
   if (!parsed.success || parsed.data.confirmed !== true || !validNearAccount(parsed.data.signerAccount)) {
@@ -105,7 +130,7 @@ router.post(`${path}/confirm`, handle("investor", async (req, res, id, cid) => {
   await db.transaction(async (tx) => {
     const [row] = await tx.select().from(demoSettlementsTable).where(whereCommitment(id, cid)).for("update");
     if (!row || row.id !== input.settlementId) throw new SettlementError("Review the founder's current transfer details first.");
-    if (input.signerAccount === row.receiverAccount) throw new SettlementError("Use different investor and founder receiving accounts.", 400);
+    if (input.signerAccount === row.receiverAccount) throw new SettlementError("Use different investor and receiving accounts.", 400);
     if (row.investorConfirmedAt) {
       if (row.signerAccount !== input.signerAccount) throw new SettlementError("The investor already confirmed another sending account.");
       return;
@@ -122,7 +147,7 @@ router.post(`${path}/prepare`, handle("investor", async (_req, res, id, cid) => 
     throw new SettlementError("Demo transfers are limited to NEAR testnet.", 409);
   }
   if (!row.sponsorConfirmedAt || !row.investorConfirmedAt || !row.signerAccount) {
-    throw new SettlementError("Both founder and investor must confirm before a transfer can be prepared.");
+    throw new SettlementError("Both the founder and investor must confirm before a transfer can be prepared.");
   }
   if (row.transactionHash || row.preparedAt) { res.json({ ...snapshot(row), maySend: false }); return; }
   await preflightSettlement(row);

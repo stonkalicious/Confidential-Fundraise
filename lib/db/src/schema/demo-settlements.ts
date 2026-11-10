@@ -11,6 +11,8 @@ export const demoSettlementsTable = pgTable("demo_settlements", {
   network: text("network").notNull(),
   receiverAccount: text("receiver_account").notNull(),
   reference: text("reference"),
+  investorLinkTokenHash: text("investor_link_token_hash"),
+  investorLinkExpiresAt: timestamp("investor_link_expires_at", { withTimezone: true }),
   sponsorConfirmedAt: timestamp("sponsor_confirmed_at", { withTimezone: true }).notNull(),
   investorConfirmedAt: timestamp("investor_confirmed_at", { withTimezone: true }),
   signerAccount: text("signer_account"),
