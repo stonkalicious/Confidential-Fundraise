@@ -159,7 +159,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorMessage"
+                $ref: "#/components/schemas/RaiseSubmissionError"
         "429":
           description: Submission rate limit reached
           content:
@@ -1161,6 +1161,22 @@ components:
       required:
         - min
         - max
+    RaiseSubmissionError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          maxLength: 800
+        fieldErrors:
+          type: object
+          additionalProperties: false
+          properties:
+            name: { type: string, maxLength: 160 }
+            thesis: { type: string, maxLength: 160 }
+            stage: { type: string, maxLength: 160 }
+            rangeMin: { type: string, maxLength: 160 }
+            rangeMax: { type: string, maxLength: 160 }
     ErrorMessage:
       type: object
       properties:

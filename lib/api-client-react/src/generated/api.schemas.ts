@@ -375,6 +375,25 @@ export interface DemoIntentsQuote {
   quotedAt: string;
 }
 
+export type RaiseSubmissionErrorFieldErrors = {
+  /** @maxLength 160 */
+  name?: string;
+  /** @maxLength 160 */
+  thesis?: string;
+  /** @maxLength 160 */
+  stage?: string;
+  /** @maxLength 160 */
+  rangeMin?: string;
+  /** @maxLength 160 */
+  rangeMax?: string;
+};
+
+export interface RaiseSubmissionError {
+  /** @maxLength 800 */
+  error: string;
+  fieldErrors?: RaiseSubmissionErrorFieldErrors;
+}
+
 export interface ErrorMessage {
   error: string;
 }

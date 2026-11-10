@@ -1,14 +1,19 @@
 import { type FormEvent, useState } from 'react';
 import {
+  submissionErrorsFromResponse,
+  type SubmissionErrors,
+  type SubmissionField,
+} from '@workspace/api-zod/raise-submission';
+import {
   approveRaise as approveRaiseApi,
   getPendingRaises as getPendingRaisesApi,
   submitRaise as submitRaiseApi,
   type PendingRaise,
-  type RaiseSubmissionInput,
 } from '@workspace/api-client-react';
 import { Link } from 'wouter';
 import { getSafeSourceLink, type Raise } from '@/data/raises';
 import SiteHeader from '@/components/site-header';
+import { validateRaiseForm } from '@/lib/raise-submission';
 
 function errorMessage(error: unknown, fallback: string): string {
   if (error && typeof error === 'object' && 'data' in error) {
@@ -39,6 +44,38 @@ export default function RaiseList({
   const [submitting, setSubmitting] = useState(false);
   const [submissionMessage, setSubmissionMessage] = useState('');
   const [submissionError, setSubmissionError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<SubmissionErrors>({});
+
+  function clearFieldError(field: SubmissionField) {
+    setSubmissionError('');
+    setFieldErrors((errors) => {
+      const updated = { ...errors };
+      delete updated[field];
+      if (field === 'rangeMin') delete updated.rangeMax;
+      return updated;
+    });
+  }
+
+  function showFieldErrors(errors: SubmissionErrors, form: HTMLFormElement) {
+    setFieldErrors(errors);
+    const first = Object.keys(errors)[0] as SubmissionField | undefined;
+    const ids = { name: 'raise-name', thesis: 'raise-thesis', stage: 'raise-stage',
+      rangeMin: 'raise-range-min', rangeMax: 'raise-range-max' };
+    if (first) form.querySelector<HTMLElement>(`#${ids[first]}`)?.focus();
+  }
+
+  function errorProps(field: SubmissionField) {
+    return {
+      'aria-invalid': fieldErrors[field] ? true as const : undefined,
+      'aria-describedby': fieldErrors[field] ? `raise-error-${field}` : undefined,
+    };
+  }
+
+  function fieldError(field: SubmissionField) {
+    return fieldErrors[field] && (
+      <p className="inline-error" id={`raise-error-${field}`} role="alert">{fieldErrors[field]}</p>
+    );
+  }
 
   const [approvalCode, setApprovalCode] = useState('');
   const [pendingRaises, setPendingRaises] = useState<PendingRaise[]>([]);
@@ -48,21 +85,15 @@ export default function RaiseList({
 
   async function submitRaise(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting) return;
+    const form = event.currentTarget;
     setSubmissionError('');
     setSubmissionMessage('');
-    const min = Number(rangeMin);
-    const max = Number(rangeMax);
-    if (!Number.isSafeInteger(min) || !Number.isSafeInteger(max) || min <= 0 || max < min) {
-      setSubmissionError('Enter a valid positive round range.');
+    const { input, errors } = validateRaiseForm({ name, thesis, stage, rangeMin, rangeMax });
+    showFieldErrors(errors, form);
+    if (Object.keys(errors).length > 0) {
       return;
     }
-
-    const input: RaiseSubmissionInput = {
-      name: name.trim(),
-      thesis: thesis.trim(),
-      stage: stage.trim(),
-      range: { min, max },
-    };
     setSubmitting(true);
     try {
       const receipt = await submitRaiseApi(input);
@@ -73,7 +104,13 @@ export default function RaiseList({
       setRangeMax('');
       setSubmissionMessage(`Submitted for approval. Reference: ${receipt.id}`);
     } catch (error) {
-      setSubmissionError(errorMessage(error, 'The raise could not be submitted.'));
+      const errors = submissionErrorsFromResponse(
+        error && typeof error === 'object' && 'data' in error ? error.data : undefined,
+      );
+      showFieldErrors(errors, form);
+      if (Object.keys(errors).length === 0) {
+        setSubmissionError(errorMessage(error, 'The raise could not be submitted.'));
+      }
     } finally {
       setSubmitting(false);
     }
@@ -184,7 +221,7 @@ export default function RaiseList({
                 </li>
               </ol>
             </section>
-            <form className="raise-submit-card" onSubmit={submitRaise}>
+            <form className="raise-submit-card" onSubmit={submitRaise} noValidate>
               <h2 className="section-title">Submit a raise</h2>
               <div className="field-wrap">
                 <label className="field-label" htmlFor="raise-name">Raise name</label>
@@ -193,10 +230,12 @@ export default function RaiseList({
                   id="raise-name"
                   data-testid="input-raise-name"
                   value={name}
-                  onChange={(event) => setName(event.target.value)}
+                  onChange={(event) => { setName(event.target.value); clearFieldError('name'); }}
+                  {...errorProps('name')}
                   maxLength={120}
                   required
                 />
+                {fieldError('name')}
               </div>
               <div className="field-wrap">
                 <label className="field-label" htmlFor="raise-thesis">Short thesis</label>
@@ -206,10 +245,12 @@ export default function RaiseList({
                   data-testid="input-raise-thesis"
                   rows={3}
                   value={thesis}
-                  onChange={(event) => setThesis(event.target.value)}
+                  onChange={(event) => { setThesis(event.target.value); clearFieldError('thesis'); }}
+                  {...errorProps('thesis')}
                   maxLength={280}
                   required
                 />
+                {fieldError('thesis')}
               </div>
               <div className="field-wrap">
                 <label className="field-label" htmlFor="raise-stage">Stage</label>
@@ -218,10 +259,12 @@ export default function RaiseList({
                   id="raise-stage"
                   data-testid="input-raise-stage"
                   value={stage}
-                  onChange={(event) => setStage(event.target.value)}
+                  onChange={(event) => { setStage(event.target.value); clearFieldError('stage'); }}
+                  {...errorProps('stage')}
                   maxLength={60}
                   required
                 />
+                {fieldError('stage')}
               </div>
               <div className="raise-range-fields">
                 <div className="field-wrap">
@@ -234,9 +277,11 @@ export default function RaiseList({
                     min="1"
                     step="1"
                     value={rangeMin}
-                    onChange={(event) => setRangeMin(event.target.value)}
+                    onChange={(event) => { setRangeMin(event.target.value); clearFieldError('rangeMin'); }}
+                    {...errorProps('rangeMin')}
                     required
                   />
+                  {fieldError('rangeMin')}
                 </div>
                 <div className="field-wrap">
                   <label className="field-label" htmlFor="raise-range-max">Range maximum (EUR)</label>
@@ -248,9 +293,11 @@ export default function RaiseList({
                     min="1"
                     step="1"
                     value={rangeMax}
-                    onChange={(event) => setRangeMax(event.target.value)}
+                    onChange={(event) => { setRangeMax(event.target.value); clearFieldError('rangeMax'); }}
+                    {...errorProps('rangeMax')}
                     required
                   />
+                  {fieldError('rangeMax')}
                 </div>
               </div>
               {submissionError && <p className="inline-error" role="alert">{submissionError}</p>}

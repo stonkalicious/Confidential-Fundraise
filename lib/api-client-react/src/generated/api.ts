@@ -48,6 +48,7 @@ import type {
   PrivateRaiseDetails,
   RaiseClaimInput,
   RaiseClaimStatus,
+  RaiseSubmissionError,
   RaiseSubmissionInput,
   RaiseSubmissionReceipt,
   RaiseSummary,
@@ -650,7 +651,7 @@ return customFetch<RaiseSubmissionReceipt>(getSubmitRaiseUrl(),
 
 export const getSubmitRaiseMutationKey = () => ['submitRaise'] as const;
 
-export const getSubmitRaiseMutationOptions = <TError = ErrorType<ErrorMessage>,
+export const getSubmitRaiseMutationOptions = <TError = ErrorType<RaiseSubmissionError | ErrorMessage>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitRaise>>, TError,SubmitRaiseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof submitRaise>>, TError,SubmitRaiseMutationVariables, TContext> => {
 
@@ -679,13 +680,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SubmitRaiseMutationResult = NonNullable<Awaited<ReturnType<typeof submitRaise>>>
     export type SubmitRaiseMutationBody = BodyType<RaiseSubmissionInput>
-    export type SubmitRaiseMutationError = ErrorType<ErrorMessage>
+    export type SubmitRaiseMutationError = ErrorType<RaiseSubmissionError | ErrorMessage>
     export type SubmitRaiseMutationVariables = {data: BodyType<RaiseSubmissionInput>}
 
     /**
  * @summary Submit a raise for manual approval
  */
-export const useSubmitRaise = <TError = ErrorType<ErrorMessage>,
+export const useSubmitRaise = <TError = ErrorType<RaiseSubmissionError | ErrorMessage>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitRaise>>, TError,SubmitRaiseMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof submitRaise>>,

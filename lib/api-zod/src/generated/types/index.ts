@@ -46,6 +46,8 @@ export * from './raiseClaimInput';
 export * from './raiseClaimStatus';
 export * from './raiseCommitment';
 export * from './raiseRange';
+export * from './raiseSubmissionError';
+export * from './raiseSubmissionErrorFieldErrors';
 export * from './raiseSubmissionInput';
 export * from './raiseSubmissionReceipt';
 export * from './raiseSubmissionReceiptStatus';

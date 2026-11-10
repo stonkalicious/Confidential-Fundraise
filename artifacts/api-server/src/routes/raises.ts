@@ -1,4 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
+import { validateRaiseSubmission } from "@workspace/api-zod/raise-submission";
 import {
   AuthenticateNearIntentsSessionBody,
   AuthenticateNearIntentsSessionResponse,
@@ -299,27 +300,19 @@ function isRateLimited(req: Request, bucket: string, max: number, windowMs: numb
 }
 
 router.post("/raises", async (req, res): Promise<void> => {
-  const body =
-    req.body && typeof req.body === "object"
-      ? {
-          ...req.body,
-          name: typeof req.body.name === "string" ? req.body.name.trim() : req.body.name,
-          thesis: typeof req.body.thesis === "string" ? req.body.thesis.trim() : req.body.thesis,
-          stage: typeof req.body.stage === "string" ? req.body.stage.trim() : req.body.stage,
-        }
-      : req.body;
-  const parsed = SubmitRaiseBody.safeParse(body);
-  if (
-    !parsed.success ||
-    !Number.isSafeInteger(parsed.data?.range.min) ||
-    !Number.isSafeInteger(parsed.data?.range.max) ||
-    parsed.data.range.min <= 0 ||
-    parsed.data.range.max < parsed.data.range.min
-  ) {
+  const { input, errors } = validateRaiseSubmission(req.body);
+  if (Object.keys(errors).length > 0) {
     noStore(res);
     res.status(400).json({
-      error: "Enter a name, short thesis, stage, and valid positive round range.",
+      error: Object.values(errors).join(" "),
+      fieldErrors: errors,
     });
+    return;
+  }
+  // The generated contract remains authoritative after normalization.
+  const parsed = SubmitRaiseBody.safeParse(input);
+  if (!parsed.success) {
+    noStore(res).status(400).json({ error: "The raise details are invalid." });
     return;
   }
 
