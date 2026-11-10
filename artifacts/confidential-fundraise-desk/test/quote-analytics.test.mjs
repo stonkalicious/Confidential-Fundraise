@@ -95,3 +95,36 @@ test('a quote attempt reports once and a retry reports its own outcome', (t) => 
     { name: 'quote_outcome', data: { outcome: 'success' } },
   ]);
 });
+
+test('throwing analytics does not interrupt success or failure outcome reporting', (t) => {
+  const attemptedOutcomes = [];
+  const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: {
+      umami: {
+        track: (_name, data) => {
+          attemptedOutcomes.push(data.outcome);
+          throw new Error('analytics provider unavailable');
+        },
+      },
+    },
+  });
+
+  t.after(() => {
+    if (originalWindow) Object.defineProperty(globalThis, 'window', originalWindow);
+    else delete globalThis.window;
+  });
+
+  const completedQuoteStates = [];
+  const successReporter = createQuoteOutcomeReporter();
+  completedQuoteStates.push('success');
+  assert.doesNotThrow(() => successReporter('success'));
+
+  const failureReporter = createQuoteOutcomeReporter();
+  completedQuoteStates.push('error');
+  assert.doesNotThrow(() => failureReporter('provider_error'));
+
+  assert.deepEqual(completedQuoteStates, ['success', 'error']);
+  assert.deepEqual(attemptedOutcomes, ['success', 'provider_error']);
+});

@@ -372,7 +372,6 @@ function AppDesk({
     }
     if (!session) {
       setNearSession(null);
-      reportOutcome('auth_required');
       setQuoteState({
         commitmentId,
         status: 'error',
@@ -380,6 +379,7 @@ function AppDesk({
           ? 'NEAR Intents is temporarily unavailable. Retry the saved wallet session before requesting this quote.'
           : 'Authenticate a NEAR wallet before requesting this confidential quote.',
       });
+      reportOutcome('auth_required');
       return;
     }
     const sessionVersion = sponsorSessionVersion.current;
@@ -394,21 +394,22 @@ function AppDesk({
         if (sessionVersion === sponsorSessionVersion.current) setNearSession(session);
         result = await onRequestDemoQuote(commitmentId, approvalCode, session.accessToken);
       }
-      reportOutcome('success');
       if (sessionVersion === sponsorSessionVersion.current) {
         setQuoteState({ commitmentId, status: 'success', result });
       }
+      reportOutcome('success');
     } catch (error) {
       const outcome = getQuoteFailureOutcome(error);
       const authRequired = outcome === 'auth_required';
+      if (sessionVersion === sponsorSessionVersion.current) {
+        if (authRequired) setNearSession(null);
+        setQuoteState({
+          commitmentId,
+          status: 'error',
+          error: requestErrorMessage(error, 'The NEAR Intents quote request failed. No funds moved.'),
+        });
+      }
       reportOutcome(outcome);
-      if (sessionVersion !== sponsorSessionVersion.current) return;
-      if (authRequired) setNearSession(null);
-      setQuoteState({
-        commitmentId,
-        status: 'error',
-        error: requestErrorMessage(error, 'The NEAR Intents quote request failed. No funds moved.'),
-      });
     }
   }
 
