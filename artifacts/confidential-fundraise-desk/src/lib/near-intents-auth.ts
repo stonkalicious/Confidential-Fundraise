@@ -11,6 +11,10 @@ import {
   NearIntentsKeyRegistrationRequiredError,
   registerNearIntentsKeyAndAuthenticateWith,
 } from './near-intents-key-registration.ts';
+import {
+  checkNearKeyRegistrationStatus,
+  parseNearViewResponse,
+} from './near-key-status.ts';
 
 const NEAR_RPC_URL = 'https://rpc.mainnet.near.org';
 const INTENTS_ACCOUNT_ID = 'intents.near';
@@ -61,20 +65,7 @@ async function callNearViewMethod(
   }
 
   const body: unknown = await response.json();
-  if (
-    !body ||
-    typeof body !== 'object' ||
-    !('result' in body) ||
-    !body.result ||
-    typeof body.result !== 'object' ||
-    !('result' in body.result) ||
-    !Array.isArray(body.result.result) ||
-    !body.result.result.every((byte) => Number.isInteger(byte) && byte >= 0 && byte <= 255)
-  ) {
-    throw new Error(`NEAR RPC returned an unreadable response for ${methodName}.`);
-  }
-
-  return JSON.parse(new TextDecoder().decode(Uint8Array.from(body.result.result)));
+  return parseNearViewResponse(body, methodName);
 }
 
 async function getCurrentSalt(): Promise<Uint8Array> {
@@ -105,19 +96,7 @@ function createVersionedNonce(salt: Uint8Array, deadline: Date): string {
 }
 
 async function hasRegisteredKey(accountId: string, publicKey: string | undefined): Promise<boolean> {
-  if (/^[0-9a-f]{64}$/i.test(accountId)) return true;
-  if (!publicKey) {
-    throw new Error('This NEAR wallet did not provide a public key to verify its demo account.');
-  }
-
-  const formattedPublicKey = publicKey.startsWith('ed25519:')
-    ? publicKey
-    : `ed25519:${publicKey}`;
-  const isRegistered = await callNearViewMethod('has_public_key', {
-    account_id: accountId,
-    public_key: formattedPublicKey,
-  });
-  return isRegistered === true;
+  return checkNearKeyRegistrationStatus(accountId, publicKey, callNearViewMethod);
 }
 
 function toEd25519Value(value: string, encoding: 'base58' | 'base64'): string {
