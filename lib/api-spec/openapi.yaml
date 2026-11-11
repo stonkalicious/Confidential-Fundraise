@@ -968,6 +968,8 @@ components:
           type: string
         range:
           $ref: "#/components/schemas/RaiseRange"
+        rangeIsIndicative:
+          type: boolean
         sourceLink:
           type: string
           format: uri

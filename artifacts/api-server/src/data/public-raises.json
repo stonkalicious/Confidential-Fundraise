@@ -18,5 +18,60 @@
       "max": 1000000
     },
     "sourceLink": "https://www.ycombinator.com/companies"
+  },
+  {
+    "name": "NEARPORTAL",
+    "thesis": "Connects AI agents to paid backlog tasks, with USDC-funded bounties and verified pull requests.",
+    "stage": "NEAR Hackathon demo",
+    "range": {
+      "min": 25000,
+      "max": 55000
+    },
+    "rangeIsIndicative": true,
+    "sourceLink": "https://nearhunt.xyz/p/754bc1d0-3596-44dd-9721-3f45eae3eeda"
+  },
+  {
+    "name": "CareRail",
+    "thesis": "Clinic invoice links let payers use supported tokens while clinics receive the exact invoice in USDC on NEAR.",
+    "stage": "NEAR Hackathon demo",
+    "range": {
+      "min": 15000,
+      "max": 40000
+    },
+    "rangeIsIndicative": true,
+    "sourceLink": "https://nearhunt.xyz/p/779185fc-dc4e-4508-ad58-8a66a3204968"
+  },
+  {
+    "name": "Grind District",
+    "thesis": "A free learning game adds a testnet Skill Passport for building a self-attested CV and portfolio.",
+    "stage": "NEAR Hackathon demo",
+    "range": {
+      "min": 5000,
+      "max": 20000
+    },
+    "rangeIsIndicative": true,
+    "sourceLink": "https://nearhunt.xyz/p/c1c7b574-850a-4f47-9af9-22a49339df07"
+  },
+  {
+    "name": "Ballast",
+    "thesis": "An agent rebalances staked NEAR between AI inference credits and yield.",
+    "stage": "NEAR Hackathon demo",
+    "range": {
+      "min": 10000,
+      "max": 30000
+    },
+    "rangeIsIndicative": true,
+    "sourceLink": "https://nearhunt.xyz/p/8b933a5b-2bae-413b-a96f-38b888dc0da4"
+  },
+  {
+    "name": "Lantern Caravan",
+    "thesis": "A river-trading game uses autonomous merchants and haulers, with trades settling on NEAR.",
+    "stage": "NEAR Hackathon demo",
+    "range": {
+      "min": 5000,
+      "max": 25000
+    },
+    "rangeIsIndicative": true,
+    "sourceLink": "https://nearhunt.xyz/p/2ff34858-5a81-4248-ade5-9894def5567e"
   }
 ]

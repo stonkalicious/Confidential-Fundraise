@@ -27,6 +27,7 @@ test("public raise seed entries validate, insert once, expose attribution, and p
     thesis: "A concise synthetic thesis for the public raise seeding test.",
     stage: "Demo concept",
     range: { min: 25_000, max: 75_000 },
+    rangeIsIndicative: true,
     status: "approved",
     sourceLink,
     commitments: [],
@@ -51,6 +52,7 @@ test("public raise seed entries validate, insert once, expose attribution, and p
         thesis: seed.thesis,
         stage: seed.stage,
         range: seed.range,
+        rangeIsIndicative: seed.rangeIsIndicative,
         sourceLink,
       },
       {
@@ -65,6 +67,7 @@ test("public raise seed entries validate, insert once, expose attribution, and p
       thesis: seed.thesis,
       stage: seed.stage,
       range: seed.range,
+      rangeIsIndicative: true,
       sourceLink,
     }],
   );
@@ -74,19 +77,26 @@ test("public raise seed entries validate, insert once, expose attribution, and p
     { name: "Bad range", thesis: seed.thesis, stage: "Demo", range: { min: 0, max: 2 } },
     { name: "Bad order", thesis: seed.thesis, stage: "Demo", range: { min: 4, max: 2 } },
     { name: "Bad link", thesis: seed.thesis, stage: "Demo", range: { min: 1, max: 2 }, sourceLink: "javascript:alert(1)" },
+    { name: "Bad range qualifier", thesis: seed.thesis, stage: "Demo", range: { min: 1, max: 2 }, rangeIsIndicative: "yes" },
   ]) {
     assert.throws(() => parsePublicRaiseSeeds([invalid]));
   }
   assert.throws(() => parsePublicRaiseSeeds({}));
 
   await initializeRaiseStore();
-  for (const bundledName of ["NEAR Agent Commerce", "Developer Workflow Copilot"]) {
+  const newNearhuntRaises = ["NEARPORTAL", "CareRail", "Grind District", "Ballast", "Lantern Caravan"];
+  for (const bundledName of ["NEAR Agent Commerce", "Developer Workflow Copilot", ...newNearhuntRaises]) {
     const bundledRaise = (await getRaises()).find((raise) => raise.name === bundledName);
     assert.ok(bundledRaise, `${bundledName} should be seeded on startup`);
     assert.equal(bundledRaise.claimed, false);
     assert.equal(bundledRaise.softTotal, 0);
     assert.equal(bundledRaise.hardTotal, 0);
     assert.ok(bundledRaise.sourceLink);
+    if (newNearhuntRaises.includes(bundledName)) {
+      assert.equal(bundledRaise.rangeIsIndicative, true);
+      assert.ok(bundledRaise.sourceLink.startsWith("https://nearhunt.xyz/p/"));
+      assert.ok(bundledRaise.range.min >= 2_000 && bundledRaise.range.max <= 55_000);
+    }
   }
 
   await initializeRaiseStore([seed, { ...seed, name: "Duplicate input must be ignored." }]);
@@ -96,6 +106,7 @@ test("public raise seed entries validate, insert once, expose attribution, and p
   assert.equal(initialPublic.softTotal, 0);
   assert.equal(initialPublic.hardTotal, 0);
   assert.equal(initialPublic.sourceLink, sourceLink);
+  assert.equal(initialPublic.rangeIsIndicative, true);
 
   const [initialRows] = await Promise.all([
     db.select().from(raiseStateTable).where(eq(raiseStateTable.id, id)),
@@ -106,11 +117,13 @@ test("public raise seed entries validate, insert once, expose attribution, and p
   assert.equal(listResponse.status, 200);
   const publicList = await listResponse.json();
   assert.ok(publicList.some((raise) => raise.id === id && raise.sourceLink === sourceLink));
+  assert.ok(publicList.some((raise) => raise.id === id && raise.rangeIsIndicative === true));
 
   const detailResponse = await fetch(`${base}/raises/${id}`);
   assert.equal(detailResponse.status, 200);
   const detail = await detailResponse.json();
   assert.equal(detail.sourceLink, sourceLink);
+  assert.equal(detail.rangeIsIndicative, true);
   assert.equal(detail.claimed, false);
 
   const claim = await claimRaiseRecord(id, {
@@ -130,6 +143,7 @@ test("public raise seed entries validate, insert once, expose attribution, and p
     name: "Stale seed value",
     thesis: "This content must never replace the live raise.",
     sourceLink: "https://example.org/stale",
+    rangeIsIndicative: false,
     commitments: [],
     softTotal: 0,
     hardTotal: 0,
@@ -139,6 +153,7 @@ test("public raise seed entries validate, insert once, expose attribution, and p
   assert.ok(preserved);
   assert.equal(preserved.name, name);
   assert.equal(preserved.sourceLink, sourceLink);
+  assert.equal(preserved.rangeIsIndicative, true);
   assert.equal(preserved.claimed, true);
   assert.equal(preserved.softTotal, 12_500);
   assert.equal(preserved.hardTotal, 0);

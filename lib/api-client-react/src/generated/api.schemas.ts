@@ -211,6 +211,7 @@ export interface RaiseSummary {
   thesis: string;
   stage: string;
   range: RaiseRange;
+  rangeIsIndicative?: boolean;
   sourceLink?: string;
   claimed: boolean;
   status?: RaiseSummaryStatus;

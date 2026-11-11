@@ -18,6 +18,7 @@ export type Raise = {
   investmentThesis: string;
   stage: string;
   sourceLink?: string;
+  rangeIsIndicative?: boolean;
   roundRange: { min: number; max: number };
   isFundThesis?: boolean;
   claimed: boolean;

@@ -31,6 +31,7 @@ type RaiseRecord = {
   thesis: string;
   stage: string;
   range: RaiseRange;
+  rangeIsIndicative?: boolean;
   status: "approved" | "pending";
   publicStatus?: "open" | "paused" | "closed";
   sourceLink?: string;
@@ -114,6 +115,7 @@ export type PublicRaiseSeed = {
   thesis: string;
   stage: string;
   range: RaiseRange;
+  rangeIsIndicative?: boolean;
   sourceLink?: string;
 };
 
@@ -173,6 +175,12 @@ export function parsePublicRaiseSeeds(value: unknown): PublicRaiseSeed[] {
     ) {
       throw new Error(`${label} must have positive integer range bounds with max at least min.`);
     }
+    if (
+      entry.rangeIsIndicative !== undefined &&
+      typeof entry.rangeIsIndicative !== "boolean"
+    ) {
+      throw new Error(`${label} rangeIsIndicative must be a boolean when provided.`);
+    }
 
     let sourceLink: string | undefined;
     if (entry.sourceLink !== undefined) {
@@ -199,6 +207,7 @@ export function parsePublicRaiseSeeds(value: unknown): PublicRaiseSeed[] {
       thesis,
       stage,
       range: { min: entry.range.min as number, max: entry.range.max as number },
+      ...(entry.rangeIsIndicative === true ? { rangeIsIndicative: true } : {}),
       ...(sourceLink ? { sourceLink } : {}),
     });
   }
@@ -296,6 +305,7 @@ function raiseFromDatabase(state: unknown, position: number): RaiseRecord {
     thesis: parsed.thesis,
     stage: parsed.stage,
     range: parsed.range,
+    ...(parsed.rangeIsIndicative === true ? { rangeIsIndicative: true } : {}),
     status: storedState.status,
     publicStatus: parsed.status ?? "open",
     ...(typeof storedState.agentClaimTokenHash === "string"
@@ -410,6 +420,7 @@ function publicSnapshot(raise: RaiseRecord): RaiseSummary {
     thesis: raise.thesis,
     stage: raise.stage,
     range: raise.range,
+    ...(raise.rangeIsIndicative === true ? { rangeIsIndicative: true } : {}),
     ...(raise.sourceLink ? { sourceLink: raise.sourceLink } : {}),
     claimed: Boolean(raise.claim || raise.agentClaimTokenHash),
     status: raise.publicStatus ?? "open",

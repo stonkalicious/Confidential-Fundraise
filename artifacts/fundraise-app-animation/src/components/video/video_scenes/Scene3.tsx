@@ -21,8 +21,8 @@ export function Scene3() {
       transition={{ duration: .36, ease: EASE }}
       style={{ background: '#f0eee5' }}
     >
-      <div className="mono" style={{ position: 'absolute', left: '6%', top: '7%', color: '#a45e49', fontSize: '1.1vmin' }}>02 / PROSPECT</div>
-      <div className="mono" style={{ position: 'absolute', right: '8%', top: '18%', width: '19%', borderTop: '1px solid #cfcabd', paddingTop: '1.1vmin', fontSize: '1.12vmin', lineHeight: 2, color: '#777468' }}>
+      <div className="mono" style={{ position: 'absolute', left: '6%', top: '7%', color: '#a45e49', fontSize: '2.8vmin' }}>02 / PROSPECT</div>
+      <div className="mono" style={{ position: 'absolute', right: '6%', top: '18%', width: '17%', borderTop: '1px solid #cfcabd', paddingTop: '1.1vmin', fontSize: '2.7vmin', lineHeight: 1.2, color: '#777468' }}>
         NO WALLET<br />NO TRANSFER
       </div>
       <motion.div
@@ -49,7 +49,7 @@ export function Scene3() {
                 <div style={{ marginTop: '1.2vmin' }}>
                   <label className="form-label">Amount</label>
                   <div className="form-field" style={{ justifyContent: 'space-between' }}>
-                    <span style={{ fontFamily: 'var(--mono)', color: '#898475', fontSize: '1.03vmin' }}>USD</span>
+                    <span style={{ fontFamily: 'var(--mono)', color: '#898475', fontSize: '2.8vmin' }}>USD</span>
                     <motion.span initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1, duration: .38 }}>$10,000</motion.span>
                   </div>
                 </div>
@@ -64,7 +64,7 @@ export function Scene3() {
               <div style={{ borderLeft: '1px solid #ded9cc', paddingLeft: '2vmin', paddingTop: '1.8vmin' }}>
                 <div className="mono metric-label" style={{ color: '#a45e49' }}>THRESHOLD</div>
                 <div className="serif" style={{ marginTop: '1vmin', fontSize: '3.8vmin' }}>$2,000,000</div>
-                <div className="ui-note" style={{ marginTop: '1vmin', fontSize: '1.1vmin' }}>Aggregate hard commitments reach the threshold. This does not trigger settlement.</div>
+                <div className="ui-note" style={{ marginTop: '1vmin' }}>Aggregate hard commitments reach the threshold. This does not trigger settlement.</div>
               </div>
             </div>
           </div>
@@ -76,7 +76,7 @@ export function Scene3() {
         style={{ position: 'absolute', left: '12%', bottom: '8.5%', display: 'flex', gap: '1vmin', alignItems: 'center' }}
       >
         <span className="tiny-dot" style={{ background: '#66806b' }} />
-        <span className="mono" style={{ fontSize: '1.05vmin', color: '#586b58' }}>INTEREST ONLY · NO MONEY SENT · WALLET NOT REQUIRED</span>
+        <span className="mono" style={{ fontSize: '2.8vmin', color: '#586b58' }}>INTEREST ONLY · NO MONEY SENT · WALLET NOT REQUIRED</span>
       </motion.div>
       <motion.div className="rule" initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 4.5, duration: .35 }}
         style={{ left: '9%', bottom: '5.5%', width: '66%', height: '.18vmin' }} />

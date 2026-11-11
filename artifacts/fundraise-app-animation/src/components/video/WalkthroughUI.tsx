@@ -19,7 +19,7 @@ export function AppMasthead({ flag = 'DEMO ONLY' }: { flag?: string }) {
         <img src={`${import.meta.env.BASE_URL}images/fundraising-logo.png`} alt="" />
         <div>
           <div className="brand-title">Confidential Fundraising</div>
-          <div className="brand-kicker" style={{ marginTop: '.42vmin' }}>Powered by NEAR</div>
+          <div className="brand-kicker" style={{ marginTop: '.2vmin' }}>Powered by NEAR</div>
         </div>
       </div>
       <span className="app-flag">{flag}</span>
@@ -43,5 +43,5 @@ export function AppTabs({ active }: { active: 'progress' | 'prospect' | 'founder
 }
 
 export function AppFootnote({ children }: { children: ReactNode }) {
-  return <div className="ui-note" style={{ marginTop: '1.3vmin', fontSize: '1.03vmin' }}>{children}</div>;
+  return <div className="ui-note" style={{ marginTop: '1.3vmin' }}>{children}</div>;
 }

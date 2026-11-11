@@ -150,6 +150,7 @@ export const GetRaisesResponseItem = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "rangeIsIndicative": zod.boolean().optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
@@ -232,6 +233,7 @@ export const UpdateAgentRaiseResponse = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "rangeIsIndicative": zod.boolean().optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
@@ -268,6 +270,7 @@ export const GetRaiseByIdResponse = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "rangeIsIndicative": zod.boolean().optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
@@ -307,6 +310,7 @@ export const ReserveAgentRaiseResponse = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "rangeIsIndicative": zod.boolean().optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
@@ -345,6 +349,7 @@ export const GetPrivateRaiseResponse = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "rangeIsIndicative": zod.boolean().optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
@@ -394,6 +399,7 @@ export const ApproveRaiseResponse = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "rangeIsIndicative": zod.boolean().optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
@@ -444,6 +450,7 @@ export const ClaimRaiseResponse = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "rangeIsIndicative": zod.boolean().optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
@@ -495,6 +502,7 @@ export const SubmitSoftCommitmentResponse = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "rangeIsIndicative": zod.boolean().optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
@@ -537,6 +545,7 @@ export const UpdateRaiseCommitmentResponse = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "rangeIsIndicative": zod.boolean().optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),

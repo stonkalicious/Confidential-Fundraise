@@ -70,6 +70,7 @@ function mergeApiRaise(summary: RaiseSummary, base: Raise): Raise {
     thesis: summary.thesis,
     stage: summary.stage,
     sourceLink: summary.sourceLink ?? base.sourceLink,
+    rangeIsIndicative: summary.rangeIsIndicative ?? base.rangeIsIndicative,
     roundRange: summary.range,
     claimed: summary.claimed || Boolean(base.claim),
     claimantName: summary.claimantName ?? base.claimantName ?? base.claim?.founderName ?? null,
@@ -627,6 +628,9 @@ function AppDesk({
         <h1 className="raise-heading">{raise.companyName}</h1>
         <p className="section-copy">{raise.thesis}</p>
         <div className="raise-details">{raise.stage} · {usd(raise.roundRange.min)} – {usd(raise.roundRange.max)}</div>
+        {raise.rangeIsIndicative && (
+          <p className="raise-details">Approximate range; not a verified fundraising ask.</p>
+        )}
         {sourceLink && (
           <a
             className="raise-source-link"

@@ -8,11 +8,11 @@ const EASE = [0.2, 0.85, 0.2, 1] as const;
 export function Scene1() {
   const [beat, setBeat] = useState(0);
   useSceneTimer([
-    { time: 470, callback: () => setBeat(1) },
-    { time: 870, callback: () => setBeat(2) },
-    { time: 1450, callback: () => setBeat(3) },
-    { time: 1950, callback: () => setBeat(4) },
-    { time: 2380, callback: () => setBeat(5) },
+    { time: 390, callback: () => setBeat(1) },
+    { time: 760, callback: () => setBeat(2) },
+    { time: 1120, callback: () => setBeat(3) },
+    { time: 1480, callback: () => setBeat(4) },
+    { time: 1840, callback: () => setBeat(5) },
   ]);
   return (
     <motion.section
@@ -23,14 +23,14 @@ export function Scene1() {
       transition={{ duration: 0.28, ease: EASE }}
       style={{ background: '#f0eee5' }}
     >
-      <div className="mono" style={{ position: 'absolute', top: '8%', left: '6%', fontSize: '1.32vmin', color: '#a45e49' }}>
+      <div className="mono" style={{ position: 'absolute', top: '6%', left: '6%', fontSize: '2.8vmin', color: '#a45e49' }}>
         CONFIDENTIAL FUNDRAISING <span style={{ color: '#8b867a' }}>/ DEMO</span>
       </div>
       <motion.div
         initial={{ scaleY: 0 }} animate={{ scaleY: 1 }} transition={{ duration: .4, ease: EASE }}
         style={{ position: 'absolute', left: '6%', top: '20%', width: '.25vmin', height: '53%', background: '#b86148', transformOrigin: 'top' }}
       />
-      <div style={{ position: 'absolute', left: '8.5%', top: '22%', width: '34%', zIndex: 2 }}>
+      <div style={{ position: 'absolute', left: '8.5%', top: '20%', width: '36%', zIndex: 2 }}>
         <motion.div
           key={beat > 1 ? 'exposure' : beat > 0 ? 'without' : 'interest'}
           initial={{ opacity: 0, y: '30%', scale: .84 }}
@@ -38,23 +38,13 @@ export function Scene1() {
           transition={{ type: 'spring', stiffness: 270, damping: 19 }}
           className="serif hero-line"
         >
-          {beat > 1 ? <>LIST YOUR PROJECT<br />IN PUBLIC.</> : beat > 0 ? 'IN PUBLIC.' : 'LIST YOUR PROJECT'}
+          <span>List your project</span>
+          {beat > 0 && <><br /><span>in public.</span></>}
+          {beat > 1 && <><br /><span>Fund it privately</span></>}
+          {beat > 2 && <><br /><span>with Near.</span></>}
+          {beat > 3 && <><br /><span>Let agents</span></>}
+          {beat > 4 && <><br /><span>update it.</span></>}
         </motion.div>
-        {beat > 2 && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: .35, ease: EASE }}
-            className="fine-copy" style={{ marginTop: '2.5vmin', color: '#6f6b60', maxWidth: '28vmin' }}
-          >
-            Fund it privately with Near.<br />Agent first fundraising.
-          </motion.div>
-        )}
-        {beat > 3 && (
-          <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: .35 }}
-            className="mono" style={{ marginTop: '2vmin', fontSize: '1.08vmin', color: '#888273', transformOrigin: 'left' }}>
-            DEMO DATA · NO INVESTMENT SETTLEMENT
-          </motion.div>
-        )}
       </div>
       <motion.div
         initial={{ x: '4%', opacity: 0, scale: .97 }}
@@ -65,10 +55,10 @@ export function Scene1() {
         <AppChrome style={{ height: '100%' }}>
           <AppMasthead />
           <div style={{ padding: '3.1vmin 3.2vmin' }}>
-            <div className="mono" style={{ fontSize: '1.08vmin', color: '#a45e49' }}>PUBLIC PROGRESS</div>
+            <div className="mono" style={{ fontSize: '2.8vmin', color: '#a45e49' }}>PUBLIC PROGRESS</div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', marginTop: '1.4vmin' }}>
               <div className="serif" style={{ fontSize: '6.8vmin', lineHeight: .92 }}>$420,000</div>
-              <div className="mono" style={{ fontSize: '1.1vmin', lineHeight: 1.8, textAlign: 'right', color: '#777468' }}>TARGET<br /><strong style={{ color: '#302b43' }}>$2,000,000</strong></div>
+              <div className="mono" style={{ fontSize: '2.8vmin', lineHeight: 1.2, textAlign: 'right', color: '#777468' }}>TARGET<br /><strong style={{ color: '#302b43' }}>$2,000,000</strong></div>
             </div>
             <div className="progress-track" style={{ marginTop: '2.6vmin', height: '.85vmin' }}>
               <motion.div className="progress-fill" initial={{ scaleX: 0 }} animate={{ scaleX: .21 }} transition={{ delay: .65, duration: .9, ease: EASE }} style={{ height: '100%' }} />

@@ -13,7 +13,7 @@ export function Scene2() {
       transition={{ duration: .38, ease: EASE }}
       style={{ background: '#eae8df' }}
     >
-      <div className="mono" style={{ position: 'absolute', left: '6%', top: '6.2%', fontSize: '1.1vmin', color: '#a45e49' }}>01 / PUBLIC VIEW</div>
+      <div className="mono" style={{ position: 'absolute', left: '6%', top: '6.2%', fontSize: '2.8vmin', color: '#a45e49' }}>01 / PUBLIC VIEW</div>
       <motion.div
         initial={{ y: '3%', opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         transition={{ delay: .12, duration: .5, ease: EASE }}
@@ -62,7 +62,7 @@ export function Scene2() {
         initial={{ opacity: 0, scale: .94 }} animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 2.7, duration: .4, ease: EASE }}
         className="note-tag mono"
-        style={{ position: 'absolute', right: '7.2%', bottom: '8%', background: '#f0eee5', fontSize: '1.1vmin' }}
+        style={{ position: 'absolute', right: '7.2%', bottom: '8%', background: '#f0eee5', fontSize: '2.7vmin' }}
       >
         AGGREGATES ONLY
       </motion.div>
