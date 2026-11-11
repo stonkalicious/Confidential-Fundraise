@@ -31,7 +31,7 @@ test('text is trimmed before all minimum and maximum checks', () => {
 
 test('range fields reject malformed, nonpositive, fractional, unsafe, and reversed bounds', () => {
   for (const field of ['rangeMin', 'rangeMax']) {
-    for (const value of ['', ' ', 'bad', '0x10', '1,000', '€100', '0', '-1', '1.5', '9007199254740992', '1e309']) {
+    for (const value of ['', ' ', 'bad', '0x10', '1,000', '$100', '0', '-1', '1.5', '9007199254740992', '1e309']) {
       assert.deepEqual(Object.keys(validateRaiseForm({ ...valid, [field]: value }).errors), [field]);
     }
   }

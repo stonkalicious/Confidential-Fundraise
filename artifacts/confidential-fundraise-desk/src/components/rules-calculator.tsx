@@ -22,9 +22,9 @@ const DEFAULT_INPUTS: CalculatorInputs = {
   sponsorCarry: '20',
 };
 
-const currency = new Intl.NumberFormat('en-IE', {
+const currency = new Intl.NumberFormat('en-US', {
   style: 'currency',
-  currency: 'EUR',
+  currency: 'USD',
   maximumFractionDigits: 2,
 });
 
@@ -88,7 +88,7 @@ export default function RulesCalculator() {
       <div className="rules-layout">
         <form className="form-card rules-inputs" onSubmit={handleCalculate} noValidate>
           <div className="field-wrap">
-            <label className="field-label" htmlFor="rules-ticket-size">Ticket size (EUR)</label>
+            <label className="field-label" htmlFor="rules-ticket-size">Ticket size (USD)</label>
             <input
               className="field"
               id="rules-ticket-size"
@@ -101,7 +101,7 @@ export default function RulesCalculator() {
             />
           </div>
           <div className="field-wrap">
-            <label className="field-label" htmlFor="rules-total-proceeds">Total proceeds (EUR)</label>
+            <label className="field-label" htmlFor="rules-total-proceeds">Total proceeds (USD)</label>
             <input
               className="field"
               id="rules-total-proceeds"

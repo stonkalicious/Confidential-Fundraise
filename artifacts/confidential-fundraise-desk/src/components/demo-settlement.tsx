@@ -233,7 +233,7 @@ export function DemoSettlementCard({
       </button>
       {open && <div className="demo-settlement-body">
         <h3>Demo settlement — 1 test USDC</h3>
-        <p className="side-copy">Optional NEAR testnet transfer. Test USDC has no real value. This is not an Intents swap and does not change EUR commitment totals or fund rights.</p>
+        <p className="side-copy">Optional NEAR testnet transfer. Test USDC has no real value. This is not an Intents swap and does not change USD commitment totals or fund rights.</p>
         {!sponsor && receipt && !receipt.persisted &&
           <p className="inline-error">This browser could not save your demo receipt. Keep this tab open; reloading may lose access.</p>}
         {sponsor && !settlement && <>

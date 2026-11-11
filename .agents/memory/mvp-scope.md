@@ -11,9 +11,9 @@ Keep the focus very tight; don't add too much—it's an MVP.
 
 This product is a hackathon demo and uses synthetic raise and commitment data only. Do not add a real prospect tracker or expose investor identities publicly.
 
-**Why:** The user confirmed the demo is for a hackathon and chose demo data only.
+**Why:** The user confirmed the demo is for a hackathon, chose synthetic data only, and switched the displayed raise currency to USD without changing numeric values.
 
-**How to apply:** Keep settlement and EUR commitment totals distinct, show only anonymous public aggregates, and avoid building account or real-prospect management unless the user changes this scope.
+**How to apply:** Keep settlement and USD commitment totals distinct, show only anonymous public aggregates, and avoid building account or real-prospect management unless the user changes this scope.
 
 Optional demo settlement must not make the core claim / update / soft-commit /
 aggregate flow depend on a wallet. The user chose exactly 1 USDC, not a

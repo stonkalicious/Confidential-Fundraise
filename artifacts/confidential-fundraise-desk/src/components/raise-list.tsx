@@ -25,8 +25,8 @@ function errorMessage(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback;
 }
 
-const format = (amount: number) => new Intl.NumberFormat('en-IE', {
-  style: 'currency', currency: 'EUR', maximumFractionDigits: 0,
+const format = (amount: number) => new Intl.NumberFormat('en-US', {
+  style: 'currency', currency: 'USD', maximumFractionDigits: 0,
 }).format(amount);
 
 export default function RaiseList({
@@ -268,7 +268,7 @@ export default function RaiseList({
               </div>
               <div className="raise-range-fields">
                 <div className="field-wrap">
-                  <label className="field-label" htmlFor="raise-range-min">Range minimum (EUR)</label>
+                  <label className="field-label" htmlFor="raise-range-min">Range minimum (USD)</label>
                   <input
                     className="field"
                     id="raise-range-min"
@@ -284,7 +284,7 @@ export default function RaiseList({
                   {fieldError('rangeMin')}
                 </div>
                 <div className="field-wrap">
-                  <label className="field-label" htmlFor="raise-range-max">Range maximum (EUR)</label>
+                  <label className="field-label" htmlFor="raise-range-max">Range maximum (USD)</label>
                   <input
                     className="field"
                     id="raise-range-max"

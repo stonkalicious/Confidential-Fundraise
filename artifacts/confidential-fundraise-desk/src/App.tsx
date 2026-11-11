@@ -112,10 +112,10 @@ function isHttpStatus(error: unknown, status: number): boolean {
   return error !== null && typeof error === 'object' && 'status' in error && error.status === status;
 }
 
-function euro(value: number) {
-  return new Intl.NumberFormat('en-IE', {
+function usd(value: number) {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'EUR',
+    currency: 'USD',
     maximumFractionDigits: 0,
   }).format(value);
 }
@@ -626,7 +626,7 @@ function AppDesk({
         <Link className="raise-back-link" href="/">← Active raises</Link>
         <h1 className="raise-heading">{raise.companyName}</h1>
         <p className="section-copy">{raise.thesis}</p>
-        <div className="raise-details">{raise.stage} · {euro(raise.roundRange.min)} – {euro(raise.roundRange.max)}</div>
+        <div className="raise-details">{raise.stage} · {usd(raise.roundRange.min)} – {usd(raise.roundRange.max)}</div>
         {sourceLink && (
           <a
             className="raise-source-link"
@@ -677,7 +677,7 @@ function AppDesk({
                 <div className="field-wrap">
                   <label className="field-label" htmlFor="prospect-amount">Amount</label>
                   <div className="amount-input">
-                    <span className="currency">EUR</span>
+                    <span className="currency">USD</span>
                     <input
                       className="field"
                       id="prospect-amount"
@@ -701,8 +701,8 @@ function AppDesk({
             </div>
             <aside className="side-card">
                   <div className="side-label">Threshold</div>
-              <h3 className="side-title">{euro(target)}</h3>
-                  <p className="side-copy">The demo threshold is met when aggregate hard commitments reach {euro(target)}. Reaching it does not trigger settlement.</p>
+              <h3 className="side-title">{usd(target)}</h3>
+                  <p className="side-copy">The demo threshold is met when aggregate hard commitments reach {usd(target)}. Reaching it does not trigger settlement.</p>
             </aside>
           </section>
         )}
@@ -761,7 +761,7 @@ function AppDesk({
                                 {item.verified ? 'Verified commitment' : item.hard ? 'Hard commitment' : 'Soft commitment'}
                               </div>
                               <div className="record-name" data-testid="text-commitment-identifier">{item.identifier}</div>
-                              <div className="record-amount" data-testid="text-commitment-amount">{euro(item.amount)}</div>
+                              <div className="record-amount" data-testid="text-commitment-amount">{usd(item.amount)}</div>
                               {item.verified && (
                                 <div className="verification-label" data-testid="text-verification-label">NEAR confidential verification (demo — no blockchain call)</div>
                               )}
@@ -822,8 +822,8 @@ function AppDesk({
               </div>
               <aside className="side-card">
                 <div className="side-label">Threshold</div>
-                <h3 className="side-title">{euro(target)}</h3>
-                <p className="side-copy">The demo threshold is met when aggregate hard commitments reach {euro(target)}. Reaching it does not trigger settlement.</p>
+                <h3 className="side-title">{usd(target)}</h3>
+                <p className="side-copy">The demo threshold is met when aggregate hard commitments reach {usd(target)}. Reaching it does not trigger settlement.</p>
               </aside>
             </div>
             {quoteState && quotedCommitment && (
@@ -1075,31 +1075,31 @@ function AppDesk({
             <div className="progress-panel">
               <div className="progress-top">
                 <div>
-                  <div className="aggregate-label">Progress toward {euro(target)}</div>
-                  <div className="progress-total">{euro(hardTotal)}</div>
+                  <div className="aggregate-label">Progress toward {usd(target)}</div>
+                  <div className="progress-total">{usd(hardTotal)}</div>
                 </div>
-                <div className="progress-target"><strong>{progress.toFixed(1)}%</strong><br />of {euro(target)}</div>
+                <div className="progress-target"><strong>{progress.toFixed(1)}%</strong><br />of {usd(target)}</div>
               </div>
               <div
                 className="progress-line"
                 data-testid="progress-hard-total"
                 role="progressbar"
-                aria-label={`Progress toward ${euro(target)}`}
+                aria-label={`Progress toward ${usd(target)}`}
                 aria-valuemin={0}
                 aria-valuemax={target}
                 aria-valuenow={Math.min(hardTotal, target)}
               >
                 <div className="progress-fill" style={{ width: `${progress}%` }} />
               </div>
-              <div className="progress-scale"><span>€0</span><span>{euro(target)}</span></div>
+              <div className="progress-scale"><span>$0</span><span>{usd(target)}</span></div>
               <div className="aggregate-grid">
                 <div className="aggregate">
                   <div className="aggregate-label">Soft total</div>
-                  <div className="aggregate-value" data-testid="text-soft-total">{euro(softTotal)}</div>
+                  <div className="aggregate-value" data-testid="text-soft-total">{usd(softTotal)}</div>
                 </div>
                 <div className="aggregate">
                   <div className="aggregate-label">Hard total</div>
-                  <div className="aggregate-value" data-testid="text-hard-total">{euro(hardTotal)}</div>
+                  <div className="aggregate-value" data-testid="text-hard-total">{usd(hardTotal)}</div>
                 </div>
               </div>
               <div className="aggregate testnet-transfer-count" data-testid="text-confirmed-testnet-transfers">
@@ -1107,7 +1107,7 @@ function AppDesk({
                 <div className="aggregate-value">{raise.confirmedTestnetTransfers ?? 0}</div>
               </div>
               <div className="share-row">
-                <span className="share-note">The demo threshold is met at {euro(target)} in hard commitments. Reaching it does not trigger settlement.</span>
+                <span className="share-note">The demo threshold is met at {usd(target)} in hard commitments. Reaching it does not trigger settlement.</span>
                 <button className="quiet-button" data-testid="button-copy-share-url" type="button" onClick={copyShareUrl}>
                   Copy share URL <span className="button-arrow" aria-hidden="true">↗</span>
                 </button>
@@ -1126,10 +1126,10 @@ function AppDesk({
                 A prospect submits a soft commitment, and a founder can claim a raise with contact details. New raises stay out of the public list until a founder approves them. The Founder view uses a shared approval code to access individual commitments and claim contact details. Marking a commitment hard enables a dry-run NEAR Intents quote with fixed synthetic values; the quote never executes a swap. Separately, the founder and investor can confirm an optional transfer of exactly 1 test USDC on NEAR testnet.
               </p>
               <p>
-                Public pages and API responses show approved raise information, aggregate soft and hard EUR totals, and an anonymous count of confirmed testnet transfers. Individual commitment identifiers, amounts, and claim contact details are not included in public responses.
+                Public pages and API responses show approved raise information, aggregate soft and hard USD totals, and an anonymous count of confirmed testnet transfers. Individual commitment identifiers, amounts, and claim contact details are not included in public responses.
               </p>
               <p>
-                The pre-seeded raises and commitments are synthetic; do not enter sensitive real prospect information. Demo records are stored in PostgreSQL and persist across API restarts. Public pages show aggregate EUR soft and hard totals plus an anonymous count of server-confirmed testnet transfers. Investor identifiers, amounts, and names stay private. Test USDC has no real value and does not change EUR commitment totals.
+                The pre-seeded raises and commitments are synthetic; do not enter sensitive real prospect information. Demo records are stored in PostgreSQL and persist across API restarts. Public pages show aggregate USD soft and hard totals plus an anonymous count of server-confirmed testnet transfers. Investor identifiers, amounts, and names stay private. Test USDC has no real value and does not change USD commitment totals.
               </p>
             </article>
           </section>
@@ -1165,8 +1165,8 @@ function AppDesk({
 
               <h2>Illustrative structure</h2>
               <div className="thesis-structure">
-                <p>Minimum target example: €2 million.</p>
-                <p>Maximum example: €5 million.</p>
+                <p>Minimum target example: $2 million.</p>
+                <p>Maximum example: $5 million.</p>
                 <p>Simple fee and carry terms can be applied.</p>
                 <p>Lock-up and term are contractual.</p>
                 <p>All figures and terms in this document are synthetic examples for the demo.</p>

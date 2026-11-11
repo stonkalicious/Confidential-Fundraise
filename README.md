@@ -16,7 +16,7 @@ are different things; none is legal investment settlement.
 | --- | --- | --- |
 | Fundraising coordination | Stores raises, page claims, commitments, and totals in PostgreSQL. Founder endpoints require the shared approval code. | Does not put commitments onchain or encrypt the database with NEAR. Application operators can access stored data. |
 | NEAR Intents 1Click | Uses wallet authentication to request a live `dry: true` quote with `confidentiality: "basic"`, a fixed synthetic 1-USDC amount, and placeholder addresses. | Does not send investor identifiers or actual commitment amounts to NEAR, deposit tokens, execute a swap, or prove completed confidential settlement. |
-| Optional NEAR testnet transfer | With separate founder and investor confirmations, asks the investor's wallet to send exactly 1 test USDC using `ft_transfer`. The server verifies the finalized transaction. | Is not an Intents swap, is not confidential onchain, and does not fund the EUR commitment or change its hard/verified status. |
+| Optional NEAR testnet transfer | With separate founder and investor confirmations, asks the investor's wallet to send exactly 1 test USDC using `ft_transfer`. The server verifies the finalized transaction. | Is not an Intents swap, is not confidential onchain, and does not fund the USD commitment or change its hard/verified status. |
 
 The Intents path uses **mainnet authentication**; there is no Intents testnet.
 An already-registered wallet signs an authentication message. A wallet whose
@@ -117,14 +117,14 @@ Use a disposable demo database and synthetic data throughout. Expected results
 below describe the implemented flow, not evidence that every live wallet action
 has been completed.
 
-1. **Open `/` and choose a raise** → its Progress view shows public EUR totals,
+1. **Open `/` and choose a raise** → its Progress view shows public USD totals,
    not investor identifiers or individual amounts. Seeded entries are demo
    listings, not evidence that a company is seeking funding or endorses the app.
-2. **Open Prospect and submit `demo-investor-001` with EUR `10000`** → the
+2. **Open Prospect and submit `demo-investor-001` with USD `10000`** → the
    commitment is recorded. The app switches to Founder; enter the operator's
    approval code to see the private record. Keep the code off recordings.
 3. **Choose “Mark verified (demo)” on that record** → its hard/verified status
-   changes and hard EUR totals increase. This is a server-side demo status,
+   changes and hard USD totals increase. This is a server-side demo status,
    not blockchain verification.
 4. **Return to Progress, then open the raise in a separate private browser
    window** → only aggregates are visible; no private commitment list appears.
