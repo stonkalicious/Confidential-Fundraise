@@ -38,7 +38,7 @@ export function Scene1() {
           transition={{ type: 'spring', stiffness: 270, damping: 19 }}
           className="serif hero-line"
         >
-          {beat > 1 ? <>INTEREST.<br />WITHOUT<br />EXPOSURE.</> : beat > 0 ? 'WITHOUT' : 'INTEREST.'}
+          {beat > 1 ? <>LIST YOUR PROJECT<br />IN PUBLIC.</> : beat > 0 ? 'IN PUBLIC.' : 'LIST YOUR PROJECT'}
         </motion.div>
         {beat > 2 && (
           <motion.div
@@ -46,7 +46,7 @@ export function Scene1() {
             transition={{ duration: .35, ease: EASE }}
             className="fine-copy" style={{ marginTop: '2.5vmin', color: '#6f6b60', maxWidth: '28vmin' }}
           >
-            Public totals.<br />Private records.
+            Fund it privately with Near.<br />Agent first fundraising.
           </motion.div>
         )}
         {beat > 3 && (
