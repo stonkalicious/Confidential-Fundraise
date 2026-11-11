@@ -1,0 +1,29 @@
+kind = "video"
+videoAspectRatio = "16:9"
+previewPath = "/fundraise-app-animation/"
+title = "Confidential Fundraising — App Walkthrough"
+description = "A short animated walkthrough of the Confidential Fundraising demo app and its privacy-limited commitment flow."
+version = "1.0.0"
+id = "artifacts/fundraise-app-animation"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/fundraise-app-animation/" ]
+localPort = 20424
+
+[services.development]
+run = "pnpm --filter @workspace/fundraise-app-animation run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/fundraise-app-animation", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/fundraise-app-animation/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20424"
+BASE_PATH = "/fundraise-app-animation/"
