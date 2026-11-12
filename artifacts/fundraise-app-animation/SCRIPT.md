@@ -13,40 +13,40 @@ Scenes 01A, 02A and 02B are a **proposed workflow** (badged `PROPOSED WORKFLOW` 
 
 | Shot | Time | Focus | Main action | Handoff |
 |---|---:|---|---|---|
-| 00 | 0.00–20.50 | Context (supplied posts) | Patrick Collison post screenshot 0–6.5; Haseeb Qureshi post screenshot 6.5–17.0 (10.5 s reading time); question “What would a Raise.md file allow?” 17.0–20.5 | Fade → Intro |
-| 00B | 20.50–25.50 | Project introduction | `AgentRaised.com`; `Scrap webforms, emails and cold calls.`; `Let founders and investors use their agents to find the best matches.` | Fade → Shot 01A |
-| 01A | 25.50–34.00 | Founder prepares raise.md (proposed) | Founder prompts own agent; raise.md with sources + flagged gaps; founder approves public page | Rule draws under approval stamp |
-| 02A | 34.00–41.00 | Investor asks, agent discovers (proposed) | One approved “I’m looking for NEAR projects…” request; agent scans public raises, marks matches, reads raise.md | Matches carry into shortlist |
-| 02B | 41.00–50.00 | Agent review, human decides (proposed) | Shortlist; Evidence / Risks / Open questions; investor chooses to proceed; agent commits nothing | Rule → soft commitment |
-| 03 | 50.00–55.00 | Soft commitment | unchanged | → founder view |
-| 04 | 55.00–60.50 | Founder review | unchanged | → quote card |
-| 05 | 60.50–66.00 | Privacy boundary, honest close | unchanged | Loop to 00 |
+| 00 | 0.00–11.50 | Context (supplied posts) | Patrick Collison post screenshot 0–4.0; Haseeb Qureshi post screenshot 4.0–8.0 (4 s each, user-approved); question “What would a Raise.md file allow?” 8.0–11.5 | Fade → Intro |
+| 00B | 11.50–16.50 | Project introduction | `AgentRaised.com`; `Scrap webforms, emails and cold calls.`; `Let founders and investors use their agents to find the best matches.` | Fade → Shot 01A |
+| 01A | 16.50–25.00 | Founder prepares raise.md (proposed) | Founder prompts own agent; raise.md with sources + flagged gaps; founder approves public page | Rule draws under approval stamp |
+| 02A | 25.00–32.00 | Investor asks, agent discovers (proposed) | One approved “I’m looking for NEAR projects…” request; agent scans public raises, marks matches, reads raise.md | Matches carry into shortlist |
+| 02B | 32.00–41.00 | Agent review, human decides (proposed) | Shortlist; Evidence / Risks / Open questions; investor chooses to proceed; agent commits nothing | Rule → soft commitment |
+| 03 | 41.00–46.00 | Soft commitment | unchanged | → founder view |
+| 04 | 46.00–51.50 | Founder review | unchanged | → quote card |
+| 05 | 51.50–57.00 | Privacy boundary, honest close | unchanged | Loop to 00 |
 
 Shots 02–05 keep their original internal timings; choreography times are scene-relative.
 
 ## Shot-by-shot script
 
-### Shot 00 / 0.00–20.50s / 20.50s — CONTEXT
-**Exact content:** Large centred heading per beat: over the Collison post `Company formations are growing exponentially.`; over the Haseeb post `Company.md files let investors agents filter quickly.`; no heading over the question; supplied screenshot of Patrick Collison's post (attached_assets/Screenshot_2026-11-12_at_09.12.42…png) 0.00–6.50 (≈80% frame height); supplied screenshot of Haseeb Qureshi's post (…09.13.20…png) 6.50–17.00 at 86% frame width; then the question `What would a Raise.md file allow?` with an oxide rule drawing at 17.7. Posts are shown unaltered as context only; no endorsement of this app is stated or implied.
+### Shot 00 / 0.00–11.50s / 11.50s — CONTEXT
+**Exact content:** Large centred heading per beat: over the Collison post `Company formations are growing exponentially.`; over the Haseeb post `Company.md files let investors agents filter quickly.`; no heading over the question; supplied screenshot of Patrick Collison's post (attached_assets/Screenshot_2026-11-12_at_09.12.42…png) 0.00–4.00 (≈80% frame height); supplied screenshot of Haseeb Qureshi's post (…09.13.20…png) 4.00–8.00 at 86% frame width; then the question `What would a Raise.md file allow?` with an oxide rule drawing at 8.7. Posts are shown unaltered as context only; no endorsement of this app is stated or implied.
 **Transition:** question fades into Shot 01A (the former Promise shot 01 was removed at the user's request).
 
-### Shot 00B / 20.50–25.50s / 5.00s — AGENTRAISED.COM
+### Shot 00B / 11.50–16.50s / 5.00s — AGENTRAISED.COM
 **Exact content (user-approved):** `AgentRaised.com` (large serif, `.com` in oxide italic) and the two lines `Scrap webforms, emails and cold calls.` / `Let founders and investors use their agents to find the best matches.` No other copy.
 **Choreography:** 0.0 oxide rule draws down; 0.2 name rises; 0.9 first line; 1.6 second line; hold to 5.0 then fade.
 
-### Shot 01A / 25.50–34.00s / 8.50s — "FOUNDER PREPARES." (PROPOSED)
+### Shot 01A / 16.50–25.00s / 8.50s — "FOUNDER PREPARES." (PROPOSED)
 **Exact content:** Kicker `03 / FOUNDER PREPARES`; badge `PROPOSED WORKFLOW`; card `FOUNDER → OWN AGENT` / `OUTSIDE THE APP`; prompt `Create a raise.md from our company materials. Include sources and flag missing information.`; document `raise.md` with `# Privacy Token Fund`, `## Thesis`, `## Sources` `[1] Public fund thesis` · `[2] Public progress page`, `## Missing information` `! How are hard commitments confirmed?` (synthetic, user-approved); `FOUNDER REVIEW` + artwork `Approve public raise page`; stamp `APPROVED BY FOUNDER · THEN PUBLIC`.
 **Choreography:** 0.3–1.6 prompt words reveal; 1.8 raise.md rises (sources + gap readable for 3.6 s); 5.4 founder's public raise page review; 6.8 approve press → `Approved · public`; 7.7 rule draws.
 
-### Shot 02A / 34.00–41.00s / 7.00s — "THE AGENT SEARCHES." (PROPOSED)
+### Shot 02A / 25.00–32.00s / 7.00s — "THE AGENT SEARCHES." (PROPOSED)
 **Exact content:** Kicker `04 / INVESTOR ASKS · AGENT SEARCHES`; `INVESTOR → OWN AGENT`; single request `I’m looking for NEAR projects using agents for private fundraising and investor discovery. Find matching public raises and review them critically.` (user-approved wording); aside `One request. The investor does not browse or filter.`; agent log `Exploring public raises` → `Matching against your request` → `Reading raise.md + public sources`; right column `APP · PUBLIC RAISES (READ BY AGENT)` with five synthetic rows; three marked `match` then `raise.md read`, others dimmed. No cursor, no filter controls.
 **Choreography:** 0.4 request; 2.3 sweep lines scan rows; 3.7 matches lit; 5.0 raise.md read.
 
-### Shot 02B / 41.00–50.00s / 9.00s — "YOU DECIDE." (PROPOSED)
+### Shot 02B / 32.00–41.00s / 9.00s — "YOU DECIDE." (PROPOSED)
 **Exact content:** Kicker `05 / AGENT REVIEWS · INVESTOR DECIDES`; `SHORTLIST` three rows; aside `A critical review, not a certification.`; review card `Privacy Token Fund` with headings and approved synthetic text: `Evidence` — `The public thesis describes confidential cross-chain settlement. [1]`; `Risks` — `Hard status alone is not proof of payment. [2]`; `Open questions` — `What evidence confirms funding?`; decision bar `INVESTOR DECIDES` · `The agent commits nothing.` · `Proceed?` → `Proceeding with Privacy Token Fund`. Shortlist: Privacy Token Fund, Private Social Trading, Swarm-for-Hire.
 **Choreography:** Evidence 0.9, Risks 2.0, Open questions 3.1; boundary bar 4.4 (visible 2.5 s before choice); investor chooses 6.9; rule 7.8.
 
-### Shot 03 / 50.00–55.00s / 5.00s — “SOFT MEANS INTEREST.”
+### Shot 03 / 41.00–46.00s / 5.00s — “SOFT MEANS INTEREST.”
 **Purpose:** Show that a prospect can record an amount without transferring funds or needing a wallet.
 
 **Exact content:** Selected tab `Prospect`; form title `Submit a soft commitment`; label `IDENTIFIER`; typed value `demo-investor-001`; label `AMOUNT`; typed value `$10,000`; CTA artwork `Submit soft commitment`; success record `Soft commitment recorded`; exact caveat `Interest only · no money sent.` Footer `Wallet not required.` Keep all identifiers synthetic.
@@ -63,7 +63,7 @@ Shots 02–05 keep their original internal timings; choreography times are scene
 
 **Sound intent:** Music bed only; a light rhythmic accent on the submit press, not an added SFX.
 
-### Shot 04 / 55.00–60.50s / 5.50s — “A FOUNDER REVIEWS.”
+### Shot 04 / 46.00–51.50s / 5.50s — “A FOUNDER REVIEWS.”
 **Purpose:** Make clear that the founder can inspect the individual record privately, and that verification is an explicit founder action.
 
 **Exact content:** Header `Founder review · PRIVATE`; guidance `Mark hard only after confirmation.` Private record `demo-investor-001` / `$10,000` / `SOFT`; visual-only control `Mark verified (demo)`; status changes to `HARD · VERIFIED (DEMO)`; public aggregate `$430,000`; footer disclaimer `Demo status only. No funds moved.`
@@ -80,7 +80,7 @@ Shots 02–05 keep their original internal timings; choreography times are scene
 
 **Sound intent:** Strongest instrumental accent at verification stamp if available; cut at 18.50s to the next downbeat, timing to be confirmed after generation.
 
-### Shot 05 / 60.50–66.00s / 5.50s — “COORDINATION ≠ SETTLEMENT.”
+### Shot 05 / 51.50–57.00s / 5.50s — “COORDINATION ≠ SETTLEMENT.”
 **Purpose:** Finish with a memorable privacy principle and truthful boundaries around the optional NEAR Intents demo.
 
 **Exact content:** Quote card heading `NEAR INTENTS · OPTIONAL DEMO`; label `FIXED EXAMPLE`; amount `1 USDC`; route `Ethereum → Arbitrum`; animated wallet-authentication sequence `Connect NEAR wallet` → `Approve authentication · empty intent` → `Confidential quote returned`; badge `DRY-RUN QUOTE`; prominent `NO FUNDS MOVE`; legal note `A quote is not a payment or investment settlement.` Final lockup `Public totals. Private records.` with `DEMO ONLY · SYNTHETIC DATA`. No claim of successful live quote or onchain settlement.
@@ -95,9 +95,11 @@ Shots 02–05 keep their original internal timings; choreography times are scene
 
 **Assets and technique:** Existing supplied logo; UI and quote card recreated as graphic artwork; Instrument Serif close, DM Sans and mono labels; explicit legal boundary copy.
 
-**Sound intent:** Instrumental has a resolved cadence under the message; loop reset at 66 s. No VO or SFX requested.
+**Sound intent:** Instrumental has a resolved cadence under the message; loop reset at 57 s. No VO or SFX requested.
 
 ## Audio spec
-- Runtime: 66 s (`SCENE_DURATIONS`: 20.5 context + 5 intro + 8.5 prep + 7 discover + 9 review + 5 soft + 5.5 founder + 5.5 close; 8 scenes). Promise (former 01) and standalone Public progress (former 02) were removed at the user's request; the aggregate update remains inside Shot 04.
+- Runtime: 57 s (`SCENE_DURATIONS`: 11.5 context + 5 intro + 8.5 prep + 7 discover + 9 review + 5 soft + 5.5 founder + 5.5 close; 8 scenes). Promise (former 01) and standalone Public progress (former 02) were removed at the user's request; the aggregate update remains inside Shot 04.
 - Music: the existing original instrumental bed, re-edited (no new generation). The 24 s source is kept at `public/audio/source/bg_music_24s.mp3`; `bg_music.mp3` is an ffmpeg concat of its own phrases so every scene starts on the same bed material and the original cadence still resolves under Shot 05: 0–3 | 8–13+8–9.5 | 3–8 | 13–18.5+13–14.5 | 8–13+3–5.5 | 8–13 | 13–18.5 | 18.5–24. 40 ms fades at each splice. For Shot 00 a 20.5 s prefix of the same source (3–8 + 8–13 + 13–18.5 + 8–13, 40 ms fades) is prepended, so every later offset shifts by +20.5 s. The former Shot 01 bed segment (20.5–23.5 s of the previous file) was cut out with 40 ms fades. The former Shot 02 segment (27–32 s of the 62.5 s file) was also cut with 40 ms fades. Audio seeks per scene: context 0, 01A 20.5, 02A 27, 02B 34, 03 41.5, 04 46.5, 05 52. No VO or SFX.
 - Playback file: `bg_music.mp3` (66.06 s). Cuts removed the former Promise (3 s) and Public progress (5 s) segments; same-source inserts (40 ms fades): 5 s (src 8–13) at 20.5 for the intro, 2 s (src 13–15) at end of prep, 1.5 s (src 13–14.5) at end of review. Seek offsets: context 0, intro 20.5, 01A 25.5, 02A 34, 02B 41, 03 50, 04 55, 05 60.5.
+
+- **Opening tightened (user-approved):** each opening post now holds 4 s; context scene 20.5 → 11.5 s, runtime 66 → 57 s. `bg_music.mp3` (57.08 s) = first 11.5 s of the previous 66.06 s bed (kept at `public/audio/source/bg_music_66s_prev.mp3`) + its 20.5 s→end, 40 ms fades at the splice, so every later scene keeps its exact bed material. Current seek offsets: context 0, intro 11.5, 01A 16.5, 02A 25, 02B 32, 03 41, 04 46, 05 51.5.

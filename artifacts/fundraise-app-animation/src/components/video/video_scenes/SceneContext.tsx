@@ -10,8 +10,8 @@ const EASE = [0.2, 0.85, 0.2, 1] as const;
 export function SceneContext() {
   const [beat, setBeat] = useState(0);
   useSceneTimer([
-    { time: 6500, callback: () => setBeat(1) },
-    { time: 17000, callback: () => setBeat(2) },
+    { time: 4000, callback: () => setBeat(1) },
+    { time: 8000, callback: () => setBeat(2) },
   ]);
   return (
     <motion.section className="film" initial={{ opacity: 0 }} animate={{ opacity: 1 }}

@@ -28,3 +28,17 @@ mtime_ms = 1794479164039
 storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:85f370ce-7616-4218-a0bb-4a518cb308c3/f903e362-65da-4d6d-bad9-53ee6ed7bfe6/f33698f6-c737-439d-81c5-3c09fc26aba4"
 storage_version_token = "1794479309746507"
 content_type = "video/mp4"
+
+[[outputs]]
+id = "yX1zo2azl6CSkc4yZQYMk"
+uri = "file://generated-artifacts/agent-raised/Agent-Raised-App-Walkthrough-57s.mp4"
+type = "video"
+title = "Agent Raised — faster opening"
+description = "Updated 57-second walkthrough. Each opening tweet lasts 4 seconds; the Raise.md question and later scene durations are preserved. MP4, 720p, with audio."
+logical_id = "b4e88b70-56cd-4c49-a6d5-0f348c9bf8a6"
+content_hash = "sha256:16a9ea3079ebd52f68201e0b42b7a9b1747a8f5bfb44aa9f31dc115b41dc23b4"
+size = 4133527
+mtime_ms = 1794479678751
+storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:85f370ce-7616-4218-a0bb-4a518cb308c3/b4e88b70-56cd-4c49-a6d5-0f348c9bf8a6/8dcd2aa5-8d73-4f17-99dc-5ddf680bd0f3"
+storage_version_token = "1794479748407060"
+content_type = "video/mp4"

@@ -17,7 +17,7 @@ import { SceneReview } from './video_scenes/SceneReview';
 import './walkthrough.css';
 
 export const SCENE_DURATIONS = {
-  context: 20500,
+  context: 11500,
   intro: 5000,
   prep: 8500,
   discover: 7000,
