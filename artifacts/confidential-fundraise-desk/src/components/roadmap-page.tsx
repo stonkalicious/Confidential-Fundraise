@@ -13,20 +13,16 @@ export default function RoadmapPage() {
           <p className="roadmap-intro">
             The current demo stores soft commitments in a shared API, with a demo-only hard-commitment status, an illustrative NEAR Intents quote, and an aggregate-only progress view.
           </p>
-          <h2 className="roadmap-list-title">Possible extensions:</h2>
+          <h2 className="roadmap-list-title">Proposed agent workflow</h2>
           <ul className="roadmap-list">
-            <li>Programmable fees taken automatically on commitment or over time</li>
-            <li>Hard caps on total commitments</li>
-            <li>Time-locks and minimum holding periods</li>
-            <li>Preferred-return or hurdle gates before distributions</li>
-            <li>Automated distribution waterfalls</li>
-            <li>Capital calls and scheduled drawdowns</li>
-            <li>Default and reallocation rules</li>
-            <li>Per-commitment restrictions or excuse provisions</li>
-            <li>Post-close asset allocation or swaps under the same confidential path</li>
+            <li>Founders use their own agents to prepare a <strong>raise.md</strong> from company materials, including sources and flagged missing information.</li>
+            <li>Founders review and approve the information before it becomes public.</li>
+            <li>Investors use their own agents to find public raises matching their interests.</li>
+            <li>Agents compare the evidence, risks and open questions and return a shortlist.</li>
+            <li>Investors decide whether to proceed. The agent commits nothing.</li>
           </ul>
           <p className="roadmap-outro">
-            All of the above can be expressed as mechanical rules on the NEAR Intents confidential settlement layer. None of them are required for the current demo.
+            This workflow is proposed, not built into the current demo. Public discovery would use public raise information only—not private commitments or investor contact details.
           </p>
         </section>
       </main>
