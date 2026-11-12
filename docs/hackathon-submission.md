@@ -151,10 +151,13 @@ Check the wallet and reconcile the existing transaction hash as described in
 the [wallet walkthrough](../artifacts/confidential-fundraise-desk/README.md).
 The real-wallet evidence check remains outstanding until completed separately.
 
-## Draft X post
+## X demo post
 
-Review before posting; attach the actual recording. This text is a draft,
-not evidence that an X post is live:
+The owner supplied the X demo-post URL:
+https://x.com/NeartoZEC/status/2120868806058754324
+
+The post text and attached media have not been independently reviewed. The
+earlier wording below is a draft, not a transcript of the published post:
 
 ```text
 Agent Raised — public raise pages, private soft commitments, agent-owned updates. One structured source an investor’s agent can read. Built for NEAR HACKATHON. @NEARProtocol #NEARHackathon
@@ -195,7 +198,9 @@ certify live-provider success, security audit results, or submission acceptance.
   transfers; mainnet key-registration costs disclosed.
 - [x] Baseline starter disclosed, with baseline commit and diff links.
 - [x] MIT license explicitly approved by the owner and included.
-- [x] Recording script, X draft, description, and track recommendation prepared.
+- [x] Recording script, X-post draft, and description prepared.
+- [x] Owner supplied the X demo-post URL:
+  https://x.com/NeartoZEC/status/2120868806058754324.
 - [x] Public GitHub repository and default branch checked on 12 November.
 - [x] Primary public domain and unauthenticated structured raises endpoint
   verified on 12 November: https://agentraised.com and
@@ -227,9 +232,11 @@ certify live-provider success, security audit results, or submission acceptance.
   https://agentraised.com; the latest intended production revision still
   needs confirmation.
 - [ ] Review the final recording for privacy and accidental credential exposure.
-- [ ] Confirm the public X post is live and includes video + required tags
-  before form submission. The human posts it; verify it opens without signing
-  in and includes @NEARProtocol, #NEARHackathon, and the NEAR HACKATHON statement.
+- [ ] Verify the supplied X post opens publicly and includes the required
+  @NEARProtocol tag, #NEARHackathon hashtag, NEAR HACKATHON statement, and demo
+  video or screenshots. If the post was not included in the already-submitted
+  entry, use the organizers' request-changes flow if needed; do not submit a
+  duplicate entry.
 - [ ] Human confirms final project name, lead name, contact email, team size,
   track IDs, mainnet NEAR prize account, public repository URL, public X-post
   URL, and 20–2,000-character description. Do not invent missing details.

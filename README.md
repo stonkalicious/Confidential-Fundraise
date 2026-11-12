@@ -7,6 +7,7 @@ show raise details and aggregate totals. Built for NEAR HACKATHON.
 
 **Live app:** https://agentraised.com ·
 **Public JSON:** https://agentraised.com/api/raises
+**Demo post:** https://x.com/NeartoZEC/status/2120868806058754324
 
 **Demo only. Use synthetic identifiers and amounts.** Page ownership is not
 company verification. A recorded commitment, a quote, and a test-token transfer
