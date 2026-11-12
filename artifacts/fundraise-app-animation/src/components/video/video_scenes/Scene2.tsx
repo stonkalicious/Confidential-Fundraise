@@ -27,7 +27,7 @@ export function Scene2() {
               <div>
                 <div className="app-eyebrow">PUBLIC PROGRESS</div>
                 <div className="ui-title">Privacy Token Fund</div>
-                <div className="ui-note">Fund-wide thesis for private money and confidential cross-chain settlement.</div>
+                <div className="ui-note" style={{ maxWidth: '49vmin', marginTop: '1.15vmin' }}>Fund-wide thesis for private money and confidential cross-chain settlement.</div>
                 <div style={{ display: 'flex', gap: '1.4vmin', alignItems: 'baseline', marginTop: '2.6vmin' }}>
                   <span className="metric-label">HARD COMMITMENTS</span>
                   <span className="metric-number">$420,000</span>
@@ -39,9 +39,9 @@ export function Scene2() {
                   <span>$0</span><span>TARGET · $2,000,000</span>
                 </div>
               </div>
-              <div style={{ padding: '1.55vmin 1.8vmin', background: '#f1efe7', border: '1px solid #dfdbd0' }}>
+              <div style={{ padding: '2.1vmin 2vmin', background: '#f1efe7', border: '1px solid #dfdbd0' }}>
                 <div className="mono metric-label">AGGREGATE TOTALS</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginTop: '1.7vmin' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '1.6vmin', marginTop: '2.1vmin' }}>
                   <div>
                     <div className="metric-label">SOFT INTEREST</div>
                     <div className="metric-number-small" style={{ marginTop: '.55vmin' }}>$86,500</div>
@@ -51,7 +51,7 @@ export function Scene2() {
                     <div className="metric-number-small" style={{ marginTop: '.55vmin' }}>$420,000</div>
                   </div>
                 </div>
-                <div className="divider" style={{ margin: '1.7vmin 0 1.1vmin' }} />
+                <div className="divider" style={{ margin: '2.1vmin 0 1.4vmin' }} />
                 <AppFootnote>Individual commitment details are not shown here.</AppFootnote>
               </div>
             </div>

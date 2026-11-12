@@ -61,10 +61,10 @@ export function Scene3() {
                   {submitted ? 'Soft commitment recorded' : 'Submit soft commitment'}
                 </motion.div>
               </div>
-              <div style={{ borderLeft: '1px solid #ded9cc', paddingLeft: '2vmin', paddingTop: '1.8vmin' }}>
+              <div style={{ borderLeft: '1px solid #ded9cc', paddingLeft: '2.5vmin', paddingTop: '2.3vmin' }}>
                 <div className="mono metric-label" style={{ color: '#a45e49' }}>THRESHOLD</div>
-                <div className="serif" style={{ marginTop: '1vmin', fontSize: '3.8vmin' }}>$2,000,000</div>
-                <div className="ui-note" style={{ marginTop: '1vmin' }}>Aggregate hard commitments reach the threshold. This does not trigger settlement.</div>
+                <div className="serif" style={{ marginTop: '1.5vmin', fontSize: '3.8vmin' }}>$2,000,000</div>
+                <div className="ui-note" style={{ marginTop: '1.6vmin', lineHeight: 1.55 }}>Aggregate hard commitments reach the threshold. This does not trigger settlement.</div>
               </div>
             </div>
           </div>

@@ -19,7 +19,7 @@ export function AppMasthead({ flag = 'DEMO ONLY' }: { flag?: string }) {
         <img src={`${import.meta.env.BASE_URL}images/fundraising-logo.png`} alt="" />
         <div>
           <div className="brand-title">Confidential Fundraising</div>
-          <div className="brand-kicker" style={{ marginTop: '.2vmin' }}>Powered by NEAR</div>
+          <div className="brand-kicker" style={{ marginTop: '.55vmin' }}>Powered by NEAR</div>
         </div>
       </div>
       <span className="app-flag">{flag}</span>

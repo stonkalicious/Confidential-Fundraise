@@ -35,7 +35,7 @@ export function Scene4() {
             <div style={{ marginTop: '1.8vmin' }}>
               <div className="app-eyebrow">FOUNDER REVIEW · PRIVATE</div>
               <div className="ui-title" style={{ fontSize: '2.75vmin' }}>Review commitments</div>
-              <div className="ui-note">Mark hard only after confirmation.</div>
+              <div className="ui-note" style={{ marginTop: '.8vmin' }}>Mark hard only after confirmation.</div>
               <motion.div
                 animate={conceal ? { opacity: .95, x: '-1%' } : { opacity: 1, x: 0 }}
                 transition={{ duration: .32 }}
@@ -89,7 +89,7 @@ export function Scene4() {
           </div>
           <div className="mono metric-label" style={{ marginTop: '.8vmin', display: 'flex', justifyContent: 'space-between' }}><span>21%</span><span>TARGET $2M</span></div>
           <div className="divider" style={{ margin: '2.1vmin 0 1.3vmin' }} />
-          <div className="ui-note">This view shows the updated total—not who committed.</div>
+          <div className="ui-note" style={{ lineHeight: 1.5, maxWidth: '31vmin' }}>This view shows the updated total—not who committed.</div>
           <div style={{ marginTop: 'auto', color: '#8d8a7e', font: '2.8vmin/1.2 var(--mono)', textTransform: 'uppercase', letterSpacing: '.025em' }}>Demo status only.<br />No funds moved.</div>
         </motion.div>
       </div>

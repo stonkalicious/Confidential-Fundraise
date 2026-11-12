@@ -9,8 +9,8 @@
 .film .ui-note { text-wrap: pretty; }
 .quote-wallet-flow {
   position: relative;
-  margin-top: 1.55vmin;
-  padding: 1.05vmin 1.15vmin .7vmin;
+  margin-top: 1.9vmin;
+  padding: 1.5vmin 1.45vmin 1vmin;
   overflow: hidden;
   border: 1px solid #d5d0c3;
   background: #efede4;
@@ -19,19 +19,19 @@
   display: flex;
   align-items: center;
   gap: .65vmin;
-  min-height: 3.1vmin;
-  padding-bottom: .75vmin;
+  min-height: 4vmin;
+  padding-bottom: 1.15vmin;
   color: #39344d;
-  font: 600 2.45vmin/1 var(--mono);
-  letter-spacing: .025em;
+  font: 600 2.2vmin/1.35 var(--mono);
+  letter-spacing: .015em;
 }
 .quote-wallet-heading svg { width: 3vmin; height: 3vmin; flex: 0 0 auto; stroke: currentColor; stroke-width: 1.45; }
 .quote-wallet-demo { margin-left: auto; color: #8c877a; font-size: 1.75vmin; letter-spacing: .015em; }
 .quote-wallet-progress {
   position: absolute;
-  top: 4.05vmin;
-  left: 1.15vmin;
-  right: 1.15vmin;
+  top: 4.8vmin;
+  left: 1.45vmin;
+  right: 1.45vmin;
   height: .2vmin;
   background: #b86148;
   transform: scaleX(0);
@@ -41,11 +41,11 @@
   display: flex;
   align-items: center;
   gap: 1vmin;
-  min-height: 5.1vmin;
-  padding: .55vmin .55vmin;
+  min-height: 5.8vmin;
+  padding: .9vmin .65vmin;
   border-top: 1px solid #dedacf;
   color: #4a4556;
-  font: 500 2.5vmin/1.1 var(--sans);
+  font: 500 2.35vmin/1.35 var(--sans);
   transform-origin: left center;
 }
 .quote-wallet-step.is-active { color: #302b43; }
@@ -59,7 +59,7 @@
 }
 .quote-wallet-marker.is-active { background: #b86148; }
 .quote-wallet-marker.is-complete { background: #66806b; }
-.quote-return-status { display: flex; align-items: center; justify-content: space-between; gap: 1vmin; min-height: 3.1vmin; margin-top: 1vmin; }
+.quote-return-status { display: flex; align-items: center; justify-content: space-between; gap: 1vmin; min-height: 3.6vmin; margin-top: 1.35vmin; }
 .quote-no-funds { color: #a34e3d; font-size: 2.45vmin; letter-spacing: .035em; white-space: nowrap; }
 .video-control-wrap { position: relative; width: 100%; height: 100dvh; overflow: hidden; }
 .video-control-sensor {
