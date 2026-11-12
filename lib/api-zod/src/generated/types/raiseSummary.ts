@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { RaiseCategory } from './raiseCategory';
 import type { RaiseRange } from './raiseRange';
 import type { RaiseSummaryStatus } from './raiseSummaryStatus';
 
@@ -15,6 +16,7 @@ export interface RaiseSummary {
   stage: string;
   range: RaiseRange;
   rangeIsIndicative?: boolean;
+  categories?: RaiseCategory[];
   sourceLink?: string;
   claimed: boolean;
   status?: RaiseSummaryStatus;

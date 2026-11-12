@@ -151,6 +151,7 @@ export const GetRaisesResponseItem = zod.object({
   "max": zod.int().min(1)
 }),
   "rangeIsIndicative": zod.boolean().optional(),
+  "categories": zod.array(zod.enum(['privacy-security', 'ai-agents', 'intents-payments', 'consumer-real-world'])).optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
@@ -234,6 +235,7 @@ export const UpdateAgentRaiseResponse = zod.object({
   "max": zod.int().min(1)
 }),
   "rangeIsIndicative": zod.boolean().optional(),
+  "categories": zod.array(zod.enum(['privacy-security', 'ai-agents', 'intents-payments', 'consumer-real-world'])).optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
@@ -271,6 +273,7 @@ export const GetRaiseByIdResponse = zod.object({
   "max": zod.int().min(1)
 }),
   "rangeIsIndicative": zod.boolean().optional(),
+  "categories": zod.array(zod.enum(['privacy-security', 'ai-agents', 'intents-payments', 'consumer-real-world'])).optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
@@ -311,6 +314,7 @@ export const ReserveAgentRaiseResponse = zod.object({
   "max": zod.int().min(1)
 }),
   "rangeIsIndicative": zod.boolean().optional(),
+  "categories": zod.array(zod.enum(['privacy-security', 'ai-agents', 'intents-payments', 'consumer-real-world'])).optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
@@ -350,6 +354,7 @@ export const GetPrivateRaiseResponse = zod.object({
   "max": zod.int().min(1)
 }),
   "rangeIsIndicative": zod.boolean().optional(),
+  "categories": zod.array(zod.enum(['privacy-security', 'ai-agents', 'intents-payments', 'consumer-real-world'])).optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
@@ -400,6 +405,7 @@ export const ApproveRaiseResponse = zod.object({
   "max": zod.int().min(1)
 }),
   "rangeIsIndicative": zod.boolean().optional(),
+  "categories": zod.array(zod.enum(['privacy-security', 'ai-agents', 'intents-payments', 'consumer-real-world'])).optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
@@ -451,6 +457,7 @@ export const ClaimRaiseResponse = zod.object({
   "max": zod.int().min(1)
 }),
   "rangeIsIndicative": zod.boolean().optional(),
+  "categories": zod.array(zod.enum(['privacy-security', 'ai-agents', 'intents-payments', 'consumer-real-world'])).optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
@@ -503,6 +510,7 @@ export const SubmitSoftCommitmentResponse = zod.object({
   "max": zod.int().min(1)
 }),
   "rangeIsIndicative": zod.boolean().optional(),
+  "categories": zod.array(zod.enum(['privacy-security', 'ai-agents', 'intents-payments', 'consumer-real-world'])).optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),
@@ -546,6 +554,7 @@ export const UpdateRaiseCommitmentResponse = zod.object({
   "max": zod.int().min(1)
 }),
   "rangeIsIndicative": zod.boolean().optional(),
+  "categories": zod.array(zod.enum(['privacy-security', 'ai-agents', 'intents-payments', 'consumer-real-world'])).optional(),
   "sourceLink": zod.url().optional(),
   "claimed": zod.boolean(),
   "status": zod.enum(['open', 'paused', 'closed']).optional(),

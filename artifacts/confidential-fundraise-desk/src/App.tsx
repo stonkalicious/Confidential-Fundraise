@@ -71,6 +71,7 @@ function mergeApiRaise(summary: RaiseSummary, base: Raise): Raise {
     stage: summary.stage,
     sourceLink: summary.sourceLink ?? base.sourceLink,
     rangeIsIndicative: summary.rangeIsIndicative ?? base.rangeIsIndicative,
+    categories: summary.categories ?? base.categories,
     roundRange: summary.range,
     claimed: summary.claimed || Boolean(base.claim),
     claimantName: summary.claimantName ?? base.claimantName ?? base.claim?.founderName ?? null,

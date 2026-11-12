@@ -16,6 +16,7 @@ import {
   type PrivateRaiseDetails,
   type RaiseCommitment,
   type RaiseRange,
+  type RaiseCategory,
   type RaiseSubmissionInput,
   type RaiseSubmissionReceipt,
   type RaiseSummary,
@@ -35,6 +36,7 @@ type RaiseRecord = {
   status: "approved" | "pending";
   publicStatus?: "open" | "paused" | "closed";
   sourceLink?: string;
+  categories?: RaiseCategory[];
   agentClaimTokenHash?: string;
   demoInvestorReceiptHashes?: Record<string, string>;
   claim?: {
@@ -54,6 +56,7 @@ const seedData: Omit<RaiseRecord, "position">[] = [
     thesis: "Fund-wide thesis for private money and confidential cross-chain settlement.",
     stage: "Fundraise",
     range: { min: 2_000_000, max: 5_000_000 },
+    categories: ["privacy-security"],
     status: "approved",
     commitments: [],
     softTotal: 0,
@@ -65,6 +68,7 @@ const seedData: Omit<RaiseRecord, "position">[] = [
     thesis: "Each disputed fact becomes an ongoing market; AI writes a public page from the market’s current view.",
     stage: "Seed",
     range: { min: 1_000_000, max: 2_000_000 },
+    categories: ["ai-agents"],
     status: "approved",
     commitments: [],
     softTotal: 0,
@@ -76,6 +80,7 @@ const seedData: Omit<RaiseRecord, "position">[] = [
     thesis: "Traders keep NEAR Intents positions private by default and share temporary viewing keys with selected followers; everyone else sees public PnL.",
     stage: "Pre-seed",
     range: { min: 500_000, max: 1_000_000 },
+    categories: ["privacy-security", "intents-payments"],
     status: "approved",
     commitments: [],
     softTotal: 0,
@@ -87,6 +92,7 @@ const seedData: Omit<RaiseRecord, "position">[] = [
     thesis: "A single checkout button lets users pay with an existing wallet and chain through NEAR Intents.",
     stage: "Series A",
     range: { min: 3_000_000, max: 5_000_000 },
+    categories: ["intents-payments"],
     status: "approved",
     commitments: [],
     softTotal: 0,
@@ -98,6 +104,7 @@ const seedData: Omit<RaiseRecord, "position">[] = [
     thesis: "Job posters set a NEAR budget; others fund agent inference, and accepted work is paid from the budget.",
     stage: "Pre-seed",
     range: { min: 500_000, max: 1_000_000 },
+    categories: ["ai-agents"],
     status: "approved",
     commitments: [],
     softTotal: 0,
@@ -117,6 +124,7 @@ export type PublicRaiseSeed = {
   range: RaiseRange;
   rangeIsIndicative?: boolean;
   sourceLink?: string;
+  categories?: RaiseCategory[];
 };
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
@@ -182,6 +190,28 @@ export function parsePublicRaiseSeeds(value: unknown): PublicRaiseSeed[] {
       throw new Error(`${label} rangeIsIndicative must be a boolean when provided.`);
     }
 
+    let categories: RaiseCategory[] | undefined;
+    if (entry.categories !== undefined) {
+      if (!Array.isArray(entry.categories) || entry.categories.length === 0) {
+        throw new Error(`${label} categories must be a non-empty array when provided.`);
+      }
+      const validCategories = new Set<string>([
+        "privacy-security",
+        "ai-agents",
+        "intents-payments",
+        "consumer-real-world",
+      ]);
+      if (
+        entry.categories.some((category) =>
+          typeof category !== "string" || !validCategories.has(category),
+        ) ||
+        new Set(entry.categories).size !== entry.categories.length
+      ) {
+        throw new Error(`${label} categories must contain unique supported category values.`);
+      }
+      categories = entry.categories as RaiseCategory[];
+    }
+
     let sourceLink: string | undefined;
     if (entry.sourceLink !== undefined) {
       if (typeof entry.sourceLink !== "string" || !entry.sourceLink.trim()) {
@@ -209,6 +239,7 @@ export function parsePublicRaiseSeeds(value: unknown): PublicRaiseSeed[] {
       range: { min: entry.range.min as number, max: entry.range.max as number },
       ...(entry.rangeIsIndicative === true ? { rangeIsIndicative: true } : {}),
       ...(sourceLink ? { sourceLink } : {}),
+      ...(categories ? { categories } : {}),
     });
   }
   return parsedSeeds;
@@ -224,6 +255,12 @@ const publicSeededRaises: RaiseRecord[] = parsePublicRaiseSeeds(publicRaiseSeedD
     softTotal: 0,
     hardTotal: 0,
   }),
+);
+const defaultCategoriesByRaiseId = new Map(
+  [...seededRaises, ...publicSeededRaises]
+    .filter((raise): raise is RaiseRecord & { categories: RaiseCategory[] } =>
+      Array.isArray(raise.categories) && raise.categories.length > 0)
+    .map((raise) => [raise.id, raise.categories]),
 );
 
 let raises = seededRaises.map(cloneRaise);
@@ -244,6 +281,7 @@ function cloneRaise(raise: RaiseRecord): RaiseRecord {
   return {
     ...raise,
     range: { ...raise.range },
+    ...(raise.categories ? { categories: [...raise.categories] } : {}),
     ...(raise.claim ? { claim: { ...raise.claim } } : {}),
     ...(raise.demoInvestorReceiptHashes
       ? { demoInvestorReceiptHashes: { ...raise.demoInvestorReceiptHashes } }
@@ -297,6 +335,7 @@ function raiseFromDatabase(state: unknown, position: number): RaiseRecord {
       ? { claimantName: claim.founderName }
       : {}),
   });
+  const categories = parsed.categories ?? defaultCategoriesByRaiseId.get(parsed.id);
 
   return {
     id: parsed.id,
@@ -305,6 +344,7 @@ function raiseFromDatabase(state: unknown, position: number): RaiseRecord {
     thesis: parsed.thesis,
     stage: parsed.stage,
     range: parsed.range,
+    ...(categories ? { categories: [...categories] } : {}),
     ...(parsed.rangeIsIndicative === true ? { rangeIsIndicative: true } : {}),
     status: storedState.status,
     publicStatus: parsed.status ?? "open",
@@ -414,12 +454,15 @@ export type RaiseStoreResult =
   | { kind: "invalidStatus" };
 
 function publicSnapshot(raise: RaiseRecord): RaiseSummary {
+  const categories = raise.categories ?? defaultCategoriesByRaiseId.get(raise.id);
   return GetRaiseByIdResponse.parse({
     id: raise.id,
     name: raise.name,
     thesis: raise.thesis,
     stage: raise.stage,
     range: raise.range,
+    ...(categories ? { categories } : {}),
+    ...(raise.categories ? { categories: raise.categories } : {}),
     ...(raise.rangeIsIndicative === true ? { rangeIsIndicative: true } : {}),
     ...(raise.sourceLink ? { sourceLink: raise.sourceLink } : {}),
     claimed: Boolean(raise.claim || raise.agentClaimTokenHash),

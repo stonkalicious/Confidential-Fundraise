@@ -196,6 +196,16 @@ export interface RaiseRange {
   max: number;
 }
 
+export type RaiseCategory = typeof RaiseCategory[keyof typeof RaiseCategory];
+
+
+export const RaiseCategory = {
+  'privacy-security': 'privacy-security',
+  'ai-agents': 'ai-agents',
+  'intents-payments': 'intents-payments',
+  'consumer-real-world': 'consumer-real-world',
+} as const;
+
 export type RaiseSummaryStatus = typeof RaiseSummaryStatus[keyof typeof RaiseSummaryStatus];
 
 
@@ -212,6 +222,7 @@ export interface RaiseSummary {
   stage: string;
   range: RaiseRange;
   rangeIsIndicative?: boolean;
+  categories?: RaiseCategory[];
   sourceLink?: string;
   claimed: boolean;
   status?: RaiseSummaryStatus;

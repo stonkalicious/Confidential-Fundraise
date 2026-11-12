@@ -11,7 +11,7 @@ import {
   type PendingRaise,
 } from '@workspace/api-client-react';
 import { Link } from 'wouter';
-import { getSafeSourceLink, type Raise } from '@/data/raises';
+import { getSafeSourceLink, RAISE_CATEGORIES, type Raise, type RaiseCategory } from '@/data/raises';
 import SiteHeader from '@/components/site-header';
 import { validateRaiseForm } from '@/lib/raise-submission';
 
@@ -45,6 +45,7 @@ export default function RaiseList({
   const [submissionMessage, setSubmissionMessage] = useState('');
   const [submissionError, setSubmissionError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<SubmissionErrors>({});
+  const [selectedCategory, setSelectedCategory] = useState<RaiseCategory | null>(null);
 
   function clearFieldError(field: SubmissionField) {
     setSubmissionError('');
@@ -153,6 +154,10 @@ export default function RaiseList({
     }
   }
 
+  const visibleRaises = selectedCategory
+    ? raises.filter((raise) => raise.categories?.includes(selectedCategory))
+    : raises;
+
   return (
     <div className="app-shell">
       <SiteHeader />
@@ -160,8 +165,29 @@ export default function RaiseList({
         <div className="raise-home-grid">
           <section className="raise-list-column">
             <h1 className="section-title">Active raises</h1>
+            <div className="raise-category-filters" role="group" aria-label="Categories">
+              <button
+                className="raise-category-filter"
+                type="button"
+                aria-pressed={selectedCategory === null}
+                onClick={() => setSelectedCategory(null)}
+              >
+                All
+              </button>
+              {RAISE_CATEGORIES.map((category) => (
+                <button
+                  className="raise-category-filter"
+                  key={category.id}
+                  type="button"
+                  aria-pressed={selectedCategory === category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                >
+                  {category.label}
+                </button>
+              ))}
+            </div>
             <ul className="raise-list" data-testid="raise-list">
-              {raises.map((raise) => {
+              {visibleRaises.map((raise) => {
                 const sourceLink = getSafeSourceLink(raise.sourceLink);
                 return (
                   <li key={raise.id}>
@@ -169,6 +195,16 @@ export default function RaiseList({
                       <div>
                         <h2 className="section-title">{raise.companyName}</h2>
                         <p className="section-copy">{raise.thesis}</p>
+                        {raise.categories && raise.categories.length > 0 && (
+                          <div className="raise-category-tags">
+                            {raise.categories.map((categoryId) => {
+                              const category = RAISE_CATEGORIES.find(({ id }) => id === categoryId);
+                              return category ? (
+                                <span className="raise-category-tag" key={category.id}>{category.label}</span>
+                              ) : null;
+                            })}
+                          </div>
+                        )}
                         <div className="raise-details">
                           {raise.stage} · {format(raise.roundRange.min)} – {format(raise.roundRange.max)}
                         </div>

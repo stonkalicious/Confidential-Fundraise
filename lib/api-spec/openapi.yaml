@@ -970,6 +970,10 @@ components:
           $ref: "#/components/schemas/RaiseRange"
         rangeIsIndicative:
           type: boolean
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/RaiseCategory"
         sourceLink:
           type: string
           format: uri
@@ -998,6 +1002,13 @@ components:
         - claimed
         - softTotal
         - hardTotal
+    RaiseCategory:
+      type: string
+      enum:
+        - privacy-security
+        - ai-agents
+        - intents-payments
+        - consumer-real-world
     PrivateRaiseDetails:
       allOf:
         - $ref: "#/components/schemas/RaiseSummary"

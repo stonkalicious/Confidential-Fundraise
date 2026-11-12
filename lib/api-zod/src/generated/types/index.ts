@@ -41,6 +41,7 @@ export * from './nearIntentsSignedDataPayload';
 export * from './pendingRaise';
 export * from './pendingRaiseStatus';
 export * from './privateRaiseDetails';
+export * from './raiseCategory';
 export * from './raiseClaim';
 export * from './raiseClaimInput';
 export * from './raiseClaimStatus';

@@ -28,6 +28,7 @@ test("public raise seed entries validate, insert once, expose attribution, and p
     stage: "Demo concept",
     range: { min: 25_000, max: 75_000 },
     rangeIsIndicative: true,
+    categories: ["privacy-security"],
     status: "approved",
     sourceLink,
     commitments: [],
@@ -53,6 +54,7 @@ test("public raise seed entries validate, insert once, expose attribution, and p
         stage: seed.stage,
         range: seed.range,
         rangeIsIndicative: seed.rangeIsIndicative,
+        categories: seed.categories,
         sourceLink,
       },
       {
@@ -68,6 +70,7 @@ test("public raise seed entries validate, insert once, expose attribution, and p
       stage: seed.stage,
       range: seed.range,
       rangeIsIndicative: true,
+      categories: ["privacy-security"],
       sourceLink,
     }],
   );
@@ -78,13 +81,27 @@ test("public raise seed entries validate, insert once, expose attribution, and p
     { name: "Bad order", thesis: seed.thesis, stage: "Demo", range: { min: 4, max: 2 } },
     { name: "Bad link", thesis: seed.thesis, stage: "Demo", range: { min: 1, max: 2 }, sourceLink: "javascript:alert(1)" },
     { name: "Bad range qualifier", thesis: seed.thesis, stage: "Demo", range: { min: 1, max: 2 }, rangeIsIndicative: "yes" },
+    { name: "Bad category", thesis: seed.thesis, stage: "Demo", range: seed.range, categories: ["unreviewed"] },
+    { name: "Duplicate categories", thesis: seed.thesis, stage: "Demo", range: seed.range, categories: ["ai-agents", "ai-agents"] },
+    { name: "Empty categories", thesis: seed.thesis, stage: "Demo", range: seed.range, categories: [] },
   ]) {
     assert.throws(() => parsePublicRaiseSeeds([invalid]));
   }
   assert.throws(() => parsePublicRaiseSeeds({}));
 
   await initializeRaiseStore();
-  const newNearhuntRaises = ["NEARPORTAL", "CareRail", "Grind District", "Ballast", "Lantern Caravan"];
+  const newNearhuntRaises = [
+    "NEARPORTAL",
+    "CareRail",
+    "Grind District",
+    "Ballast",
+    "Lantern Caravan",
+    "Intents Desk",
+    "Kinwarden",
+    "nearx402",
+    "PipTradeDex Private Intent",
+    "NEARpedia",
+  ];
   for (const bundledName of ["NEAR Agent Commerce", "Developer Workflow Copilot", ...newNearhuntRaises]) {
     const bundledRaise = (await getRaises()).find((raise) => raise.name === bundledName);
     assert.ok(bundledRaise, `${bundledName} should be seeded on startup`);
@@ -96,6 +113,7 @@ test("public raise seed entries validate, insert once, expose attribution, and p
       assert.equal(bundledRaise.rangeIsIndicative, true);
       assert.ok(bundledRaise.sourceLink.startsWith("https://nearhunt.xyz/p/"));
       assert.ok(bundledRaise.range.min >= 2_000 && bundledRaise.range.max <= 55_000);
+      assert.ok(bundledRaise.categories?.length);
     }
   }
 
@@ -107,6 +125,7 @@ test("public raise seed entries validate, insert once, expose attribution, and p
   assert.equal(initialPublic.hardTotal, 0);
   assert.equal(initialPublic.sourceLink, sourceLink);
   assert.equal(initialPublic.rangeIsIndicative, true);
+  assert.deepEqual(initialPublic.categories, ["privacy-security"]);
 
   const [initialRows] = await Promise.all([
     db.select().from(raiseStateTable).where(eq(raiseStateTable.id, id)),
@@ -118,6 +137,7 @@ test("public raise seed entries validate, insert once, expose attribution, and p
   const publicList = await listResponse.json();
   assert.ok(publicList.some((raise) => raise.id === id && raise.sourceLink === sourceLink));
   assert.ok(publicList.some((raise) => raise.id === id && raise.rangeIsIndicative === true));
+  assert.ok(publicList.some((raise) => raise.id === id && raise.categories?.includes("privacy-security")));
 
   const detailResponse = await fetch(`${base}/raises/${id}`);
   assert.equal(detailResponse.status, 200);
@@ -125,6 +145,7 @@ test("public raise seed entries validate, insert once, expose attribution, and p
   assert.equal(detail.sourceLink, sourceLink);
   assert.equal(detail.rangeIsIndicative, true);
   assert.equal(detail.claimed, false);
+  assert.deepEqual(detail.categories, ["privacy-security"]);
 
   const claim = await claimRaiseRecord(id, {
     founderName: "Synthetic Founder",

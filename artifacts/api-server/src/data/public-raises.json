@@ -7,6 +7,7 @@
       "min": 250000,
       "max": 750000
     },
+    "categories": ["ai-agents", "intents-payments"],
     "sourceLink": "https://near.org/"
   },
   {
@@ -17,6 +18,7 @@
       "min": 500000,
       "max": 1000000
     },
+    "categories": ["ai-agents"],
     "sourceLink": "https://www.ycombinator.com/companies"
   },
   {
@@ -28,6 +30,7 @@
       "max": 55000
     },
     "rangeIsIndicative": true,
+    "categories": ["ai-agents"],
     "sourceLink": "https://nearhunt.xyz/p/754bc1d0-3596-44dd-9721-3f45eae3eeda"
   },
   {
@@ -39,6 +42,7 @@
       "max": 40000
     },
     "rangeIsIndicative": true,
+    "categories": ["intents-payments", "consumer-real-world"],
     "sourceLink": "https://nearhunt.xyz/p/779185fc-dc4e-4508-ad58-8a66a3204968"
   },
   {
@@ -50,6 +54,7 @@
       "max": 20000
     },
     "rangeIsIndicative": true,
+    "categories": ["consumer-real-world"],
     "sourceLink": "https://nearhunt.xyz/p/c1c7b574-850a-4f47-9af9-22a49339df07"
   },
   {
@@ -61,6 +66,7 @@
       "max": 30000
     },
     "rangeIsIndicative": true,
+    "categories": ["ai-agents"],
     "sourceLink": "https://nearhunt.xyz/p/8b933a5b-2bae-413b-a96f-38b888dc0da4"
   },
   {
@@ -72,6 +78,67 @@
       "max": 25000
     },
     "rangeIsIndicative": true,
+    "categories": ["ai-agents", "consumer-real-world"],
     "sourceLink": "https://nearhunt.xyz/p/2ff34858-5a81-4248-ade5-9894def5567e"
+  },
+  {
+    "name": "Intents Desk",
+    "thesis": "Reliability desk for NEAR Intents: track swap status, refunds, incident evidence, and alerts.",
+    "stage": "NEAR Hackathon demo",
+    "range": {
+      "min": 15000,
+      "max": 40000
+    },
+    "rangeIsIndicative": true,
+    "categories": ["intents-payments"],
+    "sourceLink": "https://nearhunt.xyz/p/da66e1e4-d49e-421e-a73f-2b8b1b6fbfa9"
+  },
+  {
+    "name": "Kinwarden",
+    "thesis": "A NEAR AI agent proposes hospital payments; the family signs the exact payment in its own wallet.",
+    "stage": "NEAR Hackathon demo",
+    "range": {
+      "min": 15000,
+      "max": 35000
+    },
+    "rangeIsIndicative": true,
+    "categories": ["ai-agents", "intents-payments", "consumer-real-world"],
+    "sourceLink": "https://nearhunt.xyz/p/82878626-d007-4202-bbd8-bdc6305c7156"
+  },
+  {
+    "name": "nearx402",
+    "thesis": "Explores safe API payments for agents with on-chain proof checks that reject attempts to redirect payment.",
+    "stage": "NEAR Hackathon demo",
+    "range": {
+      "min": 10000,
+      "max": 30000
+    },
+    "rangeIsIndicative": true,
+    "categories": ["privacy-security", "ai-agents", "intents-payments"],
+    "sourceLink": "https://nearhunt.xyz/p/27ed2a89-1984-4bfa-8f35-59e1466e58c9"
+  },
+  {
+    "name": "PipTradeDex Private Intent",
+    "thesis": "Private Intent sends plain-language trade requests to an attested NEAR AI model, which asks for missing details.",
+    "stage": "NEAR Hackathon demo",
+    "range": {
+      "min": 15000,
+      "max": 40000
+    },
+    "rangeIsIndicative": true,
+    "categories": ["privacy-security", "intents-payments"],
+    "sourceLink": "https://nearhunt.xyz/p/cb2c6cc5-6f0d-4c19-8c29-a6a9be1b1425"
+  },
+  {
+    "name": "NEARpedia",
+    "thesis": "Sourced, dated NEAR protocol updates help AI coding agents track deprecations, upgrades, and governance votes.",
+    "stage": "NEAR Hackathon demo",
+    "range": {
+      "min": 10000,
+      "max": 30000
+    },
+    "rangeIsIndicative": true,
+    "categories": ["privacy-security", "ai-agents"],
+    "sourceLink": "https://nearhunt.xyz/p/64092c5f-df0f-41b0-98a5-697faad7314a"
   }
 ]

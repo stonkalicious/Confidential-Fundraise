@@ -1,5 +1,14 @@
 export type Commitment = { id: string; identifier: string; amount: number; hard: boolean; verified?: boolean };
 
+export const RAISE_CATEGORIES = [
+  { id: 'privacy-security', label: 'Privacy & security' },
+  { id: 'ai-agents', label: 'AI & agents' },
+  { id: 'intents-payments', label: 'Intents & payments' },
+  { id: 'consumer-real-world', label: 'Consumer & real-world' },
+] as const;
+
+export type RaiseCategory = (typeof RAISE_CATEGORIES)[number]['id'];
+
 export function getSafeSourceLink(sourceLink?: string): string | undefined {
   if (!sourceLink) return undefined;
 
@@ -19,6 +28,7 @@ export type Raise = {
   stage: string;
   sourceLink?: string;
   rangeIsIndicative?: boolean;
+  categories?: RaiseCategory[];
   roundRange: { min: number; max: number };
   isFundThesis?: boolean;
   claimed: boolean;
@@ -44,6 +54,7 @@ export const INITIAL_RAISES: Raise[] = [
     investmentThesis: '',
     stage: 'Fundraise',
     roundRange: { min: 2_000_000, max: 5_000_000 },
+    categories: ['privacy-security'],
     isFundThesis: true,
     claimed: false,
   },
@@ -58,6 +69,7 @@ Each fact becomes a small, ongoing market: people put money behind the version t
 NEAR can let participants take positions without showing their whole book and let capital come from other chains. Agents can read the latest page instead of relying on the last editor.`,
     stage: 'Seed',
     roundRange: { min: 1_000_000, max: 2_000_000 },
+    categories: ['ai-agents'],
     claimed: false,
   },
   {
@@ -71,6 +83,7 @@ With NEAR Intents, the trader keeps positions private by default and sells a tem
 An agent can receive a key and act on trades without the trader opening the whole book.`,
     stage: 'Pre-seed',
     roundRange: { min: 500_000, max: 1_000_000 },
+    categories: ['privacy-security', 'intents-payments'],
     claimed: false,
   },
   {
@@ -82,6 +95,7 @@ An agent can receive a key and act on trades without the trader opening the whol
 A merchant adds a single checkout button. The user pays with an existing wallet and chain; NEAR Intents routes the payment to the merchant. Agents can call the same button, removing the chain-selection step for both sides.`,
     stage: 'Series A',
     roundRange: { min: 3_000_000, max: 5_000_000 },
+    categories: ['intents-payments'],
     claimed: false,
   },
   {
@@ -95,6 +109,7 @@ A job poster sets a budget in NEAR. Others can fund an agent’s inference, and 
 NEAR handles payment and inference costs, making agents directly fundable and payable participants.`,
     stage: 'Pre-seed',
     roundRange: { min: 500_000, max: 1_000_000 },
+    categories: ['ai-agents'],
     claimed: false,
   },
 ];
