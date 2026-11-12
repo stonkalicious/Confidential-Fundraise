@@ -214,6 +214,7 @@ function AppDesk({
   const [identifier, setIdentifier] = useState('');
   const [amount, setAmount] = useState('');
   const [formError, setFormError] = useState('');
+  const [commitmentSubmitted, setCommitmentSubmitted] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
   const [contactSubmitted, setContactSubmitted] = useState(false);
   const [claimFormOpen, setClaimFormOpen] = useState(false);
@@ -315,6 +316,7 @@ function AppDesk({
 
   async function submitCommitment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setCommitmentSubmitted(false);
     const parsedAmount = Number(amount);
     if (!identifier.trim()) {
       setFormError('Enter an identifier.');
@@ -329,7 +331,8 @@ function AppDesk({
       setIdentifier('');
       setAmount('');
       setFormError('');
-      setView('sponsor');
+      setView('progress');
+      setCommitmentSubmitted(true);
     } catch (error) {
       setFormError(requestErrorMessage(error, 'The commitment could not be submitted.'));
     }
@@ -1023,20 +1026,44 @@ function AppDesk({
                   ? `Claimed by ${raise.claimantName ?? raise.claim?.founderName ?? ''}`
                   : 'Public aggregate view'}
               </div>
-              {!raise.claimed && (
+              <div className="raise-progress-actions">
                 <button
-                  className="quiet-button"
-                  data-testid="button-claim-raise"
+                  className="primary-button"
+                  data-testid="button-open-prospect"
                   type="button"
                   onClick={() => {
-                    setClaimError('');
-                    setClaimFormOpen(true);
+                    setFormError('');
+                    setCommitmentSubmitted(false);
+                    setView('prospect');
                   }}
                 >
-                  Claim this raise
+                  Submit soft commitment
                 </button>
-              )}
+                {!raise.claimed && (
+                  <button
+                    className="quiet-button"
+                    data-testid="button-claim-raise"
+                    type="button"
+                    onClick={() => {
+                      setClaimError('');
+                      setClaimFormOpen(true);
+                    }}
+                  >
+                    Claim this raise
+                  </button>
+                )}
+              </div>
             </div>
+            {commitmentSubmitted && (
+              <p
+                className="commitment-success"
+                data-testid="status-commitment-submitted"
+                role="status"
+                aria-live="polite"
+              >
+                Soft commitment submitted.
+              </p>
+            )}
             {claimFormOpen && !raise.claimed && (
               <form
                 className="form-card raise-claim-form"

@@ -1,5 +1,4 @@
 import { Router, type IRouter } from "express";
-import { pipeline } from "node:stream";
 import { GetWalkthroughMediaParams } from "@workspace/api-zod";
 import {
   findWalkthroughMedia,
@@ -37,11 +36,13 @@ export function createPublicMediaRouter(
     }
     try {
       const file = await resolveFile(params.data.filename);
+      if (req.aborted || res.destroyed) return;
       if (!file) {
         res.status(404).json({ error: "Public media not found." });
         return;
       }
       const [metadata] = await file.getMetadata();
+      if (req.aborted || res.destroyed) return;
       const size = Number(metadata.size);
       if (!Number.isSafeInteger(size) || size <= 0) throw new Error("Invalid media size");
       const etag = metadata.etag ? `"${metadata.etag.replaceAll('"', "")}"` : undefined;
@@ -69,10 +70,29 @@ export function createPublicMediaRouter(
         res.end();
         return;
       }
-      pipeline(file.createReadStream({ start: range.start, end: range.end }), res, (error) => {
-        if (error && !req.destroyed) req.log?.warn("Public walkthrough stream interrupted");
+      const mediaStream = file.createReadStream({ start: range.start, end: range.end });
+      res.once("close", () => {
+        if (!res.writableFinished) {
+          // Leave the cloud stream alive until its pending response is drained. The
+          // storage SDK may still pipe into it after a visitor leaves the page.
+          mediaStream.unpipe(res);
+          mediaStream.resume();
+        }
       });
+      mediaStream.once("error", () => {
+        if (req.aborted || res.destroyed) return;
+        req.log?.warn("Public walkthrough stream interrupted");
+        if (!res.headersSent) {
+          res.removeHeader("Content-Length");
+          res.set("Cache-Control", "no-store").type("application/json").status(503)
+            .json({ error: "Walkthrough media is temporarily unavailable." });
+        } else {
+          res.destroy();
+        }
+      });
+      mediaStream.pipe(res);
     } catch {
+      if (req.aborted || res.destroyed) return;
       req.log?.warn("Public walkthrough media could not be loaded");
       if (!res.headersSent) {
         res.removeHeader("Content-Length");

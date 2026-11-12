@@ -223,9 +223,10 @@ export default function RaiseList({
                         </div>
                       </div>
                       <span className="raise-list-status">
-                        {raise.claimed
-                          ? `Claimed by ${raise.claimantName ?? raise.claim?.founderName ?? ''}`
-                          : 'Public raise overview'} <span aria-hidden="true">↗</span>
+                        {raise.claimed && (
+                          <span>Claimed by {raise.claimantName ?? raise.claim?.founderName ?? ''} · </span>
+                        )}
+                        Open raise <span aria-hidden="true">→</span>
                       </span>
                     </Link>
                     {sourceLink && (

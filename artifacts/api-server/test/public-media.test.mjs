@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { Readable } from "node:stream";
+import { PassThrough, Readable } from "node:stream";
 import test from "node:test";
 import express from "express";
 import { createPublicMediaRouter, parseByteRange } from "../src/routes/public-media.ts";
@@ -84,4 +84,34 @@ test("missing or unavailable storage fails explicitly without local file fallbac
   const unavailable = await fetch(url);
   assert.equal(unavailable.status, 503);
   assert.deepEqual(await unavailable.json(), { error: "Walkthrough media is temporarily unavailable." });
+});
+
+test("leaving during media startup lets the pending storage stream drain safely", async (t) => {
+  let stream;
+  let destroyedWhenStorageResponded;
+  const app = express();
+  app.use("/api", createPublicMediaRouter(async () => ({
+    getMetadata: async () => [{ size: "4" }],
+    createReadStream: () => {
+      stream = new PassThrough();
+      setTimeout(() => {
+        destroyedWhenStorageResponded = stream.destroyed;
+        if (!stream.destroyed) stream.end("demo");
+      }, 100);
+      return stream;
+    },
+  })));
+  const server = createServer(app);
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const url = `http://127.0.0.1:${server.address().port}/api/storage/public-objects/agent-raised/walkthrough-589be0760638.mp4`;
+
+  const abandoned = await fetch(url);
+  await abandoned.body.cancel();
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  assert.equal(destroyedWhenStorageResponded, false);
+
+  const retry = await fetch(url);
+  assert.equal(retry.status, 200);
+  assert.equal(await retry.text(), "demo");
 });

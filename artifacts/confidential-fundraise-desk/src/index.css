@@ -225,7 +225,9 @@ button:focus-visible, input:focus-visible {
 .share-link { display: flex; align-items: center; gap: 9px; min-width: 0; }
 .toast-message { min-height: 19px; margin-top: 12px; color: #536b59; font-size: 11px; }
 .raise-claim-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.raise-progress-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .raise-status-banner { text-transform: none; letter-spacing: .04em; }
+.commitment-success { margin: 0 0 18px; padding: 12px 14px; border: 1px solid #d6dfd1; border-radius: 3px; background: #f5f7f2; color: #4f6853; font-size: 12px; line-height: 1.5; }
 .raise-claim-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-bottom: 18px; }
 .raise-claim-form .field-wrap { min-width: 0; margin-bottom: 0; }
 .raise-claim-error, .raise-claim-actions { grid-column: 1 / -1; }
@@ -349,9 +351,11 @@ button:focus-visible, input:focus-visible {
   .demo-label { flex: 0 0 auto; padding: 7px 8px; font-size: 9px; }
   .frame { padding: 39px 19px 52px; }
   .page-heading { max-width: 480px; font-size: clamp(43px, 11vw, 63px); }
-  .nav-row { margin-top: 29px; overflow-x: auto; }
-  .nav-button { flex: 0 0 auto; padding: 12px 10px 13px; font-size: 11px; }
+  .nav-row { margin-top: 29px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
+  .nav-button { min-width: 0; min-height: 44px; padding: 10px 8px 11px; font-size: 11px; text-align: left; white-space: normal; }
   .nav-index { margin-right: 5px; }
+  .raise-claim-toolbar { flex-wrap: wrap; align-items: flex-start; }
+  .raise-progress-actions { width: 100%; justify-content: flex-start; }
   .content-grid { grid-template-columns: 1fr; gap: 22px; margin-top: 27px; }
   .raise-home-grid { grid-template-columns: 1fr; gap: 24px; }
   .raise-range-fields { grid-template-columns: 1fr 1fr; }
