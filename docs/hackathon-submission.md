@@ -6,6 +6,10 @@ https://github.com/stonkalicious/Confidential-Fundraise
 
 Live app: https://agentraised.com
 
+Public agent API: https://agentraised.com/api/raises
+
+Human-published X demo post: https://x.com/NeartoZEC/status/2120868806058754324
+
 The approved app cleanup was pushed to GitHub separately. This submission-copy
 refresh does not authorize a new push, app publication, X post, or hackathon
 submission; none of those actions is performed by this preparation.
@@ -71,6 +75,9 @@ Keep these distinctions in the recording and description:
   changes: app typecheck, production build, and 47 desk tests passed. These are
   the prior app checks, not a fresh clean-checkout rehearsal. The mobile entry screen
   is How this app works; desktop still opens Progress. Explicit tab links win.
+- In the current workspace, the landing-page walkthrough video now appears
+  before Active raises on mobile; desktop keeps its two-column layout. This
+  latest UI change is not confirmed in the published build.
 - The shared menu includes the legal disclaimer. It identifies the hackathon
   prototype, mixed data sources, non-binding soft commitments, and the fact that
   a page claim does not verify a founder or company.
@@ -80,9 +87,17 @@ Keep these distinctions in the recording and description:
 - The primary public deployment URL was verified as https://agentraised.com
   on 12 November. This confirms the configured URL, not that every workspace
   change is already published.
+- Deployment metadata rechecked on 12 November: the public autoscale deployment
+  has a successful build and https://agentraised.com is its primary URL. This
+  does not prove that unpublished workspace changes are in the live build.
 - Live unauthenticated `GET https://agentraised.com/api/raises` returned HTTP
-  `200` and `application/json` on 12 November. It returns structured public raise
-  objects, not individual commitments or claim contact details.
+  `200` and `application/json` on 12 November. The response contains structured
+  public raise fields and no individual commitment or claim-contact fields. The
+  number of raises is live data and should not be presented as a fixed product
+  claim.
+- Live `POST` checks on 12 November confirmed that both NEAR Intents wallet
+  authentication and quote requests return HTTP `410` with the testnet-disabled
+  explanation. Do not describe a live quote flow as available.
 - The demo does not include a live NEAR Intents quote, and an exact funded-wallet
   testnet transfer is **not certified by these checks**. Do not claim a
   successful transfer unless separately demonstrated.
@@ -179,9 +194,9 @@ The following is within the required 20–2,000-character range. Review it
 against the actual recording and final code before submission:
 
 ```text
-Agent Raised is a public, agent-readable raise directory with private soft commitments. Founders and agents can claim raise pages; agent tokens authorize updates to public fields. Individual commitments stay private; public pages and JSON show raise details and aggregate totals. Built for NEAR HACKATHON.
+Agent Raised is a public, agent-readable raise directory with private soft commitments. Founders or their agents can claim pages; per-raise agent tokens enable scoped updates to public fields. Public pages and JSON show raise details and aggregate commitment totals, not individual investor records. Built for NEAR HACKATHON.
 
-NEAR Intents 1Click has no testnet. This testnet-only demo disables wallet authentication and quote requests instead of connecting to mainnet.
+NEAR is used for a separate optional testnet token-transfer demo. NEAR Intents has no testnet, so wallet authentication and quote requests are disabled; the app does not demonstrate an Intents swap or settlement.
 
 A separate optional testnet demo implements a founder/investor-confirmed 1-test-USDC transfer flow. A successful funded-wallet run is not claimed here. It is public, separate from Intents, and does not change USD totals.
 
@@ -233,11 +248,12 @@ certify live-provider success, security audit results, or submission acceptance.
   https://agentraised.com; the latest intended production revision still
   needs confirmation.
 - [ ] Review the final recording for privacy and accidental credential exposure.
-- [ ] Verify the supplied X post opens publicly and includes the required
-  @NEARProtocol tag, #NEARHackathon hashtag, NEAR HACKATHON statement, and demo
-  video or screenshots. If the post was not included in the already-submitted
-  entry, use the organizers' request-changes flow if needed; do not submit a
-  duplicate entry.
+- [ ] **Before form submission, confirm the public X post is live and includes
+  the demo video or screenshots and required tags.** It must state that the
+  project was built for NEAR HACKATHON and include @NEARProtocol and
+  #NEARHackathon. If the post was not included in the already-submitted entry,
+  use the organizers' request-changes flow if needed; do not submit a duplicate
+  entry.
 - [ ] Human confirms final project name, lead name, contact email, team size,
   track IDs, mainnet NEAR prize account, public repository URL, public X-post
   URL, and 20–2,000-character description. Do not invent missing details.

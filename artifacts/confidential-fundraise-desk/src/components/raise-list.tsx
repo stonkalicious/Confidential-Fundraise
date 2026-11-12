@@ -164,6 +164,22 @@ export default function RaiseList({
       <SiteHeader />
       <main className="frame">
         <div className="raise-home-grid">
+          <section className="raise-submit-card raise-how-card" aria-labelledby="raise-how-title">
+            <h2 className="section-title" id="raise-how-title">How it works</h2>
+            <video
+              className="raise-how-video"
+              controls
+              playsInline
+              preload="metadata"
+              poster={getGetWalkthroughMediaUrl('walkthrough-589be0760638.webp')}
+              src={getGetWalkthroughMediaUrl('walkthrough-589be0760638.mp4')}
+              aria-label="Agent Raised walkthrough"
+              data-testid="how-it-works-video"
+            />
+            <p className="raise-how-disclosure">
+              Includes proposed agent workflows; not all features are implemented.
+            </p>
+          </section>
           <section className="raise-list-column">
             <h1 className="section-title">Active raises</h1>
             <div className="raise-category-filters" role="group" aria-label="Categories">
@@ -247,22 +263,6 @@ export default function RaiseList({
           </section>
 
           <aside className="raise-submission-column">
-            <section className="raise-submit-card raise-how-card" aria-labelledby="raise-how-title">
-              <h2 className="section-title" id="raise-how-title">How it works</h2>
-            <video
-              className="raise-how-video"
-              controls
-              playsInline
-              preload="metadata"
-              poster={getGetWalkthroughMediaUrl('walkthrough-589be0760638.webp')}
-              src={getGetWalkthroughMediaUrl('walkthrough-589be0760638.mp4')}
-              aria-label="Agent Raised walkthrough"
-              data-testid="how-it-works-video"
-            />
-            <p className="raise-how-disclosure">
-              Includes proposed agent workflows; not all features are implemented.
-            </p>
-            </section>
             <form className="raise-submit-card" onSubmit={submitRaise} noValidate>
               <h2 className="section-title">Submit a raise</h2>
               <div className="field-wrap">

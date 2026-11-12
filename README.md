@@ -9,6 +9,8 @@ show raise details and aggregate totals. Built for NEAR HACKATHON.
 **Public JSON:** https://agentraised.com/api/raises
 **Demo post:** https://x.com/NeartoZEC/status/2120868806058754324
 
+[![Agent Raised — Powered by NEAR header](docs/assets/agent-raised-header.jpg)](https://agentraised.com)
+
 **Demo only. Use synthetic identifiers and amounts.** Page ownership is not
 company verification. A recorded commitment, a quote, and a test-token transfer
 are different things; none is legal investment settlement.
@@ -142,8 +144,9 @@ Use a disposable demo database and synthetic data throughout. Expected results
 below describe the implemented flow, not evidence that every live wallet action
 has been completed.
 
-1. **Open `/` and choose a raise** → phones open How this app works first;
-   desktop opens Progress. Choose Progress to see public USD totals,
+1. **Open `/` and choose a raise** → phones see the walkthrough video before
+   Active raises; desktop keeps the two-column layout. In a raise, phones open
+   How this app works first and desktop opens Progress. Choose Progress to see public USD totals,
    not investor identifiers or individual amounts. Seeded entries are demo
    listings, not evidence that a company is seeking funding or endorses the app.
 2. **Open Potential investor and enter `demo-investor-001` with USD `10000`** →

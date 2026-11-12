@@ -233,11 +233,13 @@ button:focus-visible, input:focus-visible {
 .raise-claim-error, .raise-claim-actions { grid-column: 1 / -1; }
 .raise-claim-error { margin: 0; }
 .raise-claim-actions { display: flex; justify-content: flex-end; gap: 10px; }
-.raise-home-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 30px; align-items: start; }
+.raise-home-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "list video" "list submission"; gap: 30px; align-items: start; }
+.raise-list-column { grid-area: list; }
 .raise-submission-column { min-width: 0; }
+.raise-how-card { grid-area: video; margin-bottom: 0; }
+.raise-submission-column { grid-area: submission; }
 .raise-submit-card { padding: 25px; border: 1px solid #e1dccf; border-radius: 5px; background: #fbfaf6; }
 .raise-submit-card > .section-title { margin: 0 0 20px; }
-.raise-how-card { margin-bottom: 22px; }
 .raise-how-video { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: contain; border-radius: 4px; background: #171622; }
 .raise-how-disclosure { margin: 12px 0 0; font-size: 12px; line-height: 1.5; color: #6f6b61; }
 .demo-settlement { margin: 16px 0; }
@@ -358,7 +360,7 @@ button:focus-visible, input:focus-visible {
   .raise-claim-toolbar { flex-wrap: wrap; align-items: flex-start; }
   .raise-progress-actions { width: 100%; justify-content: flex-start; }
   .content-grid { grid-template-columns: 1fr; gap: 22px; margin-top: 27px; }
-  .raise-home-grid { grid-template-columns: 1fr; gap: 24px; }
+  .raise-home-grid { grid-template-columns: 1fr; grid-template-areas: "video" "list" "submission"; gap: 24px; }
   .raise-range-fields { grid-template-columns: 1fr 1fr; }
   .rules-layout { grid-template-columns: 1fr; }
   .side-card { order: 2; }
