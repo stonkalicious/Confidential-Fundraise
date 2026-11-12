@@ -16,8 +16,10 @@ import {
 import RaiseList from '@/components/raise-list';
 import { getSafeSourceLink, INITIAL_RAISES, type Raise } from '@/data/raises';
 import RoadmapPage from '@/components/roadmap-page';
+import LegalDisclaimerPage from '@/components/legal-disclaimer-page';
 import WhyNearPage from '@/components/why-near-page';
 import SiteHeader from '@/components/site-header';
+import { getInitialRaiseView, getRaiseViews, MOBILE_RAISE_QUERY, type View } from '@/lib/raise-navigation';
 import { DemoSettlementCard, InvestorDemoSettlements } from '@/components/demo-settlement';
 import { newDemoReceipt, rememberDemoReceipt } from '@/lib/demo-settlement-wallet';
 import { loadRaises, saveRaises } from '@/data/raise-storage';
@@ -49,7 +51,6 @@ import {
 
 const queryClient = new QueryClient();
 
-type View = 'progress' | 'how' | 'prospect' | 'sponsor' | 'thesis' | 'rules';
 const DEMO_LABEL = 'Demo only — public data shows approved raises and aggregates.';
 
 function mergeApiRaise(summary: RaiseSummary, base: Raise): Raise {
@@ -142,18 +143,7 @@ type DemoQuoteState =
   | { commitmentId: string; status: 'success'; result: DemoIntentsQuote };
 
 function getInitialView(): View {
-  const requestedView = new URLSearchParams(window.location.search).get('view');
-  if (
-    requestedView === 'prospect' ||
-    requestedView === 'sponsor' ||
-    requestedView === 'progress' ||
-    requestedView === 'how' ||
-    requestedView === 'thesis' ||
-    requestedView === 'rules'
-  ) {
-    return requestedView;
-  }
-  return 'progress';
+  return getInitialRaiseView(window.location.search, window.matchMedia(MOBILE_RAISE_QUERY).matches);
 }
 
 function AppDesk({
@@ -181,6 +171,14 @@ function AppDesk({
 }) {
   const isFundThesis = raise.isFundThesis === true;
   const [view, setView] = useState<View>(getInitialView);
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia(MOBILE_RAISE_QUERY).matches);
+  useEffect(() => {
+    const media = window.matchMedia(MOBILE_RAISE_QUERY);
+    const update = () => setIsMobile(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
   const [approvalCode, setApprovalCode] = useState('');
   const [privateRaise, setPrivateRaise] = useState<PrivateRaiseDetails | null>(null);
   const sponsorSessionVersion = useRef(0);
@@ -319,7 +317,7 @@ function AppDesk({
     setCommitmentSubmitted(false);
     const parsedAmount = Number(amount);
     if (!identifier.trim()) {
-      setFormError('Enter an identifier.');
+      setFormError('Enter your name or alias.');
       return;
     }
     if (!Number.isSafeInteger(parsedAmount) || parsedAmount <= 0) {
@@ -644,14 +642,7 @@ function AppDesk({
       .catch(() => setShareMessage(fallbackCopy() ? 'Share URL copied.' : 'Copy was unavailable.'));
   }
 
-  const views: { id: View; index?: string; label: string }[] = [
-    { id: 'progress', index: '01', label: 'Progress' },
-    { id: 'how', index: '02', label: 'How this app works' },
-    { id: 'prospect', label: 'Prospect' },
-    { id: 'sponsor', label: 'Founder' },
-    { id: 'thesis', label: 'Thesis' },
-    { id: 'rules', label: 'Rules Calculator' },
-  ];
+  const views = getRaiseViews(isMobile);
   const sourceLink = getSafeSourceLink(raise.sourceLink);
 
   return (
@@ -700,7 +691,7 @@ function AppDesk({
               <h2 className="section-title">Submit a soft commitment</h2>
               <form className="form-card" onSubmit={submitCommitment} noValidate>
                 <div className="field-wrap">
-                  <label className="field-label" htmlFor="prospect-identifier">Identifier</label>
+                  <label className="field-label" htmlFor="prospect-identifier">Your name or alias</label>
                   <input
                     className="field"
                     id="prospect-identifier"
@@ -708,7 +699,7 @@ function AppDesk({
                     name="identifier"
                     autoComplete="off"
                     maxLength={80}
-                    placeholder="Name or reference"
+                    placeholder="Your name or alias"
                     value={identifier}
                     onChange={(event) => setIdentifier(event.target.value)}
                   />
@@ -732,6 +723,7 @@ function AppDesk({
                     />
                   </div>
                 </div>
+                <p className="side-copy">Do not enter sensitive personal or confidential business information.</p>
                 {formError && <p className="inline-error" data-testid="status-form-error" role="alert">{formError}</p>}
                 <button className="primary-button" data-testid="button-submit-commitment" type="submit">
                   Submit soft commitment <span className="button-arrow" aria-hidden="true">↗</span>
@@ -853,7 +845,7 @@ function AppDesk({
                       </div>
                     ) : (
                       <div className="empty-record" data-testid="status-empty-commitment">
-                        No prospect commitment has been submitted.
+                        No soft commitments have been submitted.
                       </div>
                     )}
                   </>
@@ -1005,7 +997,7 @@ function AppDesk({
                     </div>
                   )}
                   <div className="quote-warning">
-                    The request uses a fixed synthetic 1 USDC and placeholder addresses. It does not send this commitment’s identifier or amount. A quote is not a signed swap or settlement.
+                    The request uses a fixed synthetic 1 USDC and placeholder addresses. It does not send this commitment’s name or alias, or amount. A quote is not a signed swap or settlement.
                   </div>
                 </div>
               </section>
@@ -1195,13 +1187,13 @@ function AppDesk({
               <h1 className="how-title">How the app works</h1>
               <p>Agent Raised is a minimal demo of fundraise coordination with shared server-held records.</p>
               <p>
-                A prospect submits a soft commitment, and a founder can claim a raise with contact details. New raises stay out of the public list until a founder approves them. The Founder view uses a shared approval code to access individual commitments and claim contact details. Marking a commitment hard enables a dry-run NEAR Intents quote with fixed synthetic values; the quote never executes a swap. Separately, the founder and investor can confirm an optional transfer of exactly 1 test USDC on NEAR testnet.
+                A potential investor submits a soft commitment. A founder can claim a raise with contact details. New raises stay out of the public list until a founder approves them. The Founder view uses a shared approval code to access individual commitments and claim contact details. Marking a commitment hard enables a dry-run NEAR Intents quote with fixed synthetic values; the quote never executes a swap. Separately, the founder and investor can confirm an optional transfer of exactly 1 test USDC on NEAR testnet.
               </p>
               <p>
-                Public pages and API responses show approved raise information, aggregate soft and hard USD totals, and an anonymous count of confirmed testnet transfers. Individual commitment identifiers, amounts, and claim contact details are not included in public responses.
+                Public pages and API responses show approved raise information, aggregate soft and hard USD totals, and an anonymous count of confirmed testnet transfers. Individual investor names or aliases, amounts, and claim contact details are not included in public responses.
               </p>
               <p>
-                The pre-seeded raises and commitments are synthetic; do not enter sensitive real prospect information. Demo records are stored in PostgreSQL and persist across API restarts. Public pages show aggregate USD soft and hard totals plus an anonymous count of server-confirmed testnet transfers. Investor identifiers, amounts, and names stay private. Test USDC has no real value and does not change USD commitment totals.
+                Do not enter sensitive personal or confidential business information. Demo records are stored in PostgreSQL and persist across API restarts. Public pages show aggregate USD soft and hard totals plus an anonymous count of server-confirmed testnet transfers. Investor names or aliases and amounts stay private. Test USDC has no real value and does not change USD commitment totals.
               </p>
             </article>
           </section>
@@ -1487,6 +1479,7 @@ function Router() {
       <Switch>
         <Route path="/why-near"><WhyNearPage /></Route>
         <Route path="/roadmap"><RoadmapPage /></Route>
+        <Route path="/legal-disclaimer"><LegalDisclaimerPage /></Route>
         <Route path="/">
           <RaiseList raises={raises} onApproved={refreshPublicRaises} />
         </Route>

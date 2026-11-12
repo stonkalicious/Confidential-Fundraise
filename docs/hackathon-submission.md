@@ -1,13 +1,17 @@
 # NEAR Hackathon Submission Pack
 
-Prepared 9 November 2026. **Drafts for owner review, not a submitted entry.**
-No publication, push, repository visibility change, token transfer, or
-hackathon submission was performed by this preparation task.
+Refreshed 12 November 2026. **Drafts for owner review, not a submitted entry.**
+Project name: **Agent Raised**. Repository:
+https://github.com/stonkalicious/Confidential-Fundraise
+
+The owner authorized committing and pushing the current app and this pack.
+That is separate from publishing the app, posting on X, or submitting the
+hackathon form; none of those actions is performed by this preparation.
 
 ## Requirements checked
 
 Re-read the [live HACKATHON.md](https://nearhackathon.com/HACKATHON.md) before
-submitting; these notes reflect its 9 November version.
+submitting; these notes reflect the live guide re-read on 12 November 2026.
 
 - Deadline: **14 November 2026, 23:59 UTC** (23:59 Dublin).
 - Work since the 19 October announcement is eligible; earlier work is baseline.
@@ -46,6 +50,35 @@ Keep these distinctions in the recording and description:
 4. Claiming reserves a page. It does not verify a company or its fundraising.
 5. Example raises and public-source listings are not endorsements or confirmed
    live investment opportunities. Use synthetic commitments only.
+6. The animation illustrates the product direction as well as the app.
+   Founder agents preparing `raise.md`, investor-agent matching, and the
+   visualized MCP-style process are proposed workflows, not a demonstrated MCP
+   server or autonomous matching system. The implemented agent interface is HTTP.
+   Do not describe an animated wallet sequence as evidence of a live transaction.
+
+## Current submission evidence
+
+- Public repository metadata checked on 12 November: the repository is public,
+  and its default branch is `main`. The existing authenticated Git remote works.
+- Clean-checkout rehearsal: Node `v24.22.1`, pnpm `10.26.1`, PostgreSQL `16.15`;
+  110 API tests and 39 desk tests passed at the revision recorded in the README.
+  Same-origin page/API checks and persistence after API restart also passed.
+- Latest app checks after legal wording and mobile navigation changes: app
+  typecheck, production build, and 45 desk tests passed. The mobile entry screen
+  is How this app works; desktop still opens Progress. Explicit tab links win.
+- The shared menu includes the legal disclaimer. It identifies the hackathon
+  prototype, mixed data sources, non-binding soft commitments, and the fact that
+  a page claim does not verify a founder or company.
+- The Potential investor form uses “Your name or alias.” Private records remain
+  behind founder authorization; public endpoints expose raise details and totals.
+- A successful real-wallet confidential quote and an exact funded-wallet
+  testnet transfer are **not certified by these checks**. Omit successful
+  outcomes from the submission unless separately demonstrated.
+
+Before handing the repository to judges, record the pushed revision with
+`git rev-parse HEAD` and retain that commit's GitHub link. The README links the
+starter baseline and eligible-work comparison. A final submission tag or
+dedicated branch can be added only if the owner requests it.
 
 ## Short recording script (about two minutes)
 
@@ -55,8 +88,8 @@ wallet seed phrases, or private commitment data from real people.
 
 | Time | Show | Say / expected visible result |
 | --- | --- | --- |
-| 0:00–0:15 | Landing list, then a raise's Progress view | “Confidential Fundraising coordinates interest without publishing individual commitments. These are demo figures.” |
-| 0:15–0:35 | Prospect: submit `demo-investor-001`, USD `10000` | “Submitting interest does not require a wallet.” Show the recorded result. |
+| 0:00–0:15 | Landing list, then a raise; on phones How this app works opens first, so select Progress | “Agent Raised coordinates interest without publishing individual commitments. These are demo figures.” |
+| 0:15–0:35 | Potential investor: submit `demo-investor-001`, USD `10000` | “Submitting interest does not require a wallet.” Show “Soft commitment submitted” on Progress; do not show individual details publicly. |
 | 0:35–0:55 | Founder review, already unlocked off-camera | “The founder can review individual records privately.” Mark the synthetic record verified; show its demo status change. |
 | 0:55–1:10 | Separate unauthenticated session: Progress, then public JSON | “Everyone else sees aggregate USD totals, not the investor list.” Show the updated aggregate, then refresh. |
 | 1:10–1:35 | Founder quote panel, authenticated off-camera if approved | “NEAR Intents can quote a confidential cross-chain path. This request uses a fixed synthetic 1-USDC amount and never sends the investor identifier or commitment amount.” Show an actual successful live result only if obtained. Otherwise show the honest error and label the live success check outstanding. |
@@ -92,12 +125,14 @@ Review before posting; attach the actual recording. This text is a draft,
 not evidence that the repository is already public:
 
 ```text
-Fundraise without publishing investor details. Built for NEAR HACKATHON: private commitments, public totals & agent-owned pages. NEAR Intents quotes, not investment settlement. @NEARProtocol #NEARHackathon
-https://github.com/stonkalicious/Confidential-Fundraise
+Agent Raised: public project discovery, private commitment records, agent-owned pages and a NEAR Intents dry-run quote path. Built for NEAR HACKATHON. The animation includes proposed workflows, not completed settlement. @NEARProtocol #NEARHackathon
 ```
 
-Add a verified hosted-demo link in a reply if desired. Do not use an expiring
-workspace Preview URL as if it were the final published demo.
+Attach the animation and link the public repository in a reply. If possible,
+also include a short capture of the actual app: submit synthetic interest,
+show the confirmation, and show the public total without individual details.
+Add a verified hosted-demo link if desired. Do not use an expiring workspace
+Preview URL as if it were the final published demo.
 
 ## Draft submission description
 
@@ -105,18 +140,18 @@ The following is within the required 20–2,000-character range. Review it
 against the actual recording and final code before submission:
 
 ```text
-Confidential Fundraising is a prototype for coordinating fundraising interest without publishing individual investor records. People and external agents can discover raises, reserve an unclaimed page, and submit synthetic soft commitments. A founder reviews individual records behind an approval code; public pages and JSON expose aggregate totals. Claims reserve page ownership, not company verification.
+Agent Raised is a hackathon prototype for public project discovery and private fundraising coordination. People and external agents can discover approved raises, reserve an unclaimed page, and record non-binding soft commitments. The Potential investor form accepts a name or alias and an amount. Founder-authorized views show individual records; public pages and JSON show aggregate totals. Claims reserve page ownership, not verified company or founder identity.
 
 NEAR Intents provides a wallet-authenticated, confidential dry-run quote path using a fixed synthetic 1-USDC amount and placeholder addresses. Investor identifiers and commitment amounts are not sent to the quote provider. The quote does not execute a swap or settle an investment.
 
-A separate optional demo asks an investor's wallet to transfer exactly 1 test USDC on NEAR testnet after founder and investor confirmations. This is a public token transfer, not confidential Intents settlement, and it does not change the USD commitment totals.
+A separate optional testnet demo implements a founder/investor-confirmed 1-test-USDC transfer flow. A successful funded-wallet run is not claimed here. It is public, separate from Intents, and does not change USD totals.
 
-Raise state persists in PostgreSQL. Per-raise agent tokens allow public-field updates without granting access to private commitments. Commitment privacy relies on application access controls, not onchain storage or private-AI inference. The project uses synthetic commitments and is not an investment offer.
+Raise state persists in PostgreSQL. Per-raise agent tokens permit public-field updates, not access to private commitments. Privacy relies on application access controls, not onchain storage or private-AI inference. Listings may include synthetic examples, public-source material and user submissions. The animation also shows a proposed raise.md and agent-matching workflow; that matching/MCP workflow is not implemented. This is not a live investment platform or an investment offer.
 ```
 
 ## Readiness checklist
 
-Checked boxes below refer only to documentation produced here. They do not
+Checked boxes below record preparation and local verification only. They do not
 certify live-provider success, security audit results, or submission acceptance.
 
 ### Prepared
@@ -127,22 +162,23 @@ certify live-provider success, security audit results, or submission acceptance.
 - [x] Baseline starter disclosed, with baseline commit and diff links.
 - [x] MIT license explicitly approved by the owner and included.
 - [x] Recording script, X draft, description, and track recommendation prepared.
+- [x] Public GitHub repository and default branch checked on 12 November.
+- [x] Legal disclaimer, data/claim clarifications, investor labels, and mobile-first
+  How this app works entry implemented in the current app.
+- [x] Clean checkout reproduced on 12 November 2026 with Node `v24.22.1`,
+  pnpm `10.26.1`, and PostgreSQL `16.15`; typechecks, 110 API tests, 39 desk
+  tests, same-origin routes, and persistence after API restart passed. Exact
+  commands and results are in the [root README](../README.md).
 
 ### Still requires verification or owner action
 
-- [ ] Confirm the configured repository
-  `https://github.com/stonkalicious/Confidential-Fundraise` is public and contains
-  the intended latest code. No visibility or remote-content check was completed
-  in this task.
+- [ ] Verify the final push contains the intended latest code and record its
+  exact commit link.
 - [ ] Review the eligible-work diff and approve a dedicated submission branch
   or baseline/final tags; pin the final judging revision. Do not push or tag
   without owner approval.
-- [ ] Reproduce the README setup from a clean checkout against a disposable
-  database; record the tool versions, date, and results outside this checklist
-  until actually verified.
-- [ ] Finish the separately queued privacy, public-refresh, copy, disclaimer,
-  and wallet checks needed for the chosen demo. Check current task states
-  rather than assuming proposed or queued work is merged.
+- [ ] Review any remaining security/privacy findings against the actual demo.
+  Do not treat this pack or passing tests as a security audit.
 - [ ] Demonstrate an actual wallet-authenticated confidential quote if it
   appears as a successful outcome in the recording. Otherwise disclose that
   live success remains unverified.

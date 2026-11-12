@@ -53,6 +53,14 @@ export default function SiteHeader() {
               >
                 Roadmap
               </Link>
+              <Link
+                className="site-menu-item"
+                href="/legal-disclaimer"
+                data-testid="menu-legal-disclaimer"
+                onClick={() => setMenuOpen(false)}
+              >
+                Legal disclaimer
+              </Link>
             </div>
           )}
         </div>

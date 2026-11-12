@@ -108,8 +108,35 @@ caddy run --config /tmp/confidential-fundraising.Caddyfile --adapter caddyfile
 ```
 
 Open `http://localhost:3000/`. This is a development setup, not a production
-deployment recipe. A clean-machine reproduction has not been certified in this
-documentation task; record that check before submitting.
+deployment recipe. A clean-checkout rehearsal was completed on 12 November 2026;
+the revision, commands, versions, and results are recorded below.
+
+## Clean-checkout verification (12 November 2026)
+
+Reproduced from a clean local clone at revision
+`e4d965c6b0e5024449ca89f3aee9ee80b51e26d6` on Linux with Node `v24.22.1`,
+pnpm `10.26.1`, and PostgreSQL `16.15`. The database was newly created and
+disposable. `DATABASE_URL` pointed to that database; the API test run used a
+throwaway synthetic `RAISE_APPROVAL_CODE`.
+
+Commands run from the repository root:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm --filter @workspace/db run push
+pnpm run typecheck:libs
+pnpm run typecheck
+pnpm --filter @workspace/api-server test
+pnpm --filter @workspace/confidential-fundraise-desk test
+```
+
+All commands passed. The API suite reported **110 passed** and the desk suite
+reported **39 passed**. A temporary local same-origin proxy (Caddy was not
+installed) returned `200` for `/`, `/src/main.tsx`, `/api/healthz`, and
+`/api/raises`. A synthetic $10,000 commitment changed the public total from $0
+to $10,000; after restarting the API, the total and founder-authorized private
+record remained. This rehearsal used no production data, live wallet actions,
+or publication.
 
 ## Judge walkthrough: do X → see Y
 
@@ -117,12 +144,14 @@ Use a disposable demo database and synthetic data throughout. Expected results
 below describe the implemented flow, not evidence that every live wallet action
 has been completed.
 
-1. **Open `/` and choose a raise** → its Progress view shows public USD totals,
+1. **Open `/` and choose a raise** → phones open How this app works first;
+   desktop opens Progress. Choose Progress to see public USD totals,
    not investor identifiers or individual amounts. Seeded entries are demo
    listings, not evidence that a company is seeking funding or endorses the app.
-2. **Open Prospect and submit `demo-investor-001` with USD `10000`** → the
-   commitment is recorded. The app switches to Founder; enter the operator's
-   approval code to see the private record. Keep the code off recordings.
+2. **Open Potential investor and submit `demo-investor-001` with USD `10000`** → the
+   form clears, the app returns to Progress, and “Soft commitment submitted.”
+   appears. Then open Founder and enter the operator's approval code to see the
+   private record. Keep the code off recordings.
 3. **Choose “Mark verified (demo)” on that record** → its hard/verified status
    changes and hard USD totals increase. This is a server-side demo status,
    not blockchain verification.
@@ -166,8 +195,9 @@ pnpm --filter @workspace/confidential-fundraise-desk test
 API tests require `DATABASE_URL` and use synthetic records, including database
 writes. Run them against a disposable development database. Wallet/provider
 responses in regression tests are simulated; passing tests do not demonstrate
-a successful live quote or real token transfer. This documentation task does
-not claim a fresh full-suite or clean-clone pass.
+a successful live quote or real token transfer. The clean-checkout results above
+apply to the recorded revision. After the legal copy and mobile navigation
+updates, app typechecking, the production build, and all 45 desk tests passed.
 
 - UI: [artifacts/confidential-fundraise-desk](artifacts/confidential-fundraise-desk)
 - API: [artifacts/api-server/src/routes](artifacts/api-server/src/routes)
@@ -199,10 +229,12 @@ or run:
 git diff 0c05d76b9e518521a819bcdca13cfdf07cc61818 HEAD -- artifacts/confidential-fundraise-desk artifacts/api-server lib
 ```
 
-These links point at the configured repository; its public visibility and latest
-push are not verified here. Before submission, pin the final judging revision
-on a dedicated submission branch or approved tags and link its exact comparison.
-No branch, tag, push, visibility change, or submission was performed by this task.
+Public GitHub metadata was checked on 12 November 2026: the repository is public,
+with `main` as its default branch. The owner authorized pushing the latest app
+and submission documentation. Before submitting, verify the pushed revision and
+link its exact baseline comparison; use a dedicated submission branch or tags
+if separately requested. No repository visibility change, hackathon submission,
+or wallet action is performed by preparing this documentation.
 
 ## License
 
