@@ -43,4 +43,28 @@ const raiseReadErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
 };
 app.use(raiseReadErrorHandler);
 
+const apiBodyErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
+  const isApiRequest =
+    req.originalUrl === "/api" || req.originalUrl.startsWith("/api/");
+  const isMalformedJson =
+    typeof error === "object" &&
+    error !== null &&
+    "type" in error &&
+    error.type === "entity.parse.failed" &&
+    "status" in error &&
+    error.status === 400;
+
+  if (!isApiRequest || !isMalformedJson) {
+    next(error);
+    return;
+  }
+
+  req.log.warn("Rejected malformed JSON request body");
+  res
+    .set("Cache-Control", "no-store")
+    .status(400)
+    .json({ error: "Malformed JSON request body." });
+};
+app.use(apiBodyErrorHandler);
+
 export default app;

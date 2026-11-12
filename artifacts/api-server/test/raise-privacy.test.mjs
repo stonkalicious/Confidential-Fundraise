@@ -142,9 +142,18 @@ test("public raise routes expose summaries only while sponsors retain private de
   const id = await submit();
   const path = `/raises/${id}`;
   await request(`${path}/approve`, 200, { method: "POST", token: approvalCode });
-  for (const commitment of commitments.slice(0, 2)) {
-    const body = await request(`${path}/commitments`, 201, { method: "POST", body: commitment });
+  for (const [index, commitment] of commitments.slice(0, 2).entries()) {
+    const submittedCommitment = index === 0
+      ? { ...commitment, hard: true, verified: true }
+      : commitment;
+    const body = await request(`${path}/commitments`, 201, {
+      method: "POST", body: submittedCommitment,
+    });
     assertPublic(body);
+    if (index === 0) {
+      assert.equal(body.softTotal, commitment.amount);
+      assert.equal(body.hardTotal, 0);
+    }
   }
   await request(`${path}/commitments/${commitments[1].id}`, 200, {
     method: "PATCH", token: approvalCode, body: { hard: true, verified: true },
