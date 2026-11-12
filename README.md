@@ -1,4 +1,4 @@
-# Confidential Fundraising — Powered by NEAR
+# Agent Raised — Powered by NEAR
 
 A hackathon prototype for coordinating fundraising interest without publishing
 individual commitments. People or external agents can discover raises, reserve

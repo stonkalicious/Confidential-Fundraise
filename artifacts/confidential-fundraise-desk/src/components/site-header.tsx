@@ -6,9 +6,9 @@ export default function SiteHeader() {
 
   return (
     <header className="topbar">
-      <div className="brand" aria-label="Confidential Fundraising - Powered by NEAR">
+      <div className="brand" aria-label="Agent Raised - Powered by NEAR">
         <div className="brand-name">
-          <span>Confidential Fundraising - Powered by NEAR</span>
+          <span>Agent Raised - Powered by NEAR</span>
           <img
             className="brand-mark"
             src={`${import.meta.env.BASE_URL}fundraising-logo.png`}

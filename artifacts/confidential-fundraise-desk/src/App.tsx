@@ -1126,7 +1126,7 @@ function AppDesk({
           <section className="view-content how-panel" key="how">
             <article className="how-copy">
               <h1 className="how-title">How the app works</h1>
-              <p>Confidential Fundraising is a minimal demo of fundraise coordination with shared server-held records.</p>
+              <p>Agent Raised is a minimal demo of fundraise coordination with shared server-held records.</p>
               <p>
                 A prospect submits a soft commitment, and a founder can claim a raise with contact details. New raises stay out of the public list until a founder approves them. The Founder view uses a shared approval code to access individual commitments and claim contact details. Marking a commitment hard enables a dry-run NEAR Intents quote with fixed synthetic values; the quote never executes a swap. Separately, the founder and investor can confirm an optional transfer of exactly 1 test USDC on NEAR testnet.
               </p>
@@ -1145,7 +1145,7 @@ function AppDesk({
             <article className="thesis-copy">
               {isFundThesis ? (
                 <>
-              <h1 className="thesis-title">Confidential Fundraising — Example Thesis Summary</h1>
+              <h1 className="thesis-title">Agent Raised — Example Thesis Summary</h1>
               <p className="thesis-disclaimer">(Demo context only. Synthetic. Not an offer.)</p>
 
               <h2>Private money and cross-chain settlement</h2>
@@ -1178,7 +1178,7 @@ function AppDesk({
               </div>
 
               <p>
-                This page is context for the Confidential Fundraising prototype only. It demonstrates shared demo commitment tracking and an illustrative NEAR Intents quote; the quote does not execute cross-chain settlement. It is not a solicitation.
+                This page is context for the Agent Raised prototype only. It demonstrates shared demo commitment tracking and an illustrative NEAR Intents quote; the quote does not execute cross-chain settlement. It is not a solicitation.
               </p>
               <p>
                 The form below only displays a local demo confirmation. It does not send a contact request or create a commitment.

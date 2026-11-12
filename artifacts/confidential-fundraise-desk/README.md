@@ -1,4 +1,4 @@
-# Confidential Fundraising
+# Agent Raised
 
 See the [root README](../../README.md) for setup, the wallet-free judge
 walkthrough, privacy boundaries, and baseline disclosure. The walkthroughs

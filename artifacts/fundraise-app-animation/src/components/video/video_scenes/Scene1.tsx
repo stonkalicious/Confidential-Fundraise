@@ -24,7 +24,7 @@ export function Scene1() {
       style={{ background: '#f0eee5' }}
     >
       <div className="mono" style={{ position: 'absolute', top: '6%', left: '6%', fontSize: '2.8vmin', color: '#a45e49' }}>
-        CONFIDENTIAL FUNDRAISING <span style={{ color: '#8b867a' }}>/ DEMO</span>
+        AGENT RAISED <span style={{ color: '#8b867a' }}>/ DEMO</span>
       </div>
       <motion.div
         initial={{ scaleY: 0 }} animate={{ scaleY: 1 }} transition={{ duration: .4, ease: EASE }}

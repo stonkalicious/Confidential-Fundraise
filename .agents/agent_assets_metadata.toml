@@ -14,3 +14,17 @@ mtime_ms = 1794226372126
 storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:85f370ce-7616-4218-a0bb-4a518cb308c3/ca893219-6032-4ac4-b4b7-5fe538637483/231677e9-ac10-44d8-a3ce-5ea64c91fd24"
 storage_version_token = "1794226431593886"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "riaqOEE8veHk64jCwyBLb"
+uri = "file://generated-artifacts/agent-raised/Agent-Raised-App-Walkthrough.mp4"
+type = "video"
+title = "Agent Raised — corrected walkthrough"
+description = "Re-rendered 66-second MP4 with all eight scenes, restored opening posts and Raise.md question, Agent Raised branding, and soundtrack. 1280×720, H.264, 30 fps."
+logical_id = "f903e362-65da-4d6d-bad9-53ee6ed7bfe6"
+content_hash = "sha256:c63800ac436e18d3160266576571bc269a38cfbf029b5c33dbba789f37cf04a2"
+size = 4455421
+mtime_ms = 1794479164039
+storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:85f370ce-7616-4218-a0bb-4a518cb308c3/f903e362-65da-4d6d-bad9-53ee6ed7bfe6/f33698f6-c737-439d-81c5-3c09fc26aba4"
+storage_version_token = "1794479309746507"
+content_type = "video/mp4"

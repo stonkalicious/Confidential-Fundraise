@@ -1,4 +1,4 @@
-# Confidential Fundraising — App Walkthrough
+# Agent Raised — App Walkthrough
 
 ## Director's treatment
 - **Promise:** Fundraising interest can be coordinated without publishing individual commitment records.

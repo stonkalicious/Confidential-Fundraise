@@ -5,7 +5,7 @@ import SiteHeader from '@/components/site-header';
 export default function WhyNearPage() {
   useEffect(() => {
     const previousTitle = document.title;
-    const title = 'Why use NEAR Intents? | Confidential Fundraising - Powered by NEAR';
+    const title = 'Why use NEAR Intents? | Agent Raised - Powered by NEAR';
     const description = 'Learn how this demo uses NEAR Intents for a 1 USDC quote from Ethereum to Arbitrum. No funds move.';
     const previousMeta = [
       ['meta[name="description"]', description],

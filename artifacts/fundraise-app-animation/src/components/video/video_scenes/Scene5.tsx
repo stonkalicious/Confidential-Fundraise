@@ -117,7 +117,7 @@ export function Scene5() {
         style={{ position: 'absolute', bottom: '8.2%', right: '7%', display: 'flex', alignItems: 'center', gap: '1.1vmin', background: '#f8f6ef', padding: '.85vmin 1.25vmin', border: '1px solid #d7d2c5' }}
       >
         <img src={`${import.meta.env.BASE_URL}images/fundraising-logo.png`} alt="" style={{ width: '2.6vmin', height: '2.6vmin', borderRadius: '50%' }} />
-        <span style={{ font: '600 2.7vmin var(--sans)' }}>Confidential Fundraising</span>
+        <span style={{ font: '600 2.7vmin var(--sans)' }}>Agent Raised</span>
       </motion.div>
       <motion.div className="rule" initial={{ scaleX: 1 }} animate={{ scaleX: 0 }} transition={{ delay: 4.65, duration: .72, ease: EASE }}
         style={{ left: '6%', bottom: '5.5%', width: '88%', height: '.22vmin' }} />

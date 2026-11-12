@@ -16,7 +16,7 @@ export function SceneContext() {
   return (
     <motion.section className="film" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
       exit={{ opacity: 0, y: '-3%' }} transition={{ duration: .34, ease: EASE }} style={{ background: '#e9e6dc' }}>
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {beat < 2 && (
           <motion.div key={`h${beat}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             transition={{ duration: .4, ease: EASE }}
@@ -25,7 +25,7 @@ export function SceneContext() {
           </motion.div>
         )}
       </AnimatePresence>
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {beat === 0 && (
           <motion.img key="pc" src={collison} alt="Post by Patrick Collison (@patrickc)"
             initial={{ opacity: 0, y: '4%', scale: .97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
