@@ -9,6 +9,22 @@ import * as zod from 'zod';
 
 
 /**
+ * Public binary media. Supports HEAD and single byte ranges for native video playback and seeking.
+ * @summary Read the public walkthrough video or poster
+ */
+export const GetWalkthroughMediaParams = zod.object({
+  "filename": zod.enum(['walkthrough-589be0760638.mp4', 'walkthrough-589be0760638.webp'])
+})
+
+export const GetWalkthroughMediaHeader = zod.object({
+  "Range": zod.string().optional(),
+  "If-Range": zod.string().optional()
+})
+
+export const GetWalkthroughMediaResponse = zod.unknown()
+
+
+/**
  * @summary Exchange a signed wallet proof for a NEAR Intents session
  */
 

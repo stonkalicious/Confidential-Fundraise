@@ -17,6 +17,51 @@ tags:
   - name: near-intents-auth
     description: Secure NEAR Intents user sessions
 paths:
+  /storage/public-objects/agent-raised/{filename}:
+    get:
+      operationId: getWalkthroughMedia
+      summary: Read the public walkthrough video or poster
+      description: Public binary media. Supports HEAD and single byte ranges for native video playback and seeking.
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [walkthrough-589be0760638.mp4, walkthrough-589be0760638.webp]
+        - name: Range
+          in: header
+          schema:
+            type: string
+        - name: If-Range
+          in: header
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Complete public media file
+          content:
+            video/mp4:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        "206":
+          description: Requested byte range; Content-Range describes the returned portion
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Public media not found
+        "416":
+          description: Invalid or unsatisfiable byte range
+        "503":
+          description: Public media temporarily unavailable
   /near-intents/session:
     post:
       operationId: authenticateNearIntentsSession

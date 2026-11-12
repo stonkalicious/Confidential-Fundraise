@@ -82,6 +82,108 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
+export const getGetWalkthroughMediaUrl = (filename: 'walkthrough-589be0760638.mp4' | 'walkthrough-589be0760638.webp',) => {
+
+
+
+
+  return `/api/storage/public-objects/agent-raised/${filename}`
+}
+
+/**
+ * Public binary media. Supports HEAD and single byte ranges for native video playback and seeking.
+ * @summary Read the public walkthrough video or poster
+ */
+export const getWalkthroughMedia = async (filename: 'walkthrough-589be0760638.mp4' | 'walkthrough-589be0760638.webp', options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getGetWalkthroughMediaUrl(filename),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWalkthroughMediaQueryKey = (filename: 'walkthrough-589be0760638.mp4' | 'walkthrough-589be0760638.webp',) => {
+    return [
+    `/api/storage/public-objects/agent-raised/${filename}`
+    ] as const;
+    }
+
+
+export const getGetWalkthroughMediaQueryOptions = <TData = Awaited<ReturnType<typeof getWalkthroughMedia>>, TError = ErrorType<void>>(filename: 'walkthrough-589be0760638.mp4' | 'walkthrough-589be0760638.webp', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWalkthroughMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWalkthroughMediaQueryKey(filename);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWalkthroughMedia>>> = ({ signal }) => getWalkthroughMedia(filename, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: filename !== null && filename !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWalkthroughMedia>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetWalkthroughMediaQueryResult = NonNullable<Awaited<ReturnType<typeof getWalkthroughMedia>>>
+export type GetWalkthroughMediaQueryError = ErrorType<void>
+
+
+export function useGetWalkthroughMedia<TData = Awaited<ReturnType<typeof getWalkthroughMedia>>, TError = ErrorType<void>>(
+ filename: 'walkthrough-589be0760638.mp4' | 'walkthrough-589be0760638.webp', options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWalkthroughMedia>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getWalkthroughMedia>>,
+          TError,
+          Awaited<ReturnType<typeof getWalkthroughMedia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetWalkthroughMedia<TData = Awaited<ReturnType<typeof getWalkthroughMedia>>, TError = ErrorType<void>>(
+ filename: 'walkthrough-589be0760638.mp4' | 'walkthrough-589be0760638.webp', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWalkthroughMedia>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getWalkthroughMedia>>,
+          TError,
+          Awaited<ReturnType<typeof getWalkthroughMedia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetWalkthroughMedia<TData = Awaited<ReturnType<typeof getWalkthroughMedia>>, TError = ErrorType<void>>(
+ filename: 'walkthrough-589be0760638.mp4' | 'walkthrough-589be0760638.webp', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWalkthroughMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Read the public walkthrough video or poster
+ */
+
+export function useGetWalkthroughMedia<TData = Awaited<ReturnType<typeof getWalkthroughMedia>>, TError = ErrorType<void>>(
+ filename: 'walkthrough-589be0760638.mp4' | 'walkthrough-589be0760638.webp', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWalkthroughMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetWalkthroughMediaQueryOptions(filename,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getAuthenticateNearIntentsSessionUrl = () => {
 
 
