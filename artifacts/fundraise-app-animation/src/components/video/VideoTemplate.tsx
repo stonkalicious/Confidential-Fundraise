@@ -11,11 +11,17 @@ import { Scene2 } from './video_scenes/Scene2';
 import { Scene3 } from './video_scenes/Scene3';
 import { Scene4 } from './video_scenes/Scene4';
 import { Scene5 } from './video_scenes/Scene5';
+import { ScenePrep } from './video_scenes/ScenePrep';
+import { SceneDiscover } from './video_scenes/SceneDiscover';
+import { SceneReview } from './video_scenes/SceneReview';
 import './walkthrough.css';
 
 export const SCENE_DURATIONS = {
   scene1: 3000,
+  prep: 6500,
   scene2: 5000,
+  discover: 7000,
+  review: 7500,
   scene3: 5000,
   scene4: 5500,
   scene5: 5500,
@@ -31,7 +37,7 @@ const SCENE_START_SEC: Record<string, number> = (() => {
   }
   return offsets;
 })();
-const SCENE_COMPONENTS = [Scene1, Scene2, Scene3, Scene4, Scene5];
+const SCENE_COMPONENTS = [Scene1, ScenePrep, Scene2, SceneDiscover, SceneReview, Scene3, Scene4, Scene5];
 
 type AudioHandle = {
   volume: number;

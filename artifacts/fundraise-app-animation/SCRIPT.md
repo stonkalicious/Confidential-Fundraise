@@ -9,13 +9,20 @@
 - **Payoff:** The individual record folds into an unidentifiable aggregate bar while the closing disclaimer remains explicit.
 
 ## Shot timeline
+Scenes 01A, 02A and 02B are a **proposed workflow** (badged `PROPOSED WORKFLOW` on screen). Founder and investor use their own agents outside the app; nothing here shows in-app file ingestion, AI review, or agent submission.
+
 | Shot | Time | Focus | Main action | Handoff |
 |---|---:|---|---|---|
-| 01 | 0.00–3.00 | App identity and privacy promise | Three exact typographic snaps; app frame assembles | Rule line extends into dashboard progress rail |
-| 02 | 3.00–8.00 | Public progress page | Public totals and threshold draw in; private values never appear | Prospect tab geometry becomes the next form's top rule |
-| 03 | 8.00–13.00 | Soft commitment | Synthetic identifier and amount enter; submission becomes a private record | Record tile is carried through a clipped split into founder view |
-| 04 | 13.00–18.50 | Founder review and verification | Private row is verified; aggregate climbs to threshold | The amount expands into a public aggregate bar, identifier shutters away |
-| 05 | 18.50–24.00 | Privacy boundary and honest close | Public total remains; quote is clearly marked dry-run, no funds move | Aggregate rule retracts into the opening underline for loop continuity |
+| 01 | 0.00–3.00 | App identity and promise | Tagline snaps; app frame assembles | Rule → next scene |
+| 01A | 3.00–9.50 | Founder prepares raise.md (proposed) | Founder prompts own agent; raise.md with sources + flagged gaps; founder approves public page | Rule draws under approval stamp |
+| 02 | 9.50–14.50 | Public progress page | Aggregates only | Rule → investor scene |
+| 02A | 14.50–21.50 | Investor asks, agent discovers (proposed) | One "I'm looking for X" request; agent scans public raises, marks matches, reads raise.md | Matches carry into shortlist |
+| 02B | 21.50–29.00 | Agent review, human decides (proposed) | Shortlist; Evidence / Risks / Open questions; investor chooses to proceed; agent commits nothing | Rule → soft commitment |
+| 03 | 29.00–34.00 | Soft commitment | unchanged | → founder view |
+| 04 | 34.00–39.50 | Founder review | unchanged | → quote card |
+| 05 | 39.50–45.00 | Privacy boundary, honest close | unchanged | Loop to 01 |
+
+Shots 02–05 keep their original internal timings below; only their start offsets moved.
 
 ## Shot-by-shot script
 
@@ -35,6 +42,18 @@
 **Assets and technique:** Existing `fundraising-logo.png` from the source app, locally copied into this artifact; hand-built UI artwork matching the supplied app source; CSS / SVG rules and type, no live app embed or invented live data.
 
 **Sound intent:** Instrumental bed with crisp first accents; planned cut at 3.00s, alignment unverified until bed analysis.
+
+### Shot 01A / 3.00–9.50s / 6.50s — "FOUNDER PREPARES." (PROPOSED)
+**Exact content:** Kicker `01A / FOUNDER PREPARES`; badge `PROPOSED WORKFLOW`; card `FOUNDER → OWN AGENT` / `OUTSIDE THE APP`; prompt `Create a raise.md from our company materials. Include sources and flag missing information.`; reply `Drafted raise.md · sources cited · 2 gaps flagged`; document `raise.md` with `# Privacy Token Fund`, `## Thesis`, `## Sources` `[1] company deck · [2] public repo`, `## Missing information` `! Flagged for founder · not filled in by the agent`; `FOUNDER REVIEW` + artwork `Approve public raise page`; stamp `APPROVED BY FOUNDER · THEN PUBLIC`.
+**Choreography:** 0.35–1.6 prompt words reveal; 1.9 reply + doc rises; 3.9 review strip; 5.0 press + stamp; 5.7 rule draws.
+
+### Shot 02A / 14.50–21.50s / 7.00s — "THE AGENT SEARCHES." (PROPOSED)
+**Exact content:** Kicker `02A / INVESTOR ASKS · AGENT SEARCHES`; `INVESTOR → OWN AGENT`; single request `I'm looking for [X]. Find matching public raises and review them critically.` (X left as an explicit placeholder — no invented mandate); aside `One request. The investor does not browse or filter.`; agent log `Exploring public raises` → `Matching against your request` → `Reading raise.md + public sources`; right column `APP · PUBLIC RAISES (READ BY AGENT)` with five synthetic rows; three marked `match` then `raise.md read`, others dimmed. No cursor, no filter controls.
+**Choreography:** 0.4 request; 2.3 sweep lines scan rows; 3.7 matches lit; 5.0 raise.md read.
+
+### Shot 02B / 21.50–29.00s / 7.50s — "YOU DECIDE." (PROPOSED)
+**Exact content:** Kicker `02B / AGENT RETURNS A SHORTLIST`; `SHORTLIST` three rows; aside `A critical review, not a certification.`; review card `Privacy Token Fund` with headings `Evidence` (`Cited from raise.md and public sources.`), `Risks` (`Gaps and assumptions the agent flagged.`), `Open questions` (`To ask the founder before any commitment.`); bar `YOU DECIDE` · `The agent commits nothing.` · `Proceed?` → `Proceeding with Privacy Token Fund`.
+**Choreography:** headings land 0.7 / 1.5 / 2.3; decision bar 3.1; investor choice 5.0; rule 5.9 leads into Shot 03's soft commitment.
 
 ### Shot 02 / 3.00–8.00s / 5.00s — “THE PUBLIC VIEW.”
 **Purpose:** Demonstrate the progress view exposes only aggregate fundraising data.
@@ -105,7 +124,6 @@
 **Sound intent:** Instrumental has a resolved cadence under the message; loop reset at 24s. No VO or SFX requested.
 
 ## Audio spec
-- Runtime: 24 s (final `SCENE_DURATIONS` total).
-- Music: original restrained cinematic electronic / minimal piano pulse for a thoughtful fintech product walkthrough; felt-piano-like chord tones, soft hand percussion and rounded bass, 120 BPM pulse, patient opening, accents at 3, 8, 13, and 18.5 seconds, with a resolving tail at 24 seconds. The cuts land on the generated bed's measured half-second accents; the ambience is intentionally restrained. No vocals.
-- Generation note: the `generateMusic` callback was unavailable because this run could not confirm its paid-mode switch. To keep the film complete, an original local instrumental bed was synthesized and encoded as `public/audio/bg_music.mp3`; no voiceover or SFX were added.
-- Playback file: `bg_music.mp3`.
+- Runtime: 45 s (`SCENE_DURATIONS` total: 3 + 6.5 + 5 + 7 + 7.5 + 5 + 5.5 + 5.5).
+- Music: the existing original instrumental bed, re-edited (no new generation). The 24 s source is kept at `public/audio/source/bg_music_24s.mp3`; `bg_music.mp3` is an ffmpeg concat of its own phrases so every scene starts on the same bed material and the original cadence still resolves under Shot 05: 0–3 | 8–13+8–9.5 | 3–8 | 13–18.5+13–14.5 | 8–13+3–5.5 | 8–13 | 13–18.5 | 18.5–24. 40 ms fades at each splice. No VO or SFX.
+- Playback file: `bg_music.mp3` (45.06 s). Audio seeks to cumulative scene offsets derived from `SCENE_DURATIONS`.

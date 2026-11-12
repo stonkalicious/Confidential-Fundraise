@@ -6,7 +6,10 @@ import { useSceneControls } from './useSceneControls';
 
 const SCENE_DETAILS = [
   { title: 'Promise', filePath: 'src/components/video/video_scenes/Scene1.tsx' },
+  { title: 'Founder prepares raise.md (proposed)', filePath: 'src/components/video/video_scenes/ScenePrep.tsx' },
   { title: 'Public progress', filePath: 'src/components/video/video_scenes/Scene2.tsx' },
+  { title: 'Agent discovery (proposed)', filePath: 'src/components/video/video_scenes/SceneDiscover.tsx' },
+  { title: 'Agent review + investor choice (proposed)', filePath: 'src/components/video/video_scenes/SceneReview.tsx' },
   { title: 'Soft commitment', filePath: 'src/components/video/video_scenes/Scene3.tsx' },
   { title: 'Founder review', filePath: 'src/components/video/video_scenes/Scene4.tsx' },
   { title: 'Privacy boundary', filePath: 'src/components/video/video_scenes/Scene5.tsx' },
