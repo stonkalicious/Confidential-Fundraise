@@ -5,9 +5,9 @@ import VideoTemplate from './VideoTemplate';
 import { useSceneControls } from './useSceneControls';
 
 const SCENE_DETAILS = [
-  { title: 'Promise', filePath: 'src/components/video/video_scenes/Scene1.tsx' },
+  { title: 'Context: supplied posts + question', filePath: 'src/components/video/video_scenes/SceneContext.tsx' },
+  { title: 'AgentRaised.com intro', filePath: 'src/components/video/video_scenes/SceneIntro.tsx' },
   { title: 'Founder prepares raise.md (proposed)', filePath: 'src/components/video/video_scenes/ScenePrep.tsx' },
-  { title: 'Public progress', filePath: 'src/components/video/video_scenes/Scene2.tsx' },
   { title: 'Agent discovery (proposed)', filePath: 'src/components/video/video_scenes/SceneDiscover.tsx' },
   { title: 'Agent review + investor choice (proposed)', filePath: 'src/components/video/video_scenes/SceneReview.tsx' },
   { title: 'Soft commitment', filePath: 'src/components/video/video_scenes/Scene3.tsx' },

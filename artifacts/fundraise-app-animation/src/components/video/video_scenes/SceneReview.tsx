@@ -5,21 +5,26 @@ import { AgentHeader, ProposedBadge } from '../AgentUI';
 
 const EASE = [0.2, 0.85, 0.2, 1] as const;
 const COLS = ['Evidence', 'Risks', 'Open questions'];
-const LIST = ['Privacy Token Fund', 'Public raise 03', 'Public raise 04'];
+const REVIEW = [
+  'The public thesis describes confidential cross-chain settlement. [1]',
+  'Hard status alone is not proof of payment. [2]',
+  'What evidence confirms funding?',
+];
+const LIST = ['Privacy Token Fund', 'Private Social Trading', 'Swarm-for-Hire'];
 
 export function SceneReview() {
   const [beat, setBeat] = useState(0);
   useSceneTimer([
     { time: 900, callback: () => setBeat(1) },
-    { time: 1700, callback: () => setBeat(2) },
-    { time: 2500, callback: () => setBeat(3) },
-    { time: 3500, callback: () => setBeat(4) },
-    { time: 5000, callback: () => setBeat(5) },
+    { time: 2000, callback: () => setBeat(2) },
+    { time: 3100, callback: () => setBeat(3) },
+    { time: 4400, callback: () => setBeat(4) },
+    { time: 6900, callback: () => setBeat(5) },
   ]);
   return (
     <motion.section className="film" initial={{ opacity: 0, x: '4%' }} animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: '-4%' }} transition={{ duration: .34, ease: EASE }} style={{ background: '#eeebe1' }}>
-      <div className="scene-kicker mono">02B / AGENT REVIEWS · INVESTOR DECIDES</div>
+      <div className="scene-kicker mono">05 / AGENT REVIEWS · INVESTOR DECIDES</div>
       <div style={{ position: 'absolute', right: '6%', top: '5.4%' }}><ProposedBadge /></div>
 
       <div style={{ position: 'absolute', left: '6%', top: '15%', width: '27%' }}>
@@ -43,14 +48,11 @@ export function SceneReview() {
           {COLS.map((h, i) => (
             <div key={h} className="review-col">
               <div className="review-h">{h}</div>
-              {[0, 1, 2].map((k) => (
-                <motion.div key={k} className="cite-row" initial={{ opacity: 0, x: 14 }}
-                  animate={{ opacity: beat >= i + 1 ? 1 : 0, x: beat >= i + 1 ? 0 : 14 }}
-                  transition={{ delay: k * .14, duration: .3, ease: EASE }}>
-                  <i className="skel" style={{ width: `${[86, 64, 75][(k + i) % 3]}%` }} />
-                  {i === 0 && <span className="mono cite">[{k + 1}]</span>}
-                </motion.div>
-              ))}
+              <motion.div className="review-text" initial={{ opacity: 0, x: 14 }}
+                animate={{ opacity: beat >= i + 1 ? 1 : 0, x: beat >= i + 1 ? 0 : 14 }}
+                transition={{ duration: .35, ease: EASE }}>
+                {REVIEW[i]}
+              </motion.div>
             </div>
           ))}
         </div>
@@ -60,6 +62,7 @@ export function SceneReview() {
         animate={{ opacity: beat >= 4 ? 1 : 0, y: beat >= 4 ? 0 : 10 }} transition={{ duration: .4, ease: EASE }}
         style={{ position: 'absolute', left: '37%', bottom: '11%', width: '57%' }}>
         <span className="mono">INVESTOR DECIDES</span>
+        <span style={{ flex: 1, font: '600 2.8vmin/1.2 var(--sans)' }}>The agent commits nothing.</span>
         <span className="approve-btn" style={{ transform: beat >= 5 ? 'scale(.96)' : 'none' }}>
           {beat >= 5 ? 'Proceeding with Privacy Token Fund' : 'Proceed?'}
         </span>

@@ -11,13 +11,13 @@ export function ScenePrep() {
   const [beat, setBeat] = useState(0);
   useSceneTimer([
     { time: 1800, callback: () => setBeat(1) },
-    { time: 3400, callback: () => setBeat(2) },
-    { time: 4700, callback: () => setBeat(3) },
+    { time: 5400, callback: () => setBeat(2) },
+    { time: 6800, callback: () => setBeat(3) },
   ]);
   return (
     <motion.section className="film" initial={{ opacity: 0, x: '4%' }} animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: '-4%' }} transition={{ duration: .34, ease: EASE }} style={{ background: '#eeebe1' }}>
-      <div className="scene-kicker mono">01A / FOUNDER PREPARES</div>
+      <div className="scene-kicker mono">03 / FOUNDER PREPARES</div>
       <div style={{ position: 'absolute', right: '6%', top: '5.4%' }}><ProposedBadge /></div>
 
       <motion.div className="agent-card" initial={{ y: '4%', opacity: 0 }} animate={{ y: 0, opacity: 1 }}
@@ -43,9 +43,10 @@ export function ScenePrep() {
         <div className="doc-h2">## Thesis</div>
         <div className="doc-line">Private money and confidential cross-chain settlement.</div>
         <div className="doc-h2">## Sources</div>
-        <div className="doc-line mono doc-src">source references</div>
+        <div className="doc-line mono doc-src">[1] Public fund thesis</div>
+        <div className="doc-line mono doc-src">[2] Public progress page</div>
         <div className="doc-h2">## Missing information</div>
-        <div className="doc-flag">! flagged</div>
+        <div className="doc-flag">! How are hard commitments confirmed?</div>
       </motion.div>
 
       {/* beat 2+: founder reviews the public raise page itself before it goes public */}

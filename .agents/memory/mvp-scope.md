@@ -34,3 +34,15 @@ Nearhunt hackathon projects.
 
 **How to apply:** Keep each estimate visibly qualified, link to its public
 Nearhunt source, and do not add live vote ranking or synchronization.
+
+The raise.md preparation, investor discovery and critical-review flow is a
+proposed workflow using the founder's and investor's own external agents, not
+an existing in-app capability. The founder approves public information and the
+investor decides whether to proceed.
+
+**Why:** The user-approved animation scope explicitly separates this proposal
+from the demonstrated commitment features.
+
+**How to apply:** Retain clear proposed-workflow identification and human
+approval/decision beats unless a separate implementation is authorized. Do not
+imply the app already ingests files, performs AI reviews or commits for investors.

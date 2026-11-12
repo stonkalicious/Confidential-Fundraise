@@ -28,7 +28,7 @@ export function SceneDiscover() {
   return (
     <motion.section className="film" initial={{ opacity: 0, y: '3%' }} animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: '-4%' }} transition={{ duration: .34, ease: EASE }} style={{ background: '#e9e6dc' }}>
-      <div className="scene-kicker mono">02A / INVESTOR ASKS · AGENT SEARCHES</div>
+      <div className="scene-kicker mono">04 / INVESTOR ASKS · AGENT SEARCHES</div>
       <div style={{ position: 'absolute', right: '6%', top: '5.4%' }}><ProposedBadge /></div>
 
       <motion.div className="agent-card" initial={{ opacity: 0, x: '-3%' }} animate={{ opacity: 1, x: 0 }}

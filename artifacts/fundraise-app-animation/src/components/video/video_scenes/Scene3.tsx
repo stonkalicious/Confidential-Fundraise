@@ -21,7 +21,7 @@ export function Scene3() {
       transition={{ duration: .36, ease: EASE }}
       style={{ background: '#f0eee5' }}
     >
-      <div className="mono" style={{ position: 'absolute', left: '6%', top: '7%', color: '#a45e49', fontSize: '2.8vmin' }}>02 / PROSPECT</div>
+      <div className="mono" style={{ position: 'absolute', left: '6%', top: '7%', color: '#a45e49', fontSize: '2.8vmin' }}>06 / PROSPECT</div>
       <div className="mono" style={{ position: 'absolute', right: '6%', top: '18%', width: '17%', borderTop: '1px solid #cfcabd', paddingTop: '1.1vmin', fontSize: '2.7vmin', lineHeight: 1.2, color: '#777468' }}>
         NO WALLET<br />NO TRANSFER
       </div>

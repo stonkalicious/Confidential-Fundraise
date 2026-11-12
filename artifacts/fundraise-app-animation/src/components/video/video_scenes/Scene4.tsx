@@ -26,7 +26,7 @@ export function Scene4() {
       transition={{ duration: .38, ease: EASE }}
       style={{ background: '#eae8df' }}
     >
-      <div className="mono" style={{ position: 'absolute', top: '5.5%', left: '6%', color: '#a45e49', fontSize: '2.8vmin' }}>03 / FOUNDER REVIEW</div>
+      <div className="mono" style={{ position: 'absolute', top: '5.5%', left: '6%', color: '#a45e49', fontSize: '2.8vmin' }}>07 / FOUNDER REVIEW</div>
       <div style={{ position: 'absolute', left: '6%', top: '11%', width: '88%', height: '78%', display: 'grid', gridTemplateColumns: '1.23fr .77fr' }}>
         <AppChrome style={{ height: '100%', background: '#39344d', borderColor: '#514b61' }}>
           <AppMasthead flag="PRIVATE VIEW" />

@@ -13,66 +13,40 @@ Scenes 01A, 02A and 02B are a **proposed workflow** (badged `PROPOSED WORKFLOW` 
 
 | Shot | Time | Focus | Main action | Handoff |
 |---|---:|---|---|---|
-| 01 | 0.00–3.00 | App identity and promise | Tagline snaps; app frame assembles | Rule → next scene |
-| 01A | 3.00–9.50 | Founder prepares raise.md (proposed) | Founder prompts own agent; raise.md with sources + flagged gaps; founder approves public page | Rule draws under approval stamp |
-| 02 | 9.50–14.50 | Public progress page | Aggregates only | Rule → investor scene |
-| 02A | 14.50–21.50 | Investor asks, agent discovers (proposed) | One "I'm looking for X" request; agent scans public raises, marks matches, reads raise.md | Matches carry into shortlist |
-| 02B | 21.50–29.00 | Agent review, human decides (proposed) | Shortlist; Evidence / Risks / Open questions; investor chooses to proceed; agent commits nothing | Rule → soft commitment |
-| 03 | 29.00–34.00 | Soft commitment | unchanged | → founder view |
-| 04 | 34.00–39.50 | Founder review | unchanged | → quote card |
-| 05 | 39.50–45.00 | Privacy boundary, honest close | unchanged | Loop to 01 |
+| 00 | 0.00–20.50 | Context (supplied posts) | Patrick Collison post screenshot 0–6.5; Haseeb Qureshi post screenshot 6.5–17.0 (10.5 s reading time); question “What would a Raise.md file allow?” 17.0–20.5 | Fade → Intro |
+| 00B | 20.50–25.50 | Project introduction | `AgentRaised.com`; `Scrap webforms, emails and cold calls.`; `Let founders and investors use their agents to find the best matches.` | Fade → Shot 01A |
+| 01A | 25.50–34.00 | Founder prepares raise.md (proposed) | Founder prompts own agent; raise.md with sources + flagged gaps; founder approves public page | Rule draws under approval stamp |
+| 02A | 34.00–41.00 | Investor asks, agent discovers (proposed) | One approved “I’m looking for NEAR projects…” request; agent scans public raises, marks matches, reads raise.md | Matches carry into shortlist |
+| 02B | 41.00–50.00 | Agent review, human decides (proposed) | Shortlist; Evidence / Risks / Open questions; investor chooses to proceed; agent commits nothing | Rule → soft commitment |
+| 03 | 50.00–55.00 | Soft commitment | unchanged | → founder view |
+| 04 | 55.00–60.50 | Founder review | unchanged | → quote card |
+| 05 | 60.50–66.00 | Privacy boundary, honest close | unchanged | Loop to 00 |
 
-Shots 02–05 keep their original internal timings below; only their start offsets moved.
+Shots 02–05 keep their original internal timings; choreography times are scene-relative.
 
 ## Shot-by-shot script
 
-### Shot 01 / 0.00–3.00s / 3.00s — “LIST YOUR PROJECT IN PUBLIC.”
-**Purpose:** State the product's public discovery, private funding, and agent-update promise in one readable opening lockup.
+### Shot 00 / 0.00–20.50s / 20.50s — CONTEXT
+**Exact content:** Large centred heading per beat: over the Collison post `Company formations are growing exponentially.`; over the Haseeb post `Company.md files let investors agents filter quickly.`; no heading over the question; supplied screenshot of Patrick Collison's post (attached_assets/Screenshot_2026-11-12_at_09.12.42…png) 0.00–6.50 (≈80% frame height); supplied screenshot of Haseeb Qureshi's post (…09.13.20…png) 6.50–17.00 at 86% frame width; then the question `What would a Raise.md file allow?` with an oxide rule drawing at 17.7. Posts are shown unaltered as context only; no endorsement of this app is stated or implied.
+**Transition:** question fades into Shot 01A (the former Promise shot 01 was removed at the user's request).
 
-**Exact content:** The Scene 1 tagline is `List your project in public. Fund it privately with Near. Let agents update it.` It assembles as large, readable text over the first 1.85 seconds. The existing app masthead and public progress panel remain visible beside it; no new copy is added.
+### Shot 00B / 20.50–25.50s / 5.00s — AGENTRAISED.COM
+**Exact content (user-approved):** `AgentRaised.com` (large serif, `.com` in oxide italic) and the two lines `Scrap webforms, emails and cold calls.` / `Let founders and investors use their agents to find the best matches.` No other copy.
+**Choreography:** 0.0 oxide rule draws down; 0.2 name rises; 0.9 first line; 1.6 second line; hold to 5.0 then fade.
 
-**Composition:** Parchment ground, aubergine typography. Large live app window occupies the right half, cropped so its progress panel is recognizable; the left field holds the multi-line tagline at a large display size. A vermilion vertical rule anchors the safe left edge; the actual app's green-and-black logo sits in its cream masthead.
+### Shot 01A / 25.50–34.00s / 8.50s — "FOUNDER PREPARES." (PROPOSED)
+**Exact content:** Kicker `03 / FOUNDER PREPARES`; badge `PROPOSED WORKFLOW`; card `FOUNDER → OWN AGENT` / `OUTSIDE THE APP`; prompt `Create a raise.md from our company materials. Include sources and flag missing information.`; document `raise.md` with `# Privacy Token Fund`, `## Thesis`, `## Sources` `[1] Public fund thesis` · `[2] Public progress page`, `## Missing information` `! How are hard commitments confirmed?` (synthetic, user-approved); `FOUNDER REVIEW` + artwork `Approve public raise page`; stamp `APPROVED BY FOUNDER · THEN PUBLIC`.
+**Choreography:** 0.3–1.6 prompt words reveal; 1.8 raise.md rises (sources + gap readable for 3.6 s); 5.4 founder's public raise page review; 6.8 approve press → `Approved · public`; 7.7 rule draws.
 
-**Artistic idea:** The tagline assembles line by line in percussive typographic beats beside the working interface, turning the promise immediately into a recognizable tool.
-
-**Timed choreography:** 0.00–0.39: `List your project` snaps in at the 8.5% inset; the red rule is already visible. 0.39–0.76: `in public.` lands beneath it. 0.76–1.12: `Fund it privately` joins. 1.12–1.48: `with Near.` lands. 1.48–1.84: `Let agents` joins, followed by `update it.` at 1.84. The app window folds open from its top rule; its masthead and progress figure settle alongside the completed tagline. The underline extends into the next shot's progress rail; no dead hold.
-
-**Transition contract:** The underline continues across the cut as the public progress panel's threshold rule. The app window remains the visual carrier; the headline exits upward while the screen scales slightly larger.
-
-**Assets and technique:** Existing `fundraising-logo.png` from the source app, locally copied into this artifact; hand-built UI artwork matching the supplied app source; CSS / SVG rules and type, no live app embed or invented live data.
-
-**Sound intent:** Instrumental bed with crisp first accents; planned cut at 3.00s, alignment unverified until bed analysis.
-
-### Shot 01A / 3.00–9.50s / 6.50s — "FOUNDER PREPARES." (PROPOSED)
-**Exact content:** Kicker `01A / FOUNDER PREPARES`; badge `PROPOSED WORKFLOW`; card `FOUNDER → OWN AGENT` / `OUTSIDE THE APP`; prompt `Create a raise.md from our company materials. Include sources and flag missing information.`; reply `Drafted raise.md · sources cited · 2 gaps flagged`; document `raise.md` with `# Privacy Token Fund`, `## Thesis`, `## Sources` `[1] company deck · [2] public repo`, `## Missing information` `! Flagged for founder · not filled in by the agent`; `FOUNDER REVIEW` + artwork `Approve public raise page`; stamp `APPROVED BY FOUNDER · THEN PUBLIC`.
-**Choreography:** 0.35–1.6 prompt words reveal; 1.9 reply + doc rises; 3.9 review strip; 5.0 press + stamp; 5.7 rule draws.
-
-### Shot 02A / 14.50–21.50s / 7.00s — "THE AGENT SEARCHES." (PROPOSED)
-**Exact content:** Kicker `02A / INVESTOR ASKS · AGENT SEARCHES`; `INVESTOR → OWN AGENT`; single request `I'm looking for [X]. Find matching public raises and review them critically.` (X left as an explicit placeholder — no invented mandate); aside `One request. The investor does not browse or filter.`; agent log `Exploring public raises` → `Matching against your request` → `Reading raise.md + public sources`; right column `APP · PUBLIC RAISES (READ BY AGENT)` with five synthetic rows; three marked `match` then `raise.md read`, others dimmed. No cursor, no filter controls.
+### Shot 02A / 34.00–41.00s / 7.00s — "THE AGENT SEARCHES." (PROPOSED)
+**Exact content:** Kicker `04 / INVESTOR ASKS · AGENT SEARCHES`; `INVESTOR → OWN AGENT`; single request `I’m looking for NEAR projects using agents for private fundraising and investor discovery. Find matching public raises and review them critically.` (user-approved wording); aside `One request. The investor does not browse or filter.`; agent log `Exploring public raises` → `Matching against your request` → `Reading raise.md + public sources`; right column `APP · PUBLIC RAISES (READ BY AGENT)` with five synthetic rows; three marked `match` then `raise.md read`, others dimmed. No cursor, no filter controls.
 **Choreography:** 0.4 request; 2.3 sweep lines scan rows; 3.7 matches lit; 5.0 raise.md read.
 
-### Shot 02B / 21.50–29.00s / 7.50s — "YOU DECIDE." (PROPOSED)
-**Exact content:** Kicker `02B / AGENT RETURNS A SHORTLIST`; `SHORTLIST` three rows; aside `A critical review, not a certification.`; review card `Privacy Token Fund` with headings `Evidence` (`Cited from raise.md and public sources.`), `Risks` (`Gaps and assumptions the agent flagged.`), `Open questions` (`To ask the founder before any commitment.`); bar `YOU DECIDE` · `The agent commits nothing.` · `Proceed?` → `Proceeding with Privacy Token Fund`.
-**Choreography:** headings land 0.7 / 1.5 / 2.3; decision bar 3.1; investor choice 5.0; rule 5.9 leads into Shot 03's soft commitment.
+### Shot 02B / 41.00–50.00s / 9.00s — "YOU DECIDE." (PROPOSED)
+**Exact content:** Kicker `05 / AGENT REVIEWS · INVESTOR DECIDES`; `SHORTLIST` three rows; aside `A critical review, not a certification.`; review card `Privacy Token Fund` with headings and approved synthetic text: `Evidence` — `The public thesis describes confidential cross-chain settlement. [1]`; `Risks` — `Hard status alone is not proof of payment. [2]`; `Open questions` — `What evidence confirms funding?`; decision bar `INVESTOR DECIDES` · `The agent commits nothing.` · `Proceed?` → `Proceeding with Privacy Token Fund`. Shortlist: Privacy Token Fund, Private Social Trading, Swarm-for-Hire.
+**Choreography:** Evidence 0.9, Risks 2.0, Open questions 3.1; boundary bar 4.4 (visible 2.5 s before choice); investor chooses 6.9; rule 7.8.
 
-### Shot 02 / 3.00–8.00s / 5.00s — “THE PUBLIC VIEW.”
-**Purpose:** Demonstrate the progress view exposes only aggregate fundraising data.
-
-**Exact content:** UI masthead `Privacy Token Fund`; tab `01 Progress` highlighted; eyebrow `PUBLIC PROGRESS`; heading `$420,000`; target `of $2,000,000`; bar label `HARD COMMITMENTS`; secondary metrics `SOFT INTEREST  $86,500` and `HARD COMMITMENTS  $420,000`; note `Individual commitment details are not shown here.` At 6.35 a small outlined callout: `AGGREGATES ONLY`.
-
-**Composition:** Full-width dark aubergine application top rail, parchment body. Large progress panel centered, occupies ~78% of short edge; headline total owns left half, precise target and a long red bar span right half. Bottom data strip is split by one thin rule; no investor names or amounts are shown. Safe margins 6%.
-
-**Artistic idea:** The progress fill grows from the underline inherited from Shot 01, but the bar is deliberately aggregate and not a stack of individual marks. A blank record column on the screen remains visibly empty to signal what is withheld.
-
-**Timed choreography:** 0.00–0.45: window completes push-in; `PUBLIC PROGRESS` and masthead settle. 0.45–1.05: `$420,000` rolls upward through a few numerals then lands; target enters from the opposite side. 1.05–2.00: red progress rail draws from zero to 21%; bar endpoint stops with a sharp tick. 2.10–2.75: soft and hard aggregate labels reveal sequentially. 3.00–3.65: `AGGREGATES ONLY` frames the empty records region; pointer-like focus ring passes over the aggregate, never over private detail. 3.90–4.45: note becomes legible; window shifts left and Prospect tab lights up. 4.45–5.00: tab's lower border pulls outward into a writing line that crosses the cut.
-
-**Transition contract:** A hard cut rides the drawn tab underline; the UI's left navigation is retained but the center content is replaced by the prospect form. At least two mechanics combine: screen push and carried tab rule.
-
-**Assets and technique:** CSS UI, large Instrument Serif totals, DM Mono data labels, SVG progress rail. No fabricated logo; existing app mark carries through.
-
-**Sound intent:** Bed continues; planned 8.00s cut lands on a musical accent if one is present.
-
-### Shot 03 / 8.00–13.00s / 5.00s — “SOFT MEANS INTEREST.”
+### Shot 03 / 50.00–55.00s / 5.00s — “SOFT MEANS INTEREST.”
 **Purpose:** Show that a prospect can record an amount without transferring funds or needing a wallet.
 
 **Exact content:** Selected tab `Prospect`; form title `Submit a soft commitment`; label `IDENTIFIER`; typed value `demo-investor-001`; label `AMOUNT`; typed value `$10,000`; CTA artwork `Submit soft commitment`; success record `Soft commitment recorded`; exact caveat `Interest only · no money sent.` Footer `Wallet not required.` Keep all identifiers synthetic.
@@ -89,7 +63,7 @@ Shots 02–05 keep their original internal timings below; only their start offse
 
 **Sound intent:** Music bed only; a light rhythmic accent on the submit press, not an added SFX.
 
-### Shot 04 / 13.00–18.50s / 5.50s — “A FOUNDER REVIEWS.”
+### Shot 04 / 55.00–60.50s / 5.50s — “A FOUNDER REVIEWS.”
 **Purpose:** Make clear that the founder can inspect the individual record privately, and that verification is an explicit founder action.
 
 **Exact content:** Header `Founder review · PRIVATE`; guidance `Mark hard only after confirmation.` Private record `demo-investor-001` / `$10,000` / `SOFT`; visual-only control `Mark verified (demo)`; status changes to `HARD · VERIFIED (DEMO)`; public aggregate `$430,000`; footer disclaimer `Demo status only. No funds moved.`
@@ -106,7 +80,7 @@ Shots 02–05 keep their original internal timings below; only their start offse
 
 **Sound intent:** Strongest instrumental accent at verification stamp if available; cut at 18.50s to the next downbeat, timing to be confirmed after generation.
 
-### Shot 05 / 18.50–24.00s / 5.50s — “COORDINATION ≠ SETTLEMENT.”
+### Shot 05 / 60.50–66.00s / 5.50s — “COORDINATION ≠ SETTLEMENT.”
 **Purpose:** Finish with a memorable privacy principle and truthful boundaries around the optional NEAR Intents demo.
 
 **Exact content:** Quote card heading `NEAR INTENTS · OPTIONAL DEMO`; label `FIXED EXAMPLE`; amount `1 USDC`; route `Ethereum → Arbitrum`; animated wallet-authentication sequence `Connect NEAR wallet` → `Approve authentication · empty intent` → `Confidential quote returned`; badge `DRY-RUN QUOTE`; prominent `NO FUNDS MOVE`; legal note `A quote is not a payment or investment settlement.` Final lockup `Public totals. Private records.` with `DEMO ONLY · SYNTHETIC DATA`. No claim of successful live quote or onchain settlement.
@@ -121,9 +95,9 @@ Shots 02–05 keep their original internal timings below; only their start offse
 
 **Assets and technique:** Existing supplied logo; UI and quote card recreated as graphic artwork; Instrument Serif close, DM Sans and mono labels; explicit legal boundary copy.
 
-**Sound intent:** Instrumental has a resolved cadence under the message; loop reset at 24s. No VO or SFX requested.
+**Sound intent:** Instrumental has a resolved cadence under the message; loop reset at 66 s. No VO or SFX requested.
 
 ## Audio spec
-- Runtime: 45 s (`SCENE_DURATIONS` total: 3 + 6.5 + 5 + 7 + 7.5 + 5 + 5.5 + 5.5).
-- Music: the existing original instrumental bed, re-edited (no new generation). The 24 s source is kept at `public/audio/source/bg_music_24s.mp3`; `bg_music.mp3` is an ffmpeg concat of its own phrases so every scene starts on the same bed material and the original cadence still resolves under Shot 05: 0–3 | 8–13+8–9.5 | 3–8 | 13–18.5+13–14.5 | 8–13+3–5.5 | 8–13 | 13–18.5 | 18.5–24. 40 ms fades at each splice. No VO or SFX.
-- Playback file: `bg_music.mp3` (45.06 s). Audio seeks to cumulative scene offsets derived from `SCENE_DURATIONS`.
+- Runtime: 66 s (`SCENE_DURATIONS`: 20.5 context + 5 intro + 8.5 prep + 7 discover + 9 review + 5 soft + 5.5 founder + 5.5 close; 8 scenes). Promise (former 01) and standalone Public progress (former 02) were removed at the user's request; the aggregate update remains inside Shot 04.
+- Music: the existing original instrumental bed, re-edited (no new generation). The 24 s source is kept at `public/audio/source/bg_music_24s.mp3`; `bg_music.mp3` is an ffmpeg concat of its own phrases so every scene starts on the same bed material and the original cadence still resolves under Shot 05: 0–3 | 8–13+8–9.5 | 3–8 | 13–18.5+13–14.5 | 8–13+3–5.5 | 8–13 | 13–18.5 | 18.5–24. 40 ms fades at each splice. For Shot 00 a 20.5 s prefix of the same source (3–8 + 8–13 + 13–18.5 + 8–13, 40 ms fades) is prepended, so every later offset shifts by +20.5 s. The former Shot 01 bed segment (20.5–23.5 s of the previous file) was cut out with 40 ms fades. The former Shot 02 segment (27–32 s of the 62.5 s file) was also cut with 40 ms fades. Audio seeks per scene: context 0, 01A 20.5, 02A 27, 02B 34, 03 41.5, 04 46.5, 05 52. No VO or SFX.
+- Playback file: `bg_music.mp3` (66.06 s). Cuts removed the former Promise (3 s) and Public progress (5 s) segments; same-source inserts (40 ms fades): 5 s (src 8–13) at 20.5 for the intro, 2 s (src 13–15) at end of prep, 1.5 s (src 13–14.5) at end of review. Seek offsets: context 0, intro 20.5, 01A 25.5, 02A 34, 02B 41, 03 50, 04 55, 05 60.5.
