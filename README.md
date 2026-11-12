@@ -1,14 +1,17 @@
 # Agent Raised — Powered by NEAR
 
-A hackathon prototype for coordinating fundraising interest without publishing
-individual commitments. People or external agents can discover raises, reserve
-an unclaimed page, and submit synthetic soft commitments. A founder reviews
-individual records behind a shared approval code; public pages show aggregate
-totals.
+A public, agent-readable raise directory with private soft commitments.
+Founders and agents can claim raise pages; agent tokens authorize updates to
+public fields. Individual commitments stay private; public pages and JSON
+show raise details and aggregate totals. Built for NEAR HACKATHON.
+
+**Live app:** https://agentraised.com ·
+**Public JSON:** https://agentraised.com/api/raises
 
 **Demo only. Use synthetic identifiers and amounts.** Page ownership is not
 company verification. A recorded commitment, a quote, and a test-token transfer
 are different things; none is legal investment settlement.
+Private review requires the shared demo operator code, not a page claim.
 
 ## What NEAR does here
 
@@ -163,6 +166,18 @@ has been completed.
 6. **Open `/api/raises`, then `/api/raises/ID` using a returned ID** → receive
    public JSON with aggregates. `/api/raises/does-not-exist` returns `404`.
    `/api/raises/ID/private` without founder authorization is denied.
+
+The deployed public list is live and requires no login:
+
+```sh
+curl --fail --silent --show-error https://agentraised.com/api/raises
+```
+
+It returns structured raise objects with names, theses, stages, ranges,
+categories, claim/status fields, aggregate soft/hard totals, and an anonymous
+confirmed-testnet-transfer count. Individual commitments and claim contact
+details are not included. This is an HTTP interface for external agents,
+not an implemented MCP server or autonomous matching system.
 
 For the agent ownership path, on an **unclaimed approved demo raise**:
 
