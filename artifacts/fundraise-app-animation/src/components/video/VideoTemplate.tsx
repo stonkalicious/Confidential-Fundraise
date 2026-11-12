@@ -97,7 +97,7 @@ export default function VideoTemplate({
         </AnimatePresence>
         <audio
           ref={audioRef}
-          src={`${import.meta.env.BASE_URL}audio/bg_music.mp3`}
+          src={`${import.meta.env.BASE_URL}audio/agent_raised_music_57s.m4a`}
           preload="auto"
           autoPlay
           muted={muted}

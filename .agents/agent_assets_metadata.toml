@@ -42,3 +42,17 @@ mtime_ms = 1794479678751
 storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:85f370ce-7616-4218-a0bb-4a518cb308c3/b4e88b70-56cd-4c49-a6d5-0f348c9bf8a6/8dcd2aa5-8d73-4f17-99dc-5ddf680bd0f3"
 storage_version_token = "1794479748407060"
 content_type = "video/mp4"
+
+[[outputs]]
+id = "a5ibsTITH7JiPG5KaEmRf"
+uri = "file://generated-artifacts/agent-raised/Agent-Raised-App-Walkthrough-57s-music.mp4"
+type = "video"
+title = "Agent Raised — your music, unchanged video"
+description = "The original 57-second video, unchanged, with your supplied music at normal speed and cut to match the video. No old soundtrack mixed in."
+logical_id = "183ede18-8cd2-496a-9e33-4bdaf33c9138"
+content_hash = "sha256:589be07606387490c8bd64eb12cce1123c1576e4cbaec1629799f10c74209b77"
+size = 4118467
+mtime_ms = 1794479998732
+storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:85f370ce-7616-4218-a0bb-4a518cb308c3/183ede18-8cd2-496a-9e33-4bdaf33c9138/ce7b0bc4-dff7-4bf9-9050-a89815012b9c"
+storage_version_token = "1794480053822371"
+content_type = "video/mp4"
