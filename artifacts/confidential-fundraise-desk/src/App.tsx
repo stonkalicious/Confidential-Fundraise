@@ -52,6 +52,7 @@ import {
 const queryClient = new QueryClient();
 
 const DEMO_LABEL = 'Demo only — public data shows approved raises and aggregates.';
+const DEMO_ACTION_NOTICE = 'Hackathon demo. Listings are not independently verified. Recording interest is non-binding and does not transfer money. A page claim does not verify a founder or company.';
 
 function mergeApiRaise(summary: RaiseSummary, base: Raise): Raise {
   const localCommitments = base.commitments ?? [];
@@ -340,7 +341,7 @@ function AppDesk({
     event.preventDefault();
     setSponsorError('');
     if (!approvalCode) {
-      setSponsorError('Enter the founder approval code.');
+      setSponsorError('Enter the demo operator code.');
       return;
     }
     const sessionVersion = sponsorSessionVersion.current;
@@ -689,6 +690,7 @@ function AppDesk({
           <section className="view-content content-grid" key="prospect">
             <div>
               <h2 className="section-title">Submit a soft commitment</h2>
+              <p className="section-copy" data-testid="text-investor-demo-notice">{DEMO_ACTION_NOTICE}</p>
               <form className="form-card" onSubmit={submitCommitment} noValidate>
                 <div className="field-wrap">
                   <label className="field-label" htmlFor="prospect-identifier">Your name or alias</label>
@@ -723,10 +725,11 @@ function AppDesk({
                     />
                   </div>
                 </div>
+                <p className="side-copy">Your name or alias and amount are not shown publicly.</p>
                 <p className="side-copy">Do not enter sensitive personal or confidential business information.</p>
                 {formError && <p className="inline-error" data-testid="status-form-error" role="alert">{formError}</p>}
                 <button className="primary-button" data-testid="button-submit-commitment" type="submit">
-                  Submit soft commitment <span className="button-arrow" aria-hidden="true">↗</span>
+                  Record non-binding interest <span className="button-arrow" aria-hidden="true">↗</span>
                 </button>
               </form>
             </div>
@@ -750,8 +753,9 @@ function AppDesk({
                 )}
                 {!privateRaise ? (
                   <form className="sponsor-unlock-form" onSubmit={unlockSponsor}>
+                    <p className="section-copy" data-testid="text-operator-access-notice">Private review is controlled by the demo operator. Claiming a raise does not grant access. The shared code is not a founder-specific account.</p>
                     <div className="field-wrap">
-                      <label className="field-label" htmlFor="sponsor-approval-code">Founder approval code</label>
+                      <label className="field-label" htmlFor="sponsor-approval-code">Demo operator code</label>
                       <input
                         className="field"
                         id="sponsor-approval-code"
@@ -763,7 +767,7 @@ function AppDesk({
                       />
                     </div>
                     <button className="primary-button" type="submit" disabled={sponsorLoading}>
-                      {sponsorLoading ? 'Loading…' : 'Unlock founder view'}
+                      {sponsorLoading ? 'Loading…' : 'Unlock demo review'}
                     </button>
                   </form>
                 ) : (
@@ -855,6 +859,7 @@ function AppDesk({
                 <div className="side-label">Threshold</div>
                 <h3 className="side-title">{usd(target)}</h3>
                 <p className="side-copy">The demo threshold is met when aggregate hard commitments reach {usd(target)}. Reaching it does not trigger settlement.</p>
+                <p className="side-copy" data-testid="text-near-funding-separation">Optional NEAR technology demo—not a funding step. Quotes do not transfer funds. Any testnet transfer is separate from recorded interest.</p>
                 <NearDemoPanel state={nearDemoPanelState} />
               </aside>
             </div>
@@ -1007,6 +1012,7 @@ function AppDesk({
 
         {view === 'progress' && (
           <section className="view-content" key="progress">
+            <p className="section-copy" data-testid="text-progress-demo-notice">{DEMO_ACTION_NOTICE}</p>
             <div className="raise-claim-toolbar">
               <div
                 className="eyebrow raise-status-banner"
@@ -1029,7 +1035,7 @@ function AppDesk({
                     setView('prospect');
                   }}
                 >
-                  Submit soft commitment
+                  Record non-binding interest
                 </button>
                 {!raise.claimed && (
                   <button
@@ -1053,7 +1059,7 @@ function AppDesk({
                 role="status"
                 aria-live="polite"
               >
-                Soft commitment submitted.
+                Interest recorded. This is not an investment, and no money has moved. This demo does not send an introduction or follow-up message.
               </p>
             )}
             {claimFormOpen && !raise.claimed && (
@@ -1062,6 +1068,7 @@ function AppDesk({
                 data-testid="form-raise-claim"
                 onSubmit={submitRaiseClaim}
               >
+                <p className="side-copy" data-testid="text-claim-access-notice">Claiming reserves this page. It does not verify your identity or unlock private commitment records.</p>
                 <div className="field-wrap">
                   <label className="field-label" htmlFor="raise-claim-founder-name">Founder name</label>
                   <input
@@ -1260,6 +1267,7 @@ function AppDesk({
               </p>
             ) : (
               <form className="form-card thesis-contact-form" onSubmit={submitContactRequest} noValidate>
+                <p className="side-copy" data-testid="text-contact-demo-notice">Demo form only. Submitting this form does not send a message.</p>
                 <div className="field-wrap">
                   <label className="field-label" htmlFor="contact-name">Name</label>
                   <input className="field" id="contact-name" data-testid="input-contact-name" name="name" />

@@ -7,6 +7,7 @@ const app = source('../src/App.tsx');
 const navigation = source('../src/lib/raise-navigation.ts');
 const header = source('../src/components/site-header.tsx');
 const legal = source('../src/components/legal-disclaimer-page.tsx');
+const list = source('../src/components/raise-list.tsx');
 
 test('legal route and shared menu preserve existing navigation and close on selection', () => {
   assert.match(app, /<Route path="\/legal-disclaimer"><LegalDisclaimerPage \/><\/Route>/);
@@ -45,4 +46,33 @@ test('approved investor copy preserves internal fields, submission behavior, and
   const css = source('../src/index.css');
   assert.match(css, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(css, /white-space: normal/);
+});
+
+test('approved journey notices explain demo limits before acting', () => {
+  assert.ok(app.includes('Hackathon demo. Listings are not independently verified. Recording interest is non-binding and does not transfer money. A page claim does not verify a founder or company.'));
+  assert.match(app, /data-testid="text-investor-demo-notice">\{DEMO_ACTION_NOTICE\}/);
+  assert.match(app, /data-testid="text-progress-demo-notice">\{DEMO_ACTION_NOTICE\}/);
+  assert.equal(app.match(/Record non-binding interest/g)?.length, 2);
+  for (const copy of [
+    'Your name or alias and amount are not shown publicly.',
+    'Interest recorded. This is not an investment, and no money has moved. This demo does not send an introduction or follow-up message.',
+    'Claiming reserves this page. It does not verify your identity or unlock private commitment records.',
+    'Private review is controlled by the demo operator. Claiming a raise does not grant access. The shared code is not a founder-specific account.',
+    'Optional NEAR technology demo—not a funding step. Quotes do not transfer funds. Any testnet transfer is separate from recorded interest.',
+    'Demo form only. Submitting this form does not send a message.',
+  ]) assert.ok(app.includes(copy), copy);
+  assert.match(app, /text-near-funding-separation[\s\S]*?<\/p>\s*<NearDemoPanel/);
+  assert.match(app, /onSubmit=\{submitRaiseClaim\}[\s\S]*?text-claim-access-notice[\s\S]*?htmlFor="raise-claim-founder-name"/);
+  assert.match(app, /onSubmit=\{submitContactRequest\}[\s\S]*?text-contact-demo-notice[\s\S]*?htmlFor="contact-name"/);
+});
+
+test('operator wording and manual review receipt preserve existing forms and references', () => {
+  assert.ok(app.includes('>Demo operator code</label>'));
+  assert.ok(list.includes('>Demo operator code</label>'));
+  assert.ok(app.includes("'Unlock demo review'"));
+  assert.ok(list.includes('Submitted for manual review. Reference: ${receipt.id}. Your raise is not public yet. No notification is sent; keep this reference.'));
+  assert.doesNotMatch(app + list, /Founder approval code|Unlock founder view|Soft commitment submitted\./);
+  assert.ok(app.includes('onSubmit={unlockSponsor}'));
+  assert.ok(list.includes('onSubmit={loadPendingRaises}'));
+  assert.ok(app.includes('await onSubmitSoftCommitment(identifier.trim(), parsedAmount)'));
 });

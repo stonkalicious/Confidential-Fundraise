@@ -104,7 +104,7 @@ export default function RaiseList({
       setStage('');
       setRangeMin('');
       setRangeMax('');
-      setSubmissionMessage(`Submitted for approval. Reference: ${receipt.id}`);
+      setSubmissionMessage(`Submitted for manual review. Reference: ${receipt.id}. Your raise is not public yet. No notification is sent; keep this reference.`);
     } catch (error) {
       const errors = submissionErrorsFromResponse(
         error && typeof error === 'object' && 'data' in error ? error.data : undefined,
@@ -122,7 +122,7 @@ export default function RaiseList({
     event.preventDefault();
     setPendingError('');
     if (!approvalCode) {
-      setPendingError('Enter the founder approval code.');
+      setPendingError('Enter the demo operator code.');
       return;
     }
     setLoadingPending(true);
@@ -353,7 +353,7 @@ export default function RaiseList({
             <details className="pending-review">
               <summary>Review pending raises</summary>
               <form className="pending-review-form" onSubmit={loadPendingRaises}>
-                <label className="field-label" htmlFor="raise-approval-code">Founder approval code</label>
+                <label className="field-label" htmlFor="raise-approval-code">Demo operator code</label>
                 <input
                   className="field"
                   id="raise-approval-code"

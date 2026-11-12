@@ -89,7 +89,7 @@ wallet seed phrases, or private commitment data from real people.
 | Time | Show | Say / expected visible result |
 | --- | --- | --- |
 | 0:00–0:15 | Landing list, then a raise; on phones How this app works opens first, so select Progress | “Agent Raised coordinates interest without publishing individual commitments. These are demo figures.” |
-| 0:15–0:35 | Potential investor: submit `demo-investor-001`, USD `10000` | “Submitting interest does not require a wallet.” Show “Soft commitment submitted” on Progress; do not show individual details publicly. |
+| 0:15–0:35 | Potential investor: enter `demo-investor-001`, USD `10000`, then choose Record non-binding interest | “Recording interest does not require a wallet.” Show the confirmation on Progress explaining that no money moved and no introduction was sent; do not show individual details publicly. |
 | 0:35–0:55 | Founder review, already unlocked off-camera | “The founder can review individual records privately.” Mark the synthetic record verified; show its demo status change. |
 | 0:55–1:10 | Separate unauthenticated session: Progress, then public JSON | “Everyone else sees aggregate USD totals, not the investor list.” Show the updated aggregate, then refresh. |
 | 1:10–1:35 | Founder quote panel, authenticated off-camera if approved | “NEAR Intents can quote a confidential cross-chain path. This request uses a fixed synthetic 1-USDC amount and never sends the investor identifier or commitment amount.” Show an actual successful live result only if obtained. Otherwise show the honest error and label the live success check outstanding. |

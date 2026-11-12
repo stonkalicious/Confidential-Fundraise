@@ -148,9 +148,10 @@ has been completed.
    desktop opens Progress. Choose Progress to see public USD totals,
    not investor identifiers or individual amounts. Seeded entries are demo
    listings, not evidence that a company is seeking funding or endorses the app.
-2. **Open Potential investor and submit `demo-investor-001` with USD `10000`** → the
-   form clears, the app returns to Progress, and “Soft commitment submitted.”
-   appears. Then open Founder and enter the operator's approval code to see the
+2. **Open Potential investor and enter `demo-investor-001` with USD `10000`** →
+   choose “Record non-binding interest.” The form clears, the app returns to
+   Progress, and a confirmation explains that no money moved or introduction
+   was sent. Then open Founder and enter the demo operator code to see the
    private record. Keep the code off recordings.
 3. **Choose “Mark verified (demo)” on that record** → its hard/verified status
    changes and hard USD totals increase. This is a server-side demo status,
