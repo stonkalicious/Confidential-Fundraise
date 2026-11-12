@@ -7,3 +7,4 @@
 - [Quote timestamp policy](quote-timestamps.md) — Reject invalid provider date strings rather than inventing a replacement quote time.
 - [Demo settlement recovery](demo-settlement-recovery.md) — Release reservations only after investor no-broadcast attestation plus founder approval; preserve immutable details and confirmations.
 - [Animation export transitions](animation-export-transitions.md) — Recorder-driven phases must not depend on an exit callback; inspect encoded frames, not just duration and audio.
+- [NEAR testnet-only boundary](near-testnet-only.md) — Keep every Agent Raised wallet interaction on testnet; disable providers with no testnet rather than connecting to mainnet.

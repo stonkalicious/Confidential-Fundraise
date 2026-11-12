@@ -23,7 +23,7 @@ test('legal page retains the exact approved disclosures without superseded dupli
     'Hackathon prototype. Agent Raised is a hackathon submission, not a live fundraising business or investment platform.',
     'Data and claim status. Raise listings may include synthetic examples, public-source material, and user submissions; information is not independently verified. The app accepts soft commitments before a raise is claimed. These are non-binding records, not an offer, investment agreement, confirmed investment, or funds transfer. “Claimed” records someone’s claim to the page; it does not verify a founder’s identity or a company. Do not submit sensitive personal or confidential business information.',
     'No professional advice. Content is for informational and demonstration purposes only and is not investment, financial, legal, or tax advice. Seek independent professional advice before making investment decisions.',
-    'Wallet and transfer risks. Quotes do not execute transfers. Optional demo transfers are separate from recorded commitments. Testnet tokens have no real monetary value; mainnet transfers use real assets, incur fees, and may be irreversible. Review the network, recipient, and amount before approving any wallet action.',
+    'Wallet and transfer risks. Optional demo transfers are separate from recorded commitments. Testnet tokens have no real monetary value; mainnet transfers use real assets, incur fees, and may be irreversible. Review the network, recipient, and amount before approving any wallet action.',
   ]) assert.ok(text.includes(copy), copy);
   assert.doesNotMatch(text, /No investment agreement\.|Data caution\.|Demo only\. Confidential Fundraising/);
 });
@@ -58,10 +58,11 @@ test('approved journey notices explain demo limits before acting', () => {
     'Interest recorded. This is not an investment, and no money has moved. This demo does not send an introduction or follow-up message.',
     'Claiming reserves this page. It does not verify your identity or unlock private commitment records.',
     'Private review is controlled by the demo operator. Claiming a raise does not grant access. The shared code is not a founder-specific account.',
-    'Optional NEAR technology demo—not a funding step. Quotes do not transfer funds. Any testnet transfer is separate from recorded interest.',
+    'Any testnet transfer is separate from recorded interest.',
     'Demo form only. Submitting this form does not send a message.',
   ]) assert.ok(app.includes(copy), copy);
-  assert.match(app, /text-near-funding-separation[\s\S]*?<\/p>\s*<NearDemoPanel/);
+  assert.match(app, /text-near-funding-separation[\s\S]*?<\/p>/);
+  assert.doesNotMatch(app, /NearDemoPanel|requestDemoQuote|Authenticate with NEAR wallet/);
   assert.match(app, /onSubmit=\{submitRaiseClaim\}[\s\S]*?text-claim-access-notice[\s\S]*?htmlFor="raise-claim-founder-name"/);
   assert.match(app, /onSubmit=\{submitContactRequest\}[\s\S]*?text-contact-demo-notice[\s\S]*?htmlFor="contact-name"/);
 });

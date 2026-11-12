@@ -6,7 +6,7 @@ export default function WhyNearPage() {
   useEffect(() => {
     const previousTitle = document.title;
     const title = 'Why use NEAR Intents? | Agent Raised - Powered by NEAR';
-    const description = 'Learn how this demo uses NEAR Intents for a 1 USDC quote from Ethereum to Arbitrum. No funds move.';
+    const description = 'Learn how NEAR Intents can support cross-chain payments. This testnet-only demo does not request live Intents quotes.';
     const previousMeta = [
       ['meta[name="description"]', description],
       ['meta[property="og:title"]', title],
@@ -73,19 +73,10 @@ export default function WhyNearPage() {
               transfers or already use the same network, this cross-chain feature may not be needed.
             </p>
 
-            <h2>What does this demo actually do?</h2>
-            <p>
-              After marking a commitment hard and authenticating a NEAR wallet, a founder can request
-              a live quote using a fixed <strong>1 USDC example from Ethereum to Arbitrum</strong> and
-              placeholder addresses. It does not use the investor’s commitment amount.{' '}
-              <strong>No funds move.</strong>
-            </p>
-
             <h2>What does “confidential” mean here?</h2>
             <p>
-              Individual commitment details are not shown on this app’s public pages. Separately, the
-              quote request enables NEAR Intents’ basic confidentiality option. That request is not
-              proof that an investment has been paid or settled privately.
+              Individual commitment details are not shown on this app’s public pages. This is
+              application-level access control, not proof of private onchain settlement.
             </p>
           </div>
         </article>

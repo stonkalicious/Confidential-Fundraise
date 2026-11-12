@@ -25,33 +25,10 @@ export const GetWalkthroughMediaResponse = zod.unknown()
 
 
 /**
- * @summary Exchange a signed wallet proof for a NEAR Intents session
+ * NEAR Intents has no testnet; wallet authentication is disabled in this testnet-only demo.
+ * @summary Disabled NEAR Intents authentication endpoint
  */
-
-
-
-
-
-
-
-export const AuthenticateNearIntentsSessionBody = zod.object({
-  "signedData": zod.object({
-  "standard": zod.literal("nep413"),
-  "payload": zod.object({
-  "recipient": zod.string().min(1),
-  "nonce": zod.string().min(1),
-  "message": zod.string().min(1)
-}),
-  "public_key": zod.string().min(1),
-  "signature": zod.string().min(1)
-})
-})
-
-export const AuthenticateNearIntentsSessionResponse = zod.object({
-  "accountId": zod.string(),
-  "accessToken": zod.string(),
-  "expiresIn": zod.number()
-})
+export const AuthenticateNearIntentsSessionResponse = zod.void()
 
 
 /**
@@ -63,13 +40,10 @@ export const DisconnectNearIntentsSessionResponse = zod.object({
 
 
 /**
- * @summary Refresh a NEAR Intents access token
+ * NEAR Intents has no testnet; session refresh is disabled in this testnet-only demo.
+ * @summary Disabled NEAR Intents session refresh endpoint
  */
-export const RefreshNearIntentsSessionResponse = zod.object({
-  "accountId": zod.string(),
-  "accessToken": zod.string(),
-  "expiresIn": zod.number()
-})
+export const RefreshNearIntentsSessionResponse = zod.void()
 
 
 /**
@@ -582,24 +556,15 @@ export const UpdateRaiseCommitmentResponse = zod.object({
 
 
 /**
- * Uses fixed synthetic quote values and never executes a swap
- * @summary Request a synthetic NEAR Intents dry-run quote
+ * NEAR Intents has no testnet; quote requests are disabled in this testnet-only demo.
+ * @summary Disabled NEAR Intents quote endpoint
  */
 export const RequestDemoQuoteParams = zod.object({
   "id": zod.coerce.string(),
   "commitmentId": zod.coerce.string()
 })
 
-export const RequestDemoQuoteResponse = zod.object({
-  "dry": zod.literal(true),
-  "confidentialityRequested": zod.enum(['basic']),
-  "inputSymbol": zod.enum(['USDC']),
-  "outputSymbol": zod.enum(['USDC']),
-  "inputAmount": zod.string(),
-  "outputAmount": zod.string(),
-  "quoteId": zod.string().nullable(),
-  "quotedAt": zod.coerce.date()
-})
+export const RequestDemoQuoteResponse = zod.void()
 
 
 export const GetDemoSettlementConfigResponse = zod.object({

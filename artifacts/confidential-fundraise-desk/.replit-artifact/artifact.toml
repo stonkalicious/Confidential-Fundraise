@@ -1,7 +1,7 @@
 kind = "web"
 previewPath = "/"
 title = "Agent Raised"
-description = "A synthetic-data demo for one sponsor and one prospect to record soft commitments, mark a commitment hard, prepare a NEAR Intents 1Click quote request, and share aggregate-only progress."
+description = "A demo raise directory for public listings, private commitments, aggregate progress, and optional NEAR testnet transfers. NEAR Intents wallet and quote flows are disabled because 1Click has no testnet."
 version = "1.0.0"
 id = "artifacts/confidential-fundraise-desk"
 router = "path"

@@ -29,7 +29,6 @@ import type {
   AgentRaiseUpdate,
   ClaimRaiseInput,
   CommitmentStatusInput,
-  DemoIntentsQuote,
   DemoSettlementConfig,
   DemoSettlementConfirmationInput,
   DemoSettlementErrorResponse,
@@ -41,9 +40,7 @@ import type {
   DemoSettlementVerificationInput,
   ErrorMessage,
   HealthStatus,
-  NearIntentsSession,
   NearIntentsSessionCleared,
-  NearIntentsSessionInput,
   PendingRaise,
   PrivateRaiseDetails,
   RaiseClaimInput,
@@ -193,30 +190,17 @@ export const getAuthenticateNearIntentsSessionUrl = () => {
 }
 
 /**
- * @summary Exchange a signed wallet proof for a NEAR Intents session
+ * NEAR Intents has no testnet; wallet authentication is disabled in this testnet-only demo.
+ * @summary Disabled NEAR Intents authentication endpoint
  */
-export const authenticateNearIntentsSession = async (nearIntentsSessionInput: NearIntentsSessionInput, options?: Parameters<typeof customFetch>[1]): Promise<NearIntentsSession> => {
+export const authenticateNearIntentsSession = async ( options?: Parameters<typeof customFetch>[1]): Promise<unknown> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<NearIntentsSession>(getAuthenticateNearIntentsSessionUrl(),
+  return customFetch<unknown>(getAuthenticateNearIntentsSessionUrl(),
   {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(nearIntentsSessionInput)
+    method: 'POST'
+
+
   }
 );}
 
@@ -227,8 +211,8 @@ return customFetch<NearIntentsSession>(getAuthenticateNearIntentsSessionUrl(),
 export const getAuthenticateNearIntentsSessionMutationKey = () => ['authenticateNearIntentsSession'] as const;
 
 export const getAuthenticateNearIntentsSessionMutationOptions = <TError = ErrorType<ErrorMessage>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authenticateNearIntentsSession>>, TError,AuthenticateNearIntentsSessionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof authenticateNearIntentsSession>>, TError,AuthenticateNearIntentsSessionMutationVariables, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authenticateNearIntentsSession>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof authenticateNearIntentsSession>>, TError,void, TContext> => {
 
 const mutationKey = getAuthenticateNearIntentsSessionMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -240,10 +224,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authenticateNearIntentsSession>>, AuthenticateNearIntentsSessionMutationVariables> = (props) => {
-          const {data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authenticateNearIntentsSession>>, void> = () => {
 
-          return  authenticateNearIntentsSession(data,requestOptions)
+
+          return  authenticateNearIntentsSession(requestOptions)
         }
 
 
@@ -254,19 +238,19 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type AuthenticateNearIntentsSessionMutationResult = NonNullable<Awaited<ReturnType<typeof authenticateNearIntentsSession>>>
-    export type AuthenticateNearIntentsSessionMutationBody = BodyType<NearIntentsSessionInput>
+
     export type AuthenticateNearIntentsSessionMutationError = ErrorType<ErrorMessage>
-    export type AuthenticateNearIntentsSessionMutationVariables = {data: BodyType<NearIntentsSessionInput>}
+
 
     /**
- * @summary Exchange a signed wallet proof for a NEAR Intents session
+ * @summary Disabled NEAR Intents authentication endpoint
  */
 export const useAuthenticateNearIntentsSession = <TError = ErrorType<ErrorMessage>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authenticateNearIntentsSession>>, TError,AuthenticateNearIntentsSessionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authenticateNearIntentsSession>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof authenticateNearIntentsSession>>,
         TError,
-        AuthenticateNearIntentsSessionMutationVariables,
+        void,
         TContext
       > => {
       return useMutation(getAuthenticateNearIntentsSessionMutationOptions(options), queryClient);
@@ -355,11 +339,12 @@ export const getRefreshNearIntentsSessionUrl = () => {
 }
 
 /**
- * @summary Refresh a NEAR Intents access token
+ * NEAR Intents has no testnet; session refresh is disabled in this testnet-only demo.
+ * @summary Disabled NEAR Intents session refresh endpoint
  */
-export const refreshNearIntentsSession = async ( options?: Parameters<typeof customFetch>[1]): Promise<NearIntentsSession> => {
+export const refreshNearIntentsSession = async ( options?: Parameters<typeof customFetch>[1]): Promise<unknown> => {
 
-  return customFetch<NearIntentsSession>(getRefreshNearIntentsSessionUrl(),
+  return customFetch<unknown>(getRefreshNearIntentsSessionUrl(),
   {
     ...options,
     method: 'POST'
@@ -407,7 +392,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
     /**
- * @summary Refresh a NEAR Intents access token
+ * @summary Disabled NEAR Intents session refresh endpoint
  */
 export const useRefreshNearIntentsSession = <TError = ErrorType<ErrorMessage>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshNearIntentsSession>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -1721,13 +1706,13 @@ export const getRequestDemoQuoteUrl = (id: string,
 }
 
 /**
- * Uses fixed synthetic quote values and never executes a swap
- * @summary Request a synthetic NEAR Intents dry-run quote
+ * NEAR Intents has no testnet; quote requests are disabled in this testnet-only demo.
+ * @summary Disabled NEAR Intents quote endpoint
  */
 export const requestDemoQuote = async (id: string,
-    commitmentId: string, options?: Parameters<typeof customFetch>[1]): Promise<DemoIntentsQuote> => {
+    commitmentId: string, options?: Parameters<typeof customFetch>[1]): Promise<unknown> => {
 
-  return customFetch<DemoIntentsQuote>(getRequestDemoQuoteUrl(id,commitmentId),
+  return customFetch<unknown>(getRequestDemoQuoteUrl(id,commitmentId),
   {
     ...options,
     method: 'POST'
@@ -1775,7 +1760,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type RequestDemoQuoteMutationVariables = {id: string;commitmentId: string}
 
     /**
- * @summary Request a synthetic NEAR Intents dry-run quote
+ * @summary Disabled NEAR Intents quote endpoint
  */
 export const useRequestDemoQuote = <TError = ErrorType<ErrorMessage>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestDemoQuote>>, TError,RequestDemoQuoteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}

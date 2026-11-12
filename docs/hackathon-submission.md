@@ -34,8 +34,9 @@ submitting; these notes reflect the live guide re-read on 12 November 2026.
 
 **Primary recommendation: Privacy & Private AI (`privacy`).**
 The fit is private-finance coordination with operator-protected records and a
-confidential NEAR Intents quote path. There is no private-AI inference or TEE
-implementation in this app; do not imply one.
+testnet-only token-transfer demo. NEAR Intents has no testnet, so its live quote
+and wallet-authentication endpoints are disabled here. There is no private-AI
+inference or TEE implementation in this app; do not imply one.
 
 **Optional secondary: Open Innovation (`open`).** The human should confirm the
 final track selection. An HTTP API that external agents can call is not by
@@ -45,8 +46,9 @@ Keep these distinctions in the recording and description:
 
 1. Commitment privacy is enforced by application access control. Operators can
    read the database; this is not trustless or end-to-end encrypted storage.
-2. A confidential Intents request is a fixed-value **dry-run quote**, not
-   completed settlement.
+2. NEAR Intents has no testnet. This demo disables its live quote and wallet-
+   authentication endpoints; it does not demonstrate an Intents swap or
+   settlement.
 3. Optional testnet USDC uses a separate **public** NEAR transfer. It is not an
    Intents swap and does not fund the displayed USD commitment.
 4. Claiming reserves a page. It does not verify a company or its fundraising.
@@ -81,9 +83,9 @@ Keep these distinctions in the recording and description:
 - Live unauthenticated `GET https://agentraised.com/api/raises` returned HTTP
   `200` and `application/json` on 12 November. It returns structured public raise
   objects, not individual commitments or claim contact details.
-- A successful real-wallet confidential quote and an exact funded-wallet
-  testnet transfer are **not certified by these checks**. Omit successful
-  outcomes from the submission unless separately demonstrated.
+- The demo does not include a live NEAR Intents quote, and an exact funded-wallet
+  testnet transfer is **not certified by these checks**. Do not claim a
+  successful transfer unless separately demonstrated.
 
 Before handing the repository to judges, record the pushed revision with
 `git rev-parse HEAD` and retain that commit's GitHub link. The README links the
@@ -106,9 +108,9 @@ change is required.
 | 0:15–0:35 | Potential investor: enter `demo-investor-001`, USD `10000`, then choose Record non-binding interest | “Recording interest does not require a wallet.” Show the confirmation on Progress explaining that no money moved and no introduction was sent; do not show individual details publicly. |
 | 0:35–0:55 | Founder review, already unlocked off-camera | “The demo operator can review individual records privately. Claiming a page does not unlock this view.” Mark the synthetic record verified; show its demo status change. |
 | 0:55–1:10 | Separate unauthenticated session: Progress, then public JSON | “Everyone else sees aggregate USD totals, not the investor list.” Show the updated aggregate, then refresh. |
-| 1:10–1:35 | Founder quote panel, authenticated off-camera if approved | “NEAR Intents can quote a confidential cross-chain path. This request uses a fixed synthetic 1-USDC amount and never sends the investor identifier or commitment amount.” Show an actual successful live result only if obtained. Otherwise show the honest error and label the live success check outstanding. |
+| 1:10–1:35 | Explain the testnet boundary; keep any wallet interaction on testnet | “NEAR Intents has no testnet, so this demo does not request a live quote or authenticate a mainnet wallet.” Do not show a mainnet wallet prompt or imply a quote is available. |
 | 1:35–1:50 | Agent public API result, with token output and request headers hidden | “An external agent can reserve a page and update only its public fields. This is page ownership, not company verification.” Show a public field changed through the API and then the same field on the page. |
-| 1:50–2:00 | Return to Progress | “Coordination, quotes, and test-token transfers remain separate. No legal investment settlement occurs.” |
+| 1:50–2:00 | Return to Progress | “The test-token transfer is separate from coordination totals. No investment settlement occurs.” |
 
 For the agent segment, claim a separate unclaimed approved demo page in advance,
 then use its one-time token for a public-field update. Never record the raw claim
@@ -179,7 +181,7 @@ against the actual recording and final code before submission:
 ```text
 Agent Raised is a public, agent-readable raise directory with private soft commitments. Founders and agents can claim raise pages; agent tokens authorize updates to public fields. Individual commitments stay private; public pages and JSON show raise details and aggregate totals. Built for NEAR HACKATHON.
 
-NEAR Intents provides a wallet-authenticated, confidential dry-run quote path using a fixed synthetic 1-USDC amount and placeholder addresses. Investor identifiers and commitment amounts are not sent to the quote provider. The quote does not execute a swap or settle an investment.
+NEAR Intents 1Click has no testnet. This testnet-only demo disables wallet authentication and quote requests instead of connecting to mainnet.
 
 A separate optional testnet demo implements a founder/investor-confirmed 1-test-USDC transfer flow. A successful funded-wallet run is not claimed here. It is public, separate from Intents, and does not change USD totals.
 
@@ -194,8 +196,8 @@ certify live-provider success, security audit results, or submission acceptance.
 ### Prepared
 
 - [x] Root README: problem, NEAR role, setup, judge steps, API boundaries.
-- [x] Artifact README corrected for wallet authentication and testnet-only
-  transfers; mainnet key-registration costs disclosed.
+- [x] Artifact README explains that Intents quote and wallet-authentication
+  endpoints are disabled because Intents has no testnet.
 - [x] Baseline starter disclosed, with baseline commit and diff links.
 - [x] MIT license explicitly approved by the owner and included.
 - [x] Recording script, X-post draft, and description prepared.
@@ -221,9 +223,8 @@ certify live-provider success, security audit results, or submission acceptance.
   without owner approval.
 - [ ] Review any remaining security/privacy findings against the actual demo.
   Do not treat this pack or passing tests as a security audit.
-- [ ] Demonstrate an actual wallet-authenticated confidential quote if it
-  appears as a successful outcome in the recording. Otherwise disclose that
-  live success remains unverified.
+- [ ] Keep NEAR wallet interactions testnet-only; do not present a live Intents
+  quote as available in this demo.
 - [ ] Complete the separately scoped funded-testnet-wallet check before
   presenting a real 1-USDC transfer as demonstrated.
 - [ ] Confirm the final hosted URL and latest published version, or explicitly

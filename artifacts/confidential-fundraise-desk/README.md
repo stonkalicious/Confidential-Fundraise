@@ -64,37 +64,10 @@ Development schema changes are applied with `pnpm --filter @workspace/db run pus
 `pnpm --filter @workspace/api-server exec node --import tsx --test test/demo-settlement.test.mjs`.
 The test mocks chain responses; it never signs a transaction or spends tokens.
 
-## Judge walkthrough: NEAR Intents quote
+## NEAR Intents availability
 
-1. Open an approved demo raise and submit a soft commitment using synthetic
-   details only. This does not require a wallet.
-2. Open Founder and enter the configured founder approval code. Keep it off
-   recordings.
-3. Mark the demo commitment hard and select it for a quote. The app requires a
-   NEAR wallet session before requesting the confidential quote.
-4. Choose **Authenticate with NEAR wallet** and use a user-controlled NEAR
-   mainnet account. A registered wallet signs an authentication message. This
-   is not a token transfer.
-5. If the connected key is not registered on `intents.near`, review the separate
-   registration prompt. **Approve and register key** asks the wallet to call
-   `add_public_key` on mainnet, with 1 yoctoNEAR and network gas. This has a real
-   mainnet cost. Only proceed with explicit owner approval; declining keeps
-   confidential quotes blocked.
-6. Request the confidential dry-run quote. An accepted provider response shows
-   quote fields; a rejection or outage shows an error instead. Do not describe
-   an error screen as a successful quote.
-7. Return to Progress → aggregate totals remain the only public commitment
-   information. A quote alone does not fund a commitment or settle a swap.
-
-The quote always uses a fixed synthetic 1-USDC amount and placeholder addresses;
-it never sends the commitment's identifier or amount. The request asks for
-`basic` confidentiality. The app signs a wallet authentication message, exchanges
-the proof for a provider session, and keeps the refresh credential in an HttpOnly
-cookie. It can refresh a returning session without signing again while the
-provider permits it. It never silently falls back to a public quote.
-
-NEAR Intents has no testnet: this is a mainnet API **dry run**, distinct from
-the testnet `ft_transfer` above. Successful mocked regression tests do not prove
-a successful live confidential quote or funded-wallet transfer. See the
-[submission checklist](../../docs/hackathon-submission.md) for evidence still
-to collect.
+NEAR Intents 1Click has no testnet. To keep this demo testnet-only, the app
+does not authenticate NEAR Intents wallets or request quotes; those API
+endpoints return HTTP 410 without contacting 1Click. The separate optional
+`ft_transfer` above uses NEAR testnet and is not an Intents swap. No live
+confidential quote or mainnet wallet interaction is claimed.

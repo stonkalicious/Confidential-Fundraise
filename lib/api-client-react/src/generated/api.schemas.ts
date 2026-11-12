@@ -123,34 +123,6 @@ export interface DemoSettlementState {
   maySend?: boolean;
 }
 
-export type NearIntentsSignedDataPayload = {
-  /** @minLength 1 */
-  recipient: string;
-  /** @minLength 1 */
-  nonce: string;
-  /** @minLength 1 */
-  message: string;
-};
-
-export interface NearIntentsSignedData {
-  standard: 'nep413';
-  payload: NearIntentsSignedDataPayload;
-  /** @minLength 1 */
-  public_key: string;
-  /** @minLength 1 */
-  signature: string;
-}
-
-export interface NearIntentsSessionInput {
-  signedData: NearIntentsSignedData;
-}
-
-export interface NearIntentsSession {
-  accountId: string;
-  accessToken: string;
-  expiresIn: number;
-}
-
 export interface NearIntentsSessionCleared {
   cleared: boolean;
 }
@@ -352,39 +324,6 @@ export interface SoftCommitmentInput {
 export interface CommitmentStatusInput {
   hard: boolean;
   verified: boolean;
-}
-
-export type DemoIntentsQuoteConfidentialityRequested = typeof DemoIntentsQuoteConfidentialityRequested[keyof typeof DemoIntentsQuoteConfidentialityRequested];
-
-
-export const DemoIntentsQuoteConfidentialityRequested = {
-  basic: 'basic',
-} as const;
-
-export type DemoIntentsQuoteInputSymbol = typeof DemoIntentsQuoteInputSymbol[keyof typeof DemoIntentsQuoteInputSymbol];
-
-
-export const DemoIntentsQuoteInputSymbol = {
-  USDC: 'USDC',
-} as const;
-
-export type DemoIntentsQuoteOutputSymbol = typeof DemoIntentsQuoteOutputSymbol[keyof typeof DemoIntentsQuoteOutputSymbol];
-
-
-export const DemoIntentsQuoteOutputSymbol = {
-  USDC: 'USDC',
-} as const;
-
-export interface DemoIntentsQuote {
-  dry: true;
-  confidentialityRequested: DemoIntentsQuoteConfidentialityRequested;
-  inputSymbol: DemoIntentsQuoteInputSymbol;
-  outputSymbol: DemoIntentsQuoteOutputSymbol;
-  inputAmount: string;
-  outputAmount: string;
-  /** @nullable */
-  quoteId: string | null;
-  quotedAt: string;
 }
 
 export type RaiseSubmissionErrorFieldErrors = {

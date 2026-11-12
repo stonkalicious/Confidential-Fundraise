@@ -19,19 +19,13 @@ Private review requires the shared demo operator code, not a page claim.
 | Path | What it does | What it does not do |
 | --- | --- | --- |
 | Fundraising coordination | Stores raises, page claims, commitments, and totals in PostgreSQL. Founder endpoints require the shared approval code. | Does not put commitments onchain or encrypt the database with NEAR. Application operators can access stored data. |
-| NEAR Intents 1Click | Uses wallet authentication to request a live `dry: true` quote with `confidentiality: "basic"`, a fixed synthetic 1-USDC amount, and placeholder addresses. | Does not send investor identifiers or actual commitment amounts to NEAR, deposit tokens, execute a swap, or prove completed confidential settlement. |
+| NEAR Intents 1Click | Not used in this testnet-only demo; wallet-authentication and quote endpoints return HTTP 410. | No live Intents quote, mainnet wallet authentication, swap, or confidential settlement is performed. |
 | Optional NEAR testnet transfer | With separate founder and investor confirmations, asks the investor's wallet to send exactly 1 test USDC using `ft_transfer`. The server verifies the finalized transaction. | Is not an Intents swap, is not confidential onchain, and does not fund the USD commitment or change its hard/verified status. |
 
-The Intents path uses **mainnet authentication**; there is no Intents testnet.
-An already-registered wallet signs an authentication message. A wallet whose
-key is not registered must explicitly approve a separate `add_public_key`
-transaction on `intents.near`, attaching 1 yoctoNEAR plus network gas. This
-registration costs mainnet NEAR even though the subsequent quote is a dry run.
-Declining or failing authentication must not downgrade the request to a public
-quote.
-
-The optional token-transfer path is **NEAR testnet only**. Test USDC has no
-dollar value. See the [wallet walkthrough](artifacts/confidential-fundraise-desk/README.md).
+NEAR Intents has no testnet, so the demo disables its wallet-authentication and
+quote endpoints. The separate optional token-transfer path is **NEAR testnet
+only**. Test USDC has no dollar value. See the
+[wallet walkthrough](artifacts/confidential-fundraise-desk/README.md).
 
 ## Run the project
 
@@ -40,7 +34,7 @@ dollar value. See the [wallet walkthrough](artifacts/confidential-fundraise-desk
 - Node.js 24 and pnpm 10 (workspace preparation used pnpm 10.26.1).
 - PostgreSQL reachable through the server's `DATABASE_URL`.
 - A server-side `RAISE_APPROVAL_CODE` chosen by the operator for founder access.
-- Internet access to NEAR RPC and 1Click for optional wallet features.
+- Internet access to NEAR testnet for the optional token-transfer demo.
 - A same-origin reverse proxy: `/api/*` goes to the API; everything else goes
   to the web server. Browser code uses relative API URLs.
 
@@ -197,9 +191,9 @@ New raises submitted through the landing form or `POST /api/raises` go to a
 private manual-approval queue; they are not immediately public. Rehearsals should
 use a fresh demo raise rather than reset or overwrite existing claims.
 
-For wallet authentication, quote requests, and the optional testnet transfer,
-follow the [separate detailed walkthrough](artifacts/confidential-fundraise-desk/README.md).
-Do not submit a live transaction just to complete the wallet-free walkthrough.
+For the optional testnet token-transfer demo, follow the
+[separate detailed walkthrough](artifacts/confidential-fundraise-desk/README.md).
+NEAR Intents wallet authentication and quote requests are disabled in this app.
 
 ## Checks and source map
 

@@ -108,7 +108,8 @@ test("agent page ownership stays per-raise, durable, public-only, and distinct f
     ["/commitments/private-agent-test-commitment/quote", "POST"],
   ]) {
     const result = await request(`${path}${suffix}`, method, body, token);
-    assert.ok(result.status === 401 || result.status === 503);
+    if (suffix.endsWith("/quote")) assert.equal(result.status, 410);
+    else assert.ok(result.status === 401 || result.status === 503);
   }
 
   await initializeRaiseStore();

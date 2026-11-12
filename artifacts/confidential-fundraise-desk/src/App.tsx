@@ -4,12 +4,10 @@ import {
   claimRaise as claimRaiseApi,
   getPrivateRaise as getPrivateRaiseApi,
   getRaises as getRaisesApi,
-  requestDemoQuote as requestDemoQuoteApi,
   submitSoftCommitment as submitSoftCommitmentApi,
   updateRaiseCommitment as updateRaiseCommitmentApi,
   type ClaimRaiseInput,
   type CommitmentStatusInput,
-  type DemoIntentsQuote,
   type PrivateRaiseDetails,
   type RaiseSummary,
 } from '@workspace/api-client-react';
@@ -23,21 +21,9 @@ import { getInitialRaiseView, getRaiseViews, MOBILE_RAISE_QUERY, type View } fro
 import { DemoSettlementCard, InvestorDemoSettlements } from '@/components/demo-settlement';
 import { newDemoReceipt, rememberDemoReceipt } from '@/lib/demo-settlement-wallet';
 import { loadRaises, saveRaises } from '@/data/raise-storage';
-import { createQuoteOutcomeReporter, getQuoteFailureOutcome } from '@/lib/analytics';
 import { startSponsorIdleLock } from '@/lib/sponsor-idle-lock';
-import { isTemporaryNearSessionRefreshFailure } from '@/lib/near-session-recovery';
-import {
-  authenticateNearWallet,
-  disconnectNearWallet,
-  NearIntentsKeyRegistrationRequiredError,
-  registerNearIntentsKeyAndAuthenticate,
-  refreshNearWalletSession,
-  type NearUserSession,
-} from '@/lib/near-intents-auth';
 import { ErrorBoundary } from '@/components/error-boundary';
 import RulesCalculator from '@/components/rules-calculator';
-import NearDemoPanel from '@/components/near-demo-panel';
-import { deriveNearDemoPanelState } from '@/lib/near-demo-panel';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
@@ -126,23 +112,6 @@ function usd(value: number) {
   }).format(value);
 }
 
-function formatUsdcBaseUnits(amount: string): string {
-  try {
-    const units = BigInt(amount);
-    const whole = units / 1_000_000n;
-    const fractional = String(units % 1_000_000n).padStart(6, '0').replace(/0+$/, '');
-    return fractional ? `${whole}.${fractional}` : String(whole);
-  } catch {
-    return `${amount} base units`;
-  }
-}
-
-type DemoQuoteState =
-  | { commitmentId: string; status: 'ready' }
-  | { commitmentId: string; status: 'loading' }
-  | { commitmentId: string; status: 'error'; error: string }
-  | { commitmentId: string; status: 'success'; result: DemoIntentsQuote };
-
 function getInitialView(): View {
   return getInitialRaiseView(window.location.search, window.matchMedia(MOBILE_RAISE_QUERY).matches);
 }
@@ -153,7 +122,6 @@ function AppDesk({
   onSubmitSoftCommitment,
   onGetPrivateRaise,
   onUpdateCommitment,
-  onRequestDemoQuote,
 }: {
   raise: Raise;
   onClaimRaise: (claim: ClaimRaiseInput) => Promise<void>;
@@ -164,11 +132,6 @@ function AppDesk({
     status: CommitmentStatusInput,
     approvalCode: string,
   ) => Promise<void>;
-  onRequestDemoQuote: (
-    commitmentId: string,
-    approvalCode: string,
-    userSessionToken: string,
-  ) => Promise<DemoIntentsQuote>;
 }) {
   const isFundThesis = raise.isFundThesis === true;
   const [view, setView] = useState<View>(getInitialView);
@@ -185,31 +148,7 @@ function AppDesk({
   const sponsorSessionVersion = useRef(0);
   const [sponsorLoading, setSponsorLoading] = useState(false);
   const commitments = privateRaise?.commitments ?? [];
-  const [quoteState, setQuoteState] = useState<DemoQuoteState | null>(null);
-  const [nearSession, setNearSession] = useState<NearUserSession | null>(null);
-  const [nearSessionUnavailable, setNearSessionUnavailable] = useState(false);
-  const [nearAuthLoading, setNearAuthLoading] = useState(false);
-  const [nearAuthError, setNearAuthError] = useState('');
-  const [nearKeyRegistration, setNearKeyRegistration] =
-    useState<NearIntentsKeyRegistrationRequiredError | null>(null);
-  const quotedCommitment = quoteState
-    ? commitments.find((item) => item.id === quoteState.commitmentId && item.hard)
-    : undefined;
   const target = raise.roundRange.min;
-  const nearDemoFocusPending = useRef(false);
-  const nearDemoPanelState = deriveNearDemoPanelState({
-    unlocked: privateRaise !== null,
-    session: nearSession,
-    sessionUnavailable: nearSessionUnavailable,
-    authLoading: nearAuthLoading,
-    authError: Boolean(nearAuthError),
-    keyRegistrationPending: nearKeyRegistration !== null,
-    quoteStatus: quoteState?.status ?? null,
-    hasQuotedHardCommitment: Boolean(quotedCommitment),
-    confidentialityRequested:
-      quoteState?.status === 'success' ? quoteState.result.confidentialityRequested : null,
-    now: Date.now(),
-  });
   const [identifier, setIdentifier] = useState('');
   const [amount, setAmount] = useState('');
   const [formError, setFormError] = useState('');
@@ -240,40 +179,8 @@ function AppDesk({
       sponsorSessionVersion.current += 1;
       setApprovalCode('');
       setPrivateRaise(null);
-      setQuoteState(null);
-      setNearSession(null);
-      setNearSessionUnavailable(false);
-      setNearAuthError('');
-      setNearKeyRegistration(null);
       setSponsorError('');
     }
-  }, [view]);
-
-  useEffect(() => {
-    if (view !== 'sponsor') return;
-    let active = true;
-    setNearAuthLoading(true);
-    void refreshNearWalletSession()
-      .then((session) => {
-        if (active) {
-          setNearSession(session);
-          setNearSessionUnavailable(false);
-        }
-      })
-      .catch((error: unknown) => {
-        if (active && isTemporaryNearSessionRefreshFailure(error)) {
-          setNearSessionUnavailable(true);
-          setNearAuthError(
-            'NEAR Intents is temporarily unavailable. Retry your saved wallet session without signing again.',
-          );
-        }
-      })
-      .finally(() => {
-        if (active) setNearAuthLoading(false);
-      });
-    return () => {
-      active = false;
-    };
   }, [view]);
 
   useEffect(() => {
@@ -283,11 +190,6 @@ function AppDesk({
       sponsorSessionVersion.current += 1;
       setApprovalCode('');
       setPrivateRaise(null);
-      setQuoteState(null);
-      setNearSession(null);
-      setNearSessionUnavailable(false);
-      setNearAuthError('');
-      setNearKeyRegistration(null);
       setSponsorError('');
       setSponsorLoading(false);
     };
@@ -297,21 +199,6 @@ function AppDesk({
       sponsorSessionVersion.current += 1;
     };
   }, [view]);
-
-  useEffect(() => {
-    if (view !== 'sponsor' || !nearDemoFocusPending.current) return;
-    nearDemoFocusPending.current = false;
-    const target = document.getElementById(
-      privateRaise ? 'near-demo-panel' : 'sponsor-approval-code',
-    );
-    target?.focus();
-  }, [view, privateRaise]);
-
-  function openNearDemo() {
-    nearDemoFocusPending.current = true;
-    setShareMessage('');
-    setView('sponsor');
-  }
 
   async function submitCommitment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -384,163 +271,6 @@ function AppDesk({
     });
   }
 
-  async function requestDemoQuote(commitmentId: string) {
-    const reportOutcome = createQuoteOutcomeReporter();
-    let session = nearSession;
-    let refreshTemporarilyUnavailable = false;
-    if (!session || session.expiresAt <= Date.now() + 30_000) {
-      try {
-        session = await refreshNearWalletSession();
-        setNearSession(session);
-        setNearSessionUnavailable(false);
-      } catch (error) {
-        const temporaryFailure = isTemporaryNearSessionRefreshFailure(error);
-        refreshTemporarilyUnavailable = temporaryFailure;
-        setNearSessionUnavailable(temporaryFailure);
-        if (temporaryFailure) {
-          setNearAuthError(
-            'NEAR Intents is temporarily unavailable. Retry your saved wallet session without signing again.',
-          );
-        }
-        session = null;
-      }
-    }
-    if (!session) {
-      setNearSession(null);
-      setQuoteState({
-        commitmentId,
-        status: 'error',
-        error: refreshTemporarilyUnavailable
-          ? 'NEAR Intents is temporarily unavailable. Retry the saved wallet session before requesting this quote.'
-          : 'Authenticate a NEAR wallet before requesting this confidential quote.',
-      });
-      reportOutcome('auth_required');
-      return;
-    }
-    const sessionVersion = sponsorSessionVersion.current;
-    setQuoteState({ commitmentId, status: 'loading' });
-    try {
-      let result: DemoIntentsQuote;
-      try {
-        result = await onRequestDemoQuote(commitmentId, approvalCode, session.accessToken);
-      } catch (error) {
-        if (getQuoteFailureOutcome(error) !== 'auth_required') throw error;
-        session = await refreshNearWalletSession();
-        if (sessionVersion === sponsorSessionVersion.current) setNearSession(session);
-        result = await onRequestDemoQuote(commitmentId, approvalCode, session.accessToken);
-      }
-      if (sessionVersion === sponsorSessionVersion.current) {
-        setQuoteState({ commitmentId, status: 'success', result });
-      }
-      reportOutcome('success');
-    } catch (error) {
-      const outcome = getQuoteFailureOutcome(error);
-      const authRequired = outcome === 'auth_required';
-      if (sessionVersion === sponsorSessionVersion.current) {
-        if (authRequired) setNearSession(null);
-        setQuoteState({
-          commitmentId,
-          status: 'error',
-          error: requestErrorMessage(error, 'The NEAR Intents quote request failed. No funds moved.'),
-        });
-      }
-      reportOutcome(outcome);
-    }
-  }
-
-  async function connectNearWallet() {
-    const sessionVersion = sponsorSessionVersion.current;
-    setNearAuthLoading(true);
-    setNearAuthError('');
-    setNearKeyRegistration(null);
-    try {
-      const session = await authenticateNearWallet();
-      if (sessionVersion === sponsorSessionVersion.current) {
-        setNearSession(session);
-        setNearSessionUnavailable(false);
-      }
-    } catch (error) {
-      if (sessionVersion === sponsorSessionVersion.current) {
-        if (error instanceof NearIntentsKeyRegistrationRequiredError) {
-          setNearKeyRegistration(error);
-        } else {
-          setNearAuthError(
-            requestErrorMessage(error, 'NEAR wallet authentication did not complete. No funds moved.'),
-          );
-        }
-      }
-    } finally {
-      if (sessionVersion === sponsorSessionVersion.current) {
-        setNearAuthLoading(false);
-      }
-    }
-  }
-
-  async function registerNearWalletKey() {
-    if (!nearKeyRegistration) return;
-    const sessionVersion = sponsorSessionVersion.current;
-    setNearAuthLoading(true);
-    setNearAuthError('');
-    try {
-      const session = await registerNearIntentsKeyAndAuthenticate(nearKeyRegistration);
-      if (sessionVersion === sponsorSessionVersion.current) {
-        setNearKeyRegistration(null);
-        setNearSession(session);
-        setNearSessionUnavailable(false);
-      }
-    } catch (error) {
-      if (sessionVersion === sponsorSessionVersion.current) {
-        setNearAuthError(
-          requestErrorMessage(error, 'NEAR key registration did not complete. No quote was requested.'),
-        );
-      }
-    } finally {
-      if (sessionVersion === sponsorSessionVersion.current) {
-        setNearAuthLoading(false);
-      }
-    }
-  }
-
-  async function clearNearWalletSession() {
-    setNearAuthError('');
-    try {
-      await disconnectNearWallet();
-      setNearSession(null);
-      setNearSessionUnavailable(false);
-      setNearKeyRegistration(null);
-    } catch (error) {
-      setNearAuthError(
-        requestErrorMessage(error, 'The NEAR wallet session could not be cleared. Try again.'),
-      );
-    }
-  }
-
-  async function retrySavedNearSession() {
-    const sessionVersion = sponsorSessionVersion.current;
-    setNearAuthLoading(true);
-    setNearAuthError('');
-    try {
-      const session = await refreshNearWalletSession();
-      if (sessionVersion === sponsorSessionVersion.current) {
-        setNearSession(session);
-        setNearSessionUnavailable(false);
-      }
-    } catch (error) {
-      if (sessionVersion === sponsorSessionVersion.current) {
-        setNearSessionUnavailable(isTemporaryNearSessionRefreshFailure(error));
-        setNearAuthError(
-          isTemporaryNearSessionRefreshFailure(error)
-            ? 'NEAR Intents is still unavailable. Retry your saved wallet session shortly.'
-            : 'The saved NEAR wallet session has expired. Authenticate again to continue.',
-        );
-      }
-    } finally {
-      if (sessionVersion === sponsorSessionVersion.current) {
-        setNearAuthLoading(false);
-      }
-    }
-  }
-
   function submitContactRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setContactSubmitted(true);
@@ -590,11 +320,6 @@ function AppDesk({
       await onUpdateCommitment(id, status, approvalCode);
       if (sessionVersion !== sponsorSessionVersion.current) return;
       applyPrivateCommitmentStatus(id, status);
-      if (status.hard) {
-        setQuoteState({ commitmentId: id, status: 'ready' });
-      } else if (quoteState?.commitmentId === id) {
-        setQuoteState(null);
-      }
     } catch (error) {
       if (sessionVersion === sponsorSessionVersion.current) {
         setSponsorError(requestErrorMessage(error, 'The commitment status could not be updated.'));
@@ -610,7 +335,6 @@ function AppDesk({
       await onUpdateCommitment(id, status, approvalCode);
       if (sessionVersion !== sponsorSessionVersion.current) return;
       applyPrivateCommitmentStatus(id, status);
-      setQuoteState({ commitmentId: id, status: 'ready' });
     } catch (error) {
       if (sessionVersion === sponsorSessionVersion.current) {
         setSponsorError(requestErrorMessage(error, 'The commitment could not be verified.'));
@@ -829,18 +553,6 @@ function AppDesk({
                                 <h3>Optional demos</h3>
                                 <p>Separate from commitment review; these do not change fundraising totals.</p>
                               </div>
-                              {item.hard && (
-                                <button
-                                  className="quiet-button"
-                                  data-testid="button-prepare-quote"
-                                  type="button"
-                                  onClick={() =>
-                                    setQuoteState({ commitmentId: item.id, status: 'ready' })
-                                  }
-                                >
-                                  Request quote
-                                </button>
-                              )}
                             </div>
                             <DemoSettlementCard raiseId={raise.id} commitmentId={item.id} approvalCode={approvalCode} />
                           </section>
@@ -859,154 +571,9 @@ function AppDesk({
                 <div className="side-label">Threshold</div>
                 <h3 className="side-title">{usd(target)}</h3>
                 <p className="side-copy">The demo threshold is met when aggregate hard commitments reach {usd(target)}. Reaching it does not trigger settlement.</p>
-                <p className="side-copy" data-testid="text-near-funding-separation">Optional NEAR technology demo—not a funding step. Quotes do not transfer funds. Any testnet transfer is separate from recorded interest.</p>
-                <NearDemoPanel state={nearDemoPanelState} />
+                <p className="side-copy" data-testid="text-near-funding-separation">Any testnet transfer is separate from recorded interest.</p>
               </aside>
             </div>
-            {quoteState && quotedCommitment && (
-              <section className="quote-section" aria-labelledby="near-quote-title">
-                <div className="quote-heading">
-                  <h3 id="near-quote-title">NEAR Intents 1Click quote</h3>
-                  <p>Live API request · dry run only · no funds moved</p>
-                </div>
-                <div className="quote-card">
-                  <div className="quote-topline">
-                    <span className="quote-url" data-testid="text-quote-endpoint">POST https://1click.chaindefuser.com/v0/quote</span>
-                    <span>confidentiality: basic</span>
-                  </div>
-                  <div className="near-auth-row">
-                    <div>
-                      <strong data-testid="text-near-session-account">
-                        {nearSession
-                          ? `NEAR wallet: ${nearSession.accountId}`
-                          : 'NEAR wallet not authenticated'}
-                      </strong>
-                      <p>
-                        Authentication signs an empty intent only. It does not authorize a swap or move tokens.
-                      </p>
-                    </div>
-                    {nearSession ? (
-                      <button
-                        className="quiet-button"
-                        data-testid="button-disconnect-near-wallet"
-                        type="button"
-                        onClick={clearNearWalletSession}
-                      >
-                        Disconnect NEAR wallet
-                      </button>
-                    ) : nearSessionUnavailable ? (
-                      <button
-                        className="primary-button"
-                        data-testid="button-retry-saved-near-session"
-                        type="button"
-                        onClick={retrySavedNearSession}
-                        disabled={nearAuthLoading}
-                      >
-                        {nearAuthLoading ? 'Retrying saved session…' : 'Retry saved session'}
-                      </button>
-                    ) : !nearKeyRegistration ? (
-                      <button
-                        className="primary-button"
-                        data-testid="button-authenticate-near-wallet"
-                        type="button"
-                        onClick={connectNearWallet}
-                        disabled={nearAuthLoading}
-                      >
-                        {nearAuthLoading ? 'Authenticating…' : 'Authenticate with NEAR wallet'}
-                      </button>
-                    ) : null}
-                  </div>
-                  {nearAuthError && (
-                    <p className="quote-result quote-result-error" role="alert" data-testid="status-near-auth-error">
-                      {nearAuthError}
-                    </p>
-                  )}
-                  {nearKeyRegistration && !nearSession && (
-                    <div className="quote-result" role="status" data-testid="status-near-key-registration">
-                      <p>
-                        This named NEAR account has not registered its current public key with NEAR Intents.
-                        To continue, approve a one-time mainnet transaction that calls add_public_key on intents.near.
-                      </p>
-                      <p>
-                        The transaction attaches 1 yoctoNEAR and also costs NEAR network gas, paid by this account.
-                        Your wallet will show the exact gas fee before you approve the transaction. This is not a swap
-                        and does not move investment funds.
-                      </p>
-                      <div className="quote-action-row">
-                        <button
-                          className="primary-button"
-                          data-testid="button-register-near-key"
-                          type="button"
-                          onClick={registerNearWalletKey}
-                          disabled={nearAuthLoading}
-                        >
-                          {nearAuthLoading ? 'Registering key…' : 'Approve and register key'}
-                        </button>
-                        <button
-                          className="quiet-button"
-                          data-testid="button-decline-near-key-registration"
-                          type="button"
-                          onClick={() => setNearKeyRegistration(null)}
-                          disabled={nearAuthLoading}
-                        >
-                          Decline
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  {(quoteState.status === 'ready' || quoteState.status === 'error') &&
-                    nearSession && (
-                      <div className="quote-action-row">
-                        <button
-                          className="primary-button"
-                          data-testid="button-request-confidential-quote"
-                          type="button"
-                          onClick={() => requestDemoQuote(quoteState.commitmentId)}
-                        >
-                          {quoteState.status === 'error' ? 'Retry dry-run quote' : 'Request confidential dry-run quote'}
-                        </button>
-                      </div>
-                    )}
-                  {quoteState.status === 'ready' && !nearSession && !nearKeyRegistration && (
-                    <p className="quote-result" role="status" data-testid="status-near-auth-required">
-                      Authenticate with a NEAR wallet before requesting this confidential quote.
-                    </p>
-                  )}
-                  {quoteState.status === 'ready' &&
-                    nearSession &&
-                    nearSession.expiresAt <= Date.now() && (
-                    <p className="quote-result quote-result-error" role="alert">
-                      This NEAR wallet session has expired. Authenticate again to continue.
-                    </p>
-                  )}
-                  {quoteState.status === 'loading' && (
-                    <p className="quote-result" role="status" data-testid="status-quote-loading">
-                      Requesting a dry-run quote with fixed synthetic values…
-                    </p>
-                  )}
-                  {quoteState.status === 'error' && (
-                    <p className="quote-result quote-result-error" role="alert" data-testid="status-quote-error">
-                      {quoteState.error}
-                    </p>
-                  )}
-                  {quoteState.status === 'success' && (
-                    <div className="quote-result" role="status" data-testid="status-quote-result">
-                      <p>
-                        Input: {formatUsdcBaseUnits(quoteState.result.inputAmount)} {quoteState.result.inputSymbol}
-                      </p>
-                      <p>
-                        Quoted output: {formatUsdcBaseUnits(quoteState.result.outputAmount)} {quoteState.result.outputSymbol}
-                      </p>
-                      {quoteState.result.quoteId && <p>Quote reference: {quoteState.result.quoteId}</p>}
-                      <p>Confidentiality requested: {quoteState.result.confidentialityRequested}</p>
-                    </div>
-                  )}
-                  <div className="quote-warning">
-                    The request uses a fixed synthetic 1 USDC and placeholder addresses. It does not send this commitment’s name or alias, or amount. A quote is not a signed swap or settlement.
-                  </div>
-                </div>
-              </section>
-            )}
           </section>
         )}
 
@@ -1176,14 +743,6 @@ function AppDesk({
                 </button>
               </div>
               <div className="toast-message" data-testid="status-share-url" aria-live="polite">{shareMessage}</div>
-              <button
-                className="quiet-button near-demo-open"
-                data-testid="button-open-near-demo"
-                type="button"
-                onClick={openNearDemo}
-              >
-                Open NEAR demo
-              </button>
             </div>
           </section>
         )}
@@ -1194,7 +753,7 @@ function AppDesk({
               <h1 className="how-title">How the app works</h1>
               <p>Agent Raised is a minimal demo of fundraise coordination with shared server-held records.</p>
               <p>
-                A potential investor submits a soft commitment. A founder can claim a raise with contact details. New raises stay out of the public list until a founder approves them. The Founder view uses a shared approval code to access individual commitments and claim contact details. Marking a commitment hard enables a dry-run NEAR Intents quote with fixed synthetic values; the quote never executes a swap. Separately, the founder and investor can confirm an optional transfer of exactly 1 test USDC on NEAR testnet.
+                A potential investor submits a soft commitment. A founder can claim a raise with contact details. New raises stay out of the public list until a founder approves them. The Founder view uses a shared approval code to access individual commitments and claim contact details. Separately, the founder and investor can confirm an optional transfer of exactly 1 test USDC on NEAR testnet.
               </p>
               <p>
                 Public pages and API responses show approved raise information, aggregate soft and hard USD totals, and an anonymous count of confirmed testnet transfers. Individual investor names or aliases, amounts, and claim contact details are not included in public responses.
@@ -1244,7 +803,7 @@ function AppDesk({
               </div>
 
               <p>
-                This page is context for the Agent Raised prototype only. It demonstrates shared demo commitment tracking and an illustrative NEAR Intents quote; the quote does not execute cross-chain settlement. It is not a solicitation.
+                This page is context for the Agent Raised prototype only. It demonstrates shared demo commitment tracking. It is not a solicitation.
               </p>
               <p>
                 The form below only displays a local demo confirmation. It does not send a contact request or create a commitment.
@@ -1504,14 +1063,6 @@ function Router() {
                 onGetPrivateRaise={(approvalCode) => getPrivateRaiseForSponsor(raise.id, approvalCode)}
                 onUpdateCommitment={(commitmentId, status, approvalCode) =>
                   updateCommitment(raise.id, commitmentId, status, approvalCode)
-                }
-                onRequestDemoQuote={(commitmentId, approvalCode, userSessionToken) =>
-                  requestDemoQuoteApi(raise.id, commitmentId, {
-                    headers: {
-                      Authorization: `Bearer ${approvalCode}`,
-                      'X-NEAR-User-Session': userSessionToken,
-                    },
-                  })
                 }
               />
             );
