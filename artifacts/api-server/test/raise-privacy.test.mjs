@@ -100,6 +100,13 @@ test("public raise routes expose summaries only while sponsors retain private de
     assert.equal(response.headers.get("cache-control"), "no-store", path);
     return result;
   }
+  async function requestMarkdown(path, status) {
+    const response = await fetch(`${base}${path}`);
+    const text = await response.text();
+    assert.equal(response.status, status, `GET ${path}: ${text}`);
+    assert.equal(response.headers.get("cache-control"), "no-store", path);
+    return { response, text };
+  }
 
   await t.test("legacy claim GET and POST hide contact details and commitments", async () => {
     // Before initialization the store is in-memory only. Never claim or modify
@@ -192,6 +199,36 @@ test("public raise routes expose summaries only while sponsors retain private de
       assert.equal(body.status, "open");
       assert.equal(body.confirmedTestnetTransfers, 0);
     }
+  });
+
+  await t.test("public category filters return only matching raises", async () => {
+    const matching = await request("/raises?category=ai-agents", 200);
+    assert.ok(matching.length > 0, "The seeded directory includes AI-agent raises");
+    assert.ok(matching.every((raise) => raise.categories?.includes("ai-agents")));
+    assertPublic(matching);
+    await request("/raises?category=not-a-category", 400);
+  });
+
+  await t.test("Raise.md exposes the public summary without private records", async () => {
+    const { response, text } = await requestMarkdown(`${path}/markdown`, 200);
+    assert.match(response.headers.get("content-type") ?? "", /^text\/markdown\b/);
+    assert.match(text, /^# Privacy regression /);
+    assert.match(text, /Synthetic route-level privacy regression data\./);
+    assert.match(text, /Stage: Seed/);
+    assert.match(text, /Page claimed: yes by Synthetic Public Founder/);
+    assert.match(text, /Soft total: USD 35,806/);
+    assert.match(text, /Hard total: USD 34,561/);
+    for (const secret of [
+      claim.email, claim.signatureOrAccount,
+      ...commitments.flatMap(({ id: commitmentId, identifier }) => [commitmentId, identifier]),
+    ]) {
+      assert.equal(text.includes(secret), false, `Private value leaked into Markdown: ${secret}`);
+    }
+
+    const missing = await fetch(`${base}/raises/missing-raise-${randomUUID()}/markdown`);
+    assert.equal(missing.status, 404);
+    assert.equal(missing.headers.get("cache-control"), "no-store");
+    assert.match((await missing.json()).error, /not found/i);
   });
 
   await t.test("private details require sponsor authorization and remain complete", async () => {

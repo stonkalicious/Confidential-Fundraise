@@ -185,6 +185,13 @@ paths:
       operationId: getRaises
       tags: [raises]
       summary: Get approved public raises and aggregate totals
+      parameters:
+        - name: category
+          in: query
+          required: false
+          description: Return only raises assigned to this category
+          schema:
+            $ref: "#/components/schemas/RaiseCategory"
       responses:
         "200":
           description: Approved raises with aggregate totals only
@@ -218,6 +225,31 @@ paths:
                 $ref: "#/components/schemas/ErrorMessage"
         "503":
           description: Sponsor access is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+  /raises/{id}/markdown:
+    get:
+      operationId: getRaiseMarkdown
+      tags: [raises]
+      summary: Get one approved public raise as agent-readable Markdown
+      description: Returns only the same public raise fields and aggregate totals as the JSON endpoint. Private commitments and contact details are never included.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Public raise details as Markdown
+          content:
+            text/markdown:
+              schema:
+                type: string
+        "404":
+          description: Raise not found
           content:
             application/json:
               schema:

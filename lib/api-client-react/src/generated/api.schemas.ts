@@ -354,3 +354,8 @@ export interface ErrorMessage {
  */
 export type DemoSettlementErrorResponse = ErrorMessage;
 
+export type GetRaisesParams = {
+  /** Return only raises assigned to this category */
+  category?: RaiseCategory;
+};
+

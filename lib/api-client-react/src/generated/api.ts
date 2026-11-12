@@ -39,6 +39,7 @@ import type {
   DemoSettlementState,
   DemoSettlementVerificationInput,
   ErrorMessage,
+  GetRaisesParams,
   HealthStatus,
   NearIntentsSessionCleared,
   PendingRaise,
@@ -784,20 +785,27 @@ export const useSubmitRaise = <TError = ErrorType<RaiseSubmissionError | ErrorMe
       return useMutation(getSubmitRaiseMutationOptions(options), queryClient);
     }
 
-export const getGetRaisesUrl = () => {
+export const getGetRaisesUrl = (params?: GetRaisesParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/raises`
+  return stringifiedParams.length > 0 ? `/api/raises?${stringifiedParams}` : `/api/raises`
 }
 
 /**
  * @summary Get approved public raises and aggregate totals
  */
-export const getRaises = async ( options?: Parameters<typeof customFetch>[1]): Promise<RaiseSummary[]> => {
+export const getRaises = async (params?: GetRaisesParams, options?: Parameters<typeof customFetch>[1]): Promise<RaiseSummary[]> => {
 
-  return customFetch<RaiseSummary[]>(getGetRaisesUrl(),
+  return customFetch<RaiseSummary[]>(getGetRaisesUrl(params),
   {
     ...options,
     method: 'GET'
@@ -810,23 +818,23 @@ export const getRaises = async ( options?: Parameters<typeof customFetch>[1]): P
 
 
 
-export const getGetRaisesQueryKey = () => {
+export const getGetRaisesQueryKey = (params?: GetRaisesParams,) => {
     return [
-    `/api/raises`
+    `/api/raises`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetRaisesQueryOptions = <TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getGetRaisesQueryOptions = <TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<unknown>>(params?: GetRaisesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetRaisesQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetRaisesQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRaises>>> = ({ signal }) => getRaises({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRaises>>> = ({ signal }) => getRaises(params, { signal, ...requestOptions });
 
 
 
@@ -840,7 +848,7 @@ export type GetRaisesQueryError = ErrorType<unknown>
 
 
 export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<unknown>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>> & Pick<
+ params: undefined |  GetRaisesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getRaises>>,
           TError,
@@ -850,7 +858,7 @@ export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TErr
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>> & Pick<
+ params?: GetRaisesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getRaises>>,
           TError,
@@ -860,7 +868,7 @@ export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TErr
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ params?: GetRaisesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -868,11 +876,11 @@ export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TErr
  */
 
 export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ params?: GetRaisesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetRaisesQueryOptions(options)
+  const queryOptions = getGetRaisesQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -974,6 +982,108 @@ export function useGetPendingRaises<TData = Awaited<ReturnType<typeof getPending
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetPendingRaisesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetRaiseMarkdownUrl = (id: string,) => {
+
+
+
+
+  return `/api/raises/${id}/markdown`
+}
+
+/**
+ * Returns only the same public raise fields and aggregate totals as the JSON endpoint. Private commitments and contact details are never included.
+ * @summary Get one approved public raise as agent-readable Markdown
+ */
+export const getRaiseMarkdown = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<string> => {
+
+  return customFetch<string>(getGetRaiseMarkdownUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRaiseMarkdownQueryKey = (id: string,) => {
+    return [
+    `/api/raises/${id}/markdown`
+    ] as const;
+    }
+
+
+export const getGetRaiseMarkdownQueryOptions = <TData = Awaited<ReturnType<typeof getRaiseMarkdown>>, TError = ErrorType<ErrorMessage>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaiseMarkdown>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRaiseMarkdownQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRaiseMarkdown>>> = ({ signal }) => getRaiseMarkdown(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRaiseMarkdown>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetRaiseMarkdownQueryResult = NonNullable<Awaited<ReturnType<typeof getRaiseMarkdown>>>
+export type GetRaiseMarkdownQueryError = ErrorType<ErrorMessage>
+
+
+export function useGetRaiseMarkdown<TData = Awaited<ReturnType<typeof getRaiseMarkdown>>, TError = ErrorType<ErrorMessage>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaiseMarkdown>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRaiseMarkdown>>,
+          TError,
+          Awaited<ReturnType<typeof getRaiseMarkdown>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRaiseMarkdown<TData = Awaited<ReturnType<typeof getRaiseMarkdown>>, TError = ErrorType<ErrorMessage>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaiseMarkdown>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRaiseMarkdown>>,
+          TError,
+          Awaited<ReturnType<typeof getRaiseMarkdown>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRaiseMarkdown<TData = Awaited<ReturnType<typeof getRaiseMarkdown>>, TError = ErrorType<ErrorMessage>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaiseMarkdown>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get one approved public raise as agent-readable Markdown
+ */
+
+export function useGetRaiseMarkdown<TData = Awaited<ReturnType<typeof getRaiseMarkdown>>, TError = ErrorType<ErrorMessage>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaiseMarkdown>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetRaiseMarkdownQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

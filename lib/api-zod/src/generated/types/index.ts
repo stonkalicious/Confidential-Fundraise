@@ -28,6 +28,7 @@ export * from './demoSettlementState';
 export * from './demoSettlementStatus';
 export * from './demoSettlementVerificationInput';
 export * from './errorMessage';
+export * from './getRaisesParams';
 export * from './healthStatus';
 export * from './nearIntentsSessionCleared';
 export * from './pendingRaise';

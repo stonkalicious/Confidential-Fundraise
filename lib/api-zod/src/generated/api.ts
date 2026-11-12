@@ -121,6 +121,10 @@ export const SubmitRaiseResponse = zod.object({
 /**
  * @summary Get approved public raises and aggregate totals
  */
+export const GetRaisesQueryParams = zod.object({
+  "category": zod.enum(['privacy-security', 'ai-agents', 'intents-payments', 'consumer-real-world']).optional().describe('Return only raises assigned to this category')
+})
+
 
 
 export const getRaisesResponseSoftTotalMin = 0;
@@ -172,6 +176,17 @@ export const GetPendingRaisesResponseItem = zod.object({
   "status": zod.enum(['pending'])
 })
 export const GetPendingRaisesResponse = zod.array(GetPendingRaisesResponseItem)
+
+
+/**
+ * Returns only the same public raise fields and aggregate totals as the JSON endpoint. Private commitments and contact details are never included.
+ * @summary Get one approved public raise as agent-readable Markdown
+ */
+export const GetRaiseMarkdownParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetRaiseMarkdownResponse = zod.unknown()
 
 
 /**

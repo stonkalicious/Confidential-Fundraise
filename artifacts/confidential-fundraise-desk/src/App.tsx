@@ -379,6 +379,24 @@ function AppDesk({
         <h1 className="raise-heading">{raise.companyName}</h1>
         <p className="section-copy">{raise.thesis}</p>
         <div className="raise-details">{raise.stage} · {usd(raise.roundRange.min)} – {usd(raise.roundRange.max)}</div>
+        <div className="raise-agent-links" aria-label="Agent-readable raise data">
+          <a
+            className="raise-source-link"
+            href={`/api/raises/${encodeURIComponent(raise.id)}/markdown`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Raise.md
+          </a>
+          <a
+            className="raise-source-link"
+            href={`/api/raises/${encodeURIComponent(raise.id)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            JSON
+          </a>
+        </div>
         {raise.rangeIsIndicative && (
           <p className="raise-details">Approximate range; not a verified fundraising ask.</p>
         )}

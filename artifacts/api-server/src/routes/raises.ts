@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { validateRaiseSubmission } from "@workspace/api-zod/raise-submission";
 import {
+  RaiseCategory as RaiseCategoryValues,
   ApproveRaiseParams,
   ApproveRaiseResponse,
   ClaimRaiseBody,
@@ -40,6 +41,13 @@ const rateLimitWindows = new Map<string, number[]>();
 const NEAR_REFRESH_COOKIE = "near_intents_refresh";
 const NEAR_ACCOUNT_COOKIE = "near_intents_account";
 const NEAR_SESSION_COOKIE_PATH = "/api/near-intents/session";
+type PublicRaiseCategory = (typeof RaiseCategoryValues)[keyof typeof RaiseCategoryValues];
+const supportedRaiseCategories = Object.values(RaiseCategoryValues);
+
+function isPublicRaiseCategory(value: unknown): value is PublicRaiseCategory {
+  return typeof value === "string" &&
+    supportedRaiseCategories.includes(value as PublicRaiseCategory);
+}
 
 function noStore(res: Response): Response {
   return res.set("Cache-Control", "no-store");
@@ -155,13 +163,79 @@ router.post("/raises", async (req, res): Promise<void> => {
   noStore(res).status(201).json(SubmitRaiseResponse.parse(submitted));
 });
 
-router.get("/raises", async (_req, res): Promise<void> => {
-  noStore(res).json(GetRaisesResponse.parse(await getRaisesWithConfirmedTestnetCounts()));
+router.get("/raises", async (req, res): Promise<void> => {
+  let category: PublicRaiseCategory | undefined;
+  const rawCategory = req.query.category;
+  if (rawCategory !== undefined && !isPublicRaiseCategory(rawCategory)) {
+    noStore(res).status(400).json({ error: "Invalid raise category filter." });
+    return;
+  }
+  if (rawCategory !== undefined) category = rawCategory;
+
+  const raises = await getRaisesWithConfirmedTestnetCounts();
+  const filtered = category
+    ? raises.filter((raise) => raise.categories?.includes(category))
+    : raises;
+  noStore(res).json(GetRaisesResponse.parse(filtered));
 });
 
 router.get("/raises/pending", async (req, res): Promise<void> => {
   if (!requireApprovalCode(req, res)) return;
   noStore(res).json(GetPendingRaisesResponse.parse(await getPendingRaises()));
+});
+
+function escapeMarkdownText(value: string): string {
+  return value
+    .replace(/[\r\n]+/g, " ")
+    .replace(/[\\`*_{}\[\]<>]/g, "\\$&");
+}
+
+function raiseMarkdown(
+  raise: NonNullable<Awaited<ReturnType<typeof getRaiseWithConfirmedTestnetCount>>>,
+): string {
+  const lines = [
+    `# ${escapeMarkdownText(raise.name)}`,
+    "",
+    escapeMarkdownText(raise.thesis),
+    "",
+    "## Public raise details",
+    "",
+    `- Raise ID: \`${escapeMarkdownText(raise.id)}\``,
+    `- Stage: ${escapeMarkdownText(raise.stage)}`,
+    `- Round range: USD ${raise.range.min.toLocaleString("en-US")}–${raise.range.max.toLocaleString("en-US")}${raise.rangeIsIndicative ? " (indicative)" : ""}`,
+    `- Status: ${escapeMarkdownText(raise.status ?? "open")}`,
+    `- Page claimed: ${raise.claimed ? `yes${raise.claimantName ? ` by ${escapeMarkdownText(raise.claimantName)}` : ""}` : "no"} (a claim does not verify a founder or company)`,
+    `- Soft total: USD ${raise.softTotal.toLocaleString("en-US")}`,
+    `- Hard total: USD ${raise.hardTotal.toLocaleString("en-US")}`,
+  ];
+
+  if (raise.categories?.length) {
+    lines.push(`- Categories: ${raise.categories.map(escapeMarkdownText).join(", ")}`);
+  }
+  if (raise.confirmedTestnetTransfers !== undefined) {
+    lines.push(`- Confirmed testnet transfers: ${raise.confirmedTestnetTransfers}`);
+  }
+  if (raise.sourceLink) {
+    lines.push(`- Public source: ${raise.sourceLink}`);
+  }
+
+  return `${lines.join("\n")}\n`;
+}
+
+router.get("/raises/:id/markdown", async (req, res): Promise<void> => {
+  const params = GetRaiseByIdParams.safeParse(req.params);
+  if (!params.success) {
+    noStore(res).status(400).json({ error: "Invalid raise ID." });
+    return;
+  }
+
+  const raise = await getRaiseWithConfirmedTestnetCount(params.data.id);
+  if (!raise) {
+    noStore(res).status(404).json({ error: `Raise '${params.data.id}' not found.` });
+    return;
+  }
+
+  noStore(res).type("text/markdown").send(raiseMarkdown(raise));
 });
 
 router.get("/raises/:id", async (req, res): Promise<void> => {
