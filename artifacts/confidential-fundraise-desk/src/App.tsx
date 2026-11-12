@@ -34,6 +34,8 @@ import {
 } from '@/lib/near-intents-auth';
 import { ErrorBoundary } from '@/components/error-boundary';
 import RulesCalculator from '@/components/rules-calculator';
+import NearDemoPanel from '@/components/near-demo-panel';
+import { deriveNearDemoPanelState } from '@/lib/near-demo-panel';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
@@ -195,6 +197,20 @@ function AppDesk({
     ? commitments.find((item) => item.id === quoteState.commitmentId && item.hard)
     : undefined;
   const target = raise.roundRange.min;
+  const nearDemoFocusPending = useRef(false);
+  const nearDemoPanelState = deriveNearDemoPanelState({
+    unlocked: privateRaise !== null,
+    session: nearSession,
+    sessionUnavailable: nearSessionUnavailable,
+    authLoading: nearAuthLoading,
+    authError: Boolean(nearAuthError),
+    keyRegistrationPending: nearKeyRegistration !== null,
+    quoteStatus: quoteState?.status ?? null,
+    hasQuotedHardCommitment: Boolean(quotedCommitment),
+    confidentialityRequested:
+      quoteState?.status === 'success' ? quoteState.result.confidentialityRequested : null,
+    now: Date.now(),
+  });
   const [identifier, setIdentifier] = useState('');
   const [amount, setAmount] = useState('');
   const [formError, setFormError] = useState('');
@@ -281,6 +297,21 @@ function AppDesk({
       sponsorSessionVersion.current += 1;
     };
   }, [view]);
+
+  useEffect(() => {
+    if (view !== 'sponsor' || !nearDemoFocusPending.current) return;
+    nearDemoFocusPending.current = false;
+    const target = document.getElementById(
+      privateRaise ? 'near-demo-panel' : 'sponsor-approval-code',
+    );
+    target?.focus();
+  }, [view, privateRaise]);
+
+  function openNearDemo() {
+    nearDemoFocusPending.current = true;
+    setShareMessage('');
+    setView('sponsor');
+  }
 
   async function submitCommitment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -829,6 +860,7 @@ function AppDesk({
                 <div className="side-label">Threshold</div>
                 <h3 className="side-title">{usd(target)}</h3>
                 <p className="side-copy">The demo threshold is met when aggregate hard commitments reach {usd(target)}. Reaching it does not trigger settlement.</p>
+                <NearDemoPanel state={nearDemoPanelState} />
               </aside>
             </div>
             {quoteState && quotedCommitment && (
@@ -1118,6 +1150,14 @@ function AppDesk({
                 </button>
               </div>
               <div className="toast-message" data-testid="status-share-url" aria-live="polite">{shareMessage}</div>
+              <button
+                className="quiet-button near-demo-open"
+                data-testid="button-open-near-demo"
+                type="button"
+                onClick={openNearDemo}
+              >
+                Open NEAR demo
+              </button>
             </div>
           </section>
         )}
