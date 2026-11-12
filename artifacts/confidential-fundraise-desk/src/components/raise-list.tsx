@@ -193,7 +193,12 @@ export default function RaiseList({
                   <li key={raise.id}>
                     <Link className="raise-list-item" href={`/raises/${raise.id}`} data-testid={`raise-${raise.id}`}>
                       <div>
-                        <h2 className="section-title">{raise.companyName}</h2>
+                        <div className="raise-list-heading">
+                          <h2 className="section-title">{raise.companyName}</h2>
+                          <span className="raise-list-range">
+                            {format(raise.roundRange.min)} – {format(raise.roundRange.max)}
+                          </span>
+                        </div>
                         <p className="section-copy">{raise.thesis}</p>
                         {raise.categories && raise.categories.length > 0 && (
                           <div className="raise-category-tags">
@@ -206,7 +211,7 @@ export default function RaiseList({
                           </div>
                         )}
                         <div className="raise-details">
-                          {raise.stage} · {format(raise.roundRange.min)} – {format(raise.roundRange.max)}
+                          {raise.stage}
                         </div>
                         {raise.rangeIsIndicative && (
                           <div className="raise-details">Approximate range; not a verified fundraising ask.</div>
