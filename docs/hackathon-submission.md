@@ -59,10 +59,10 @@ Keep these distinctions in the recording and description:
 5. Example raises and public-source listings are not endorsements or confirmed
    live investment opportunities. Use synthetic commitments only.
 6. The animation illustrates the product direction as well as the app.
-   Founder agents preparing `raise.md`, investor-agent matching, and the
-   visualized MCP-style process are proposed workflows, not a demonstrated MCP
-   server or autonomous matching system. The implemented agent interface is HTTP.
-   Do not describe an animated wallet sequence as evidence of a live transaction.
+    Founder agents preparing `raise.md`, investor-agent matching, and AI review
+    remain proposed workflows. The repository includes an optional local stdio
+    MCP server that wraps the HTTP API; it does not implement autonomous matching.
+    Do not describe an animated wallet sequence as evidence of a live transaction.
 
 ## Current submission evidence
 
@@ -149,8 +149,9 @@ The response is a JSON array of structured public objects with `id`, `name`,
 count, not a transfer receipt. A returned ID can also be used with
 `GET https://agentraised.com/api/raises/ID` to inspect that raise.
 Individual investor records and claim contact details are excluded.
-This is a live HTTP interface that external agents can call, not an implemented
-MCP server or evidence of autonomous investor matching.
+The repository also includes an optional local stdio MCP server that calls the
+same HTTP API. It is not a hosted remote MCP service and does not perform
+autonomous investor matching.
 
 ### Optional testnet-transfer clip (only after actual verification)
 
@@ -200,7 +201,7 @@ NEAR is used for a separate optional testnet token-transfer demo. NEAR Intents h
 
 A separate optional testnet demo implements a founder/investor-confirmed 1-test-USDC transfer flow. A successful funded-wallet run is not claimed here. It is public, separate from Intents, and does not change USD totals.
 
-The live public GET https://agentraised.com/api/raises returns structured raise objects that external agents can read. Raise state persists in PostgreSQL. Per-raise agent tokens permit public-field updates, not access to private commitments. Individual records require the shared demo operator code; claiming a page does not grant access or verify a founder or company. Soft commitments are non-binding. Privacy relies on application access controls, not onchain storage or private-AI inference. Listings may include synthetic examples, public-source material and user submissions. The animation also shows a proposed raise.md and agent-matching workflow; that matching/MCP workflow is not implemented. This hackathon prototype is not a live investment platform or an investment offer.
+The live public GET https://agentraised.com/api/raises returns structured raise objects that external agents can read. An optional local stdio MCP server exposes tools for public listing, raise creation/claim/update, soft-commit submission, and testnet transfer coordination. It wraps the existing API, does not expose investor records, does not submit transfers, and does not provide autonomous investor matching. Raise state persists in PostgreSQL. Per-raise agent tokens permit public-field updates, not access to private commitments. Individual records require the shared demo operator code; claiming a page does not grant access or verify a founder or company. Soft commitments are non-binding. Privacy relies on application access controls, not onchain storage or private-AI inference. Listings may include synthetic examples, public-source material and user submissions. The animation also shows proposed raise.md preparation, investor-agent matching, and AI review; those workflows are not implemented. This hackathon prototype is not a live investment platform or an investment offer.
 ```
 
 ## Readiness checklist

@@ -12,10 +12,16 @@ const artifactDir = path.dirname(fileURLToPath(import.meta.url));
 
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
-  await rm(distDir, { recursive: true, force: true });
+  const mcpOnly = process.argv.includes("--mcp");
+  if (!mcpOnly) await rm(distDir, { recursive: true, force: true });
 
   await esbuild({
-    entryPoints: [path.resolve(artifactDir, "src/index.ts")],
+    entryPoints: mcpOnly
+      ? [{ in: path.resolve(artifactDir, "src/mcp.ts"), out: "mcp" }]
+      : [
+          path.resolve(artifactDir, "src/index.ts"),
+          path.resolve(artifactDir, "src/mcp.ts"),
+        ],
     platform: "node",
     bundle: true,
     format: "esm",

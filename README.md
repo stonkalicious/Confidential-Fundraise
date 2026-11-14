@@ -175,7 +175,8 @@ It returns structured raise objects with names, theses, stages, ranges,
 categories, claim/status fields, aggregate soft/hard totals, and an anonymous
 confirmed-testnet-transfer count. Individual commitments and claim contact
 details are not included. This is an HTTP interface for external agents,
-not an implemented MCP server or autonomous matching system.
+and the repository also includes an optional local stdio MCP server that wraps
+these API routes. It does not implement autonomous matching.
 
 For the agent ownership path, on an **unclaimed approved demo raise**:
 
@@ -193,6 +194,13 @@ For the agent ownership path, on an **unclaimed approved demo raise**:
 New raises submitted through the landing form or `POST /api/raises` go to a
 private manual-approval queue; they are not immediately public. Rehearsals should
 use a fresh demo raise rather than reset or overwrite existing claims.
+
+The optional local MCP server exposes the same public list, claim/update, and
+soft-commit actions, plus a non-custodial testnet transfer handoff. Setup
+instructions, Claude Desktop and Cursor configuration examples, and one tool
+example per action are in
+[the API server README](artifacts/api-server/README.md). Starting the MCP server
+is independent of the web and API workflows.
 
 For the optional testnet token-transfer demo, follow the
 [separate detailed walkthrough](artifacts/confidential-fundraise-desk/README.md).
