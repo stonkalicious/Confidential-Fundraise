@@ -2,6 +2,7 @@ import express, { type Express, type ErrorRequestHandler } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
+import remoteMcpRouter from "./routes/mcp";
 import { logger } from "./lib/logger";
 import { RaiseSnapshotUnavailableError } from "./lib/raise-store";
 
@@ -31,6 +32,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use("/api/mcp", remoteMcpRouter);
 app.use("/api", router);
 
 const raiseReadErrorHandler: ErrorRequestHandler = (error, req, res, next) => {

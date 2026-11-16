@@ -1,10 +1,43 @@
-# Optional Agent Raised MCP server
+# Agent Raised MCP server
 
-This is a standalone local MCP server for MCP-compatible clients. It communicates
-over stdio and calls the existing Agent Raised HTTP API. It is not imported by or
-started with the web app or API server.
+Agent Raised provides a hosted MCP endpoint for Claude and other compatible
+clients, plus a local stdio server for development.
 
-The MCP server exposes exactly four tools:
+## Hosted server
+
+The public remote MCP endpoint is:
+
+```text
+https://agentraised.com/api/mcp
+```
+
+It exposes four tools:
+
+1. `list_raises` — read public raises and filter by stage, overlapping ticket
+   range, or keyword.
+2. `get_raise` — read one raise's public details.
+3. `claim_or_update_raise` — submit a new raise for manual approval, claim an
+   approved page, or update its public fields with the per-raise token.
+4. `soft_commit` — record a synthetic, non-binding commitment without returning
+   its identifier or amount.
+
+The hosted endpoint has no sign-in. Its reads return public raise information
+and aggregates only; it never reads individual commitments or founder contact
+details. New raises remain pending until manually approved. Page claims do not
+verify a founder or company. The hosted server does not expose testnet settlement
+tools.
+
+In Claude, open **Customize → Connectors → Add custom connector**, enter the URL
+above, and choose **No sign in**. Enable Agent Raised for a conversation, then
+ask Claude to find or read public raises. Founders can ask it to submit a raise;
+the result will say it is pending approval. Investors can ask it to record a
+synthetic soft commitment. Do not use real investor contact details or
+confidential business information.
+
+## Local stdio server
+
+The local server communicates over stdio and calls the existing Agent Raised
+HTTP API. It exposes exactly four tools:
 
 1. `list_raises` — reads public raise summaries and filters by stage (case-insensitive
    exact match), overlapping ticket range, and case-insensitive keyword.
@@ -205,8 +238,9 @@ pnpm --filter @workspace/api-server test
 pnpm --filter @workspace/api-server run build:mcp
 ```
 
-The MCP tests use a local fake API and verify the tool inventory, public
-filters, claim-token scoping, private commitment response, testnet confirmation
-sequence, no-send wallet handoff, onchain-verification gate, and independence
-from the API process. They do not send a real transfer or prove a live wallet
-connection.
+The MCP tests use a local fake API and verify both stdio and hosted stateless
+HTTP transports, including tool inventories, public filters, claim-token
+scoping, pending raise submissions, and private commitment responses. Local
+stdio tests also cover the optional testnet confirmation sequence, no-send
+wallet handoff, onchain-verification gate, and independence from the API
+process. They do not send a real transfer or prove a live wallet connection.

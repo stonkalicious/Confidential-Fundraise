@@ -197,6 +197,10 @@ const RaiseRange = z.object({
   max: SafeInteger,
 }).strict().refine((range) => range.max >= range.min, "Maximum must be at least the minimum.");
 
+const getRaiseSchema = z.object({
+  raiseId: z.string().trim().min(1).max(120),
+}).strict();
+
 const listRaisesSchema = z.object({
   stage: z.string().trim().min(1).max(60).optional(),
   minRange: SafeInteger.optional(),
@@ -206,6 +210,12 @@ const listRaisesSchema = z.object({
   (input) => input.minRange === undefined || input.maxRange === undefined || input.maxRange >= input.minRange,
   { message: "maxRange must be greater than or equal to minRange." },
 );
+
+export type RaiseMcpServerOptions = {
+  includeGetRaise?: boolean;
+  includeTestSettlement?: boolean;
+  retainCommitSessions?: boolean;
+};
 
 const claimOrUpdateSchema = z.discriminatedUnion("action", [
   z.object({
@@ -314,9 +324,10 @@ function safeSettlementStatus(
   };
 }
 
-export function createRaiseMcpServer(): McpServer {
+export function createRaiseMcpServer(options: RaiseMcpServerOptions = {}): McpServer {
   const server = new McpServer({ name: "agent-raised", version: "1.0.0" });
   const localCommitSessions = new Map<string, LocalCommitSession>();
+  const retainCommitSessions = options.retainCommitSessions ?? true;
 
   server.registerTool(
     "list_raises",
@@ -347,6 +358,21 @@ export function createRaiseMcpServer(): McpServer {
       return textResult({ raises: matches.map((raise) => publicSummary(raise)) });
     }),
   );
+
+  if (options.includeGetRaise) {
+    server.registerTool(
+      "get_raise",
+      {
+        title: "Get public raise details",
+        description: "Read one raise's public thesis, stage, range, status, and aggregate totals. Never returns founder contact details or individual commitments.",
+        inputSchema: getRaiseSchema,
+      },
+      toolHandler<typeof getRaiseSchema>(async ({ raiseId }) => {
+        const raise = GetRaiseByIdResponse.parse(await apiRequest(`raises/${encodeURIComponent(raiseId)}`));
+        return textResult({ raise: publicSummary(raise) });
+      }),
+    );
+  }
 
   server.registerTool(
     "claim_or_update_raise",
@@ -416,32 +442,36 @@ export function createRaiseMcpServer(): McpServer {
       inputSchema: softCommitSchema,
     },
     toolHandler<typeof softCommitSchema>(async (input) => {
-      pruneSessions(localCommitSessions);
       const key = sessionKey(input.raiseId, input.commitmentId);
-      let session = localCommitSessions.get(key);
-      if (!session) {
-        session = { receipt: randomBytes(32).toString("hex"), createdAt: Date.now() };
-        localCommitSessions.set(key, session);
+      let receipt = randomBytes(32).toString("hex");
+      if (retainCommitSessions) {
+        pruneSessions(localCommitSessions);
+        let session = localCommitSessions.get(key);
+        if (!session) {
+          session = { receipt, createdAt: Date.now() };
+          localCommitSessions.set(key, session);
+        }
+        receipt = session.receipt;
       }
       const payload = SubmitSoftCommitmentBody.parse({
         id: input.commitmentId,
         identifier: input.identifier,
         amount: input.amount,
-        demoReceipt: session.receipt,
+        demoReceipt: receipt,
       });
       SubmitSoftCommitmentResponse.parse(await apiRequest(
         `raises/${encodeURIComponent(input.raiseId)}/commitments`,
         {
           method: "POST",
           body: payload,
-          redact: [input.raiseId, input.commitmentId, input.identifier, String(input.amount), session.receipt],
+          redact: [input.raiseId, input.commitmentId, input.identifier, String(input.amount), receipt],
         },
       ));
       return messageResult("Soft commitment recorded.");
     }),
   );
 
-  server.registerTool(
+  if (options.includeTestSettlement !== false) server.registerTool(
     "settle_test_usdc",
     {
       title: "Coordinate optional testnet transfer",

@@ -35,17 +35,18 @@ Nearhunt hackathon projects.
 **How to apply:** Keep each estimate visibly qualified, link to its public
 Nearhunt source, and do not add live vote ranking or synchronization.
 
-The raise.md preparation, investor discovery and critical-review flow is a
-proposed workflow using the founder's and investor's own external agents, not
-an existing in-app capability. The founder approves public information and the
-investor decides whether to proceed.
+Hosted Claude MCP is central to the MVP: investors use Claude to discover and
+read public raises, and founders submit raises through Claude. New submissions
+remain pending manual approval; claiming a page does not verify a founder or
+company; individual commitments and investor contact details remain private.
 
-**Why:** The user-approved animation scope explicitly separates this proposal
-from the demonstrated commitment features.
+**Why:** The user said being able to open Claude, ask questions as an investor,
+and publish a raise as a founder is the product's core value.
 
-**How to apply:** Retain clear proposed-workflow identification and human
-approval/decision beats unless a separate implementation is authorized. Do not
-imply the app already ingests files, performs AI reviews or commits for investors.
+**How to apply:** Prioritize a hosted HTTPS MCP connection over local-only
+configuration. Expose public raise data and the existing limited raise and
+commitment actions; do not expose private commitment records or founder contact
+details. Keep manual review and investor decision-making explicit.
 
 The proposed Raise.md preparation step includes an agent drafting a sourced
 file, identifying missing information, and waiting for founder approval. This

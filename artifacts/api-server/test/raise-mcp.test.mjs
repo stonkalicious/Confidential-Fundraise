@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createServer } from "node:http";
+import { createServer, request as httpRequest } from "node:http";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { fileURLToPath } from "node:url";
@@ -73,6 +73,16 @@ async function startFakeApi() {
     }
     if (url.pathname === `${API_PATH}/raises` && request.method === "GET") {
       sendJson(response, 200, state.raises);
+      return;
+    }
+    const raiseMatch = url.pathname.match(/^\/api\/raises\/([^/]+)$/);
+    if (raiseMatch && request.method === "GET") {
+      const raise = state.raises.find(({ id }) => id === decodeURIComponent(raiseMatch[1]));
+      if (!raise) {
+        sendJson(response, 404, { error: "Raise not found." });
+        return;
+      }
+      sendJson(response, 200, raise);
       return;
     }
     if (url.pathname === `${API_PATH}/raises` && request.method === "POST") {
@@ -313,6 +323,176 @@ function startMcp(baseUrl, extraEnv = {}) {
 function toolText(result) {
   return result?.content?.find((block) => block.type === "text")?.text ?? "";
 }
+
+async function remoteMcpRequest(baseUrl, message, options = {}) {
+  const response = await fetch(`${baseUrl}/api/mcp`, {
+    method: "POST",
+    headers: {
+      accept: "application/json, text/event-stream",
+      "content-type": "application/json",
+      ...(options.headers ?? {}),
+    },
+    body: JSON.stringify(message),
+  });
+  const contentType = response.headers.get("content-type") ?? "";
+  const text = await response.text();
+  if (!text) return { status: response.status, result: undefined, text };
+  if (contentType.includes("text/event-stream")) {
+    const data = text
+      .split(/\r?\n/)
+      .filter((line) => line.startsWith("data:"))
+      .map((line) => line.slice(5).trim())
+      .filter(Boolean);
+    return {
+      status: response.status,
+      result: data.length ? JSON.parse(data.at(-1)) : undefined,
+      text,
+    };
+  }
+  return { status: response.status, result: JSON.parse(text), text };
+}
+
+async function remoteMcpRequestWithHost(baseUrl, host, message) {
+  const url = new URL(`${baseUrl}/api/mcp`);
+  return new Promise((resolve, reject) => {
+    const request = httpRequest(url, {
+      method: "POST",
+      headers: {
+        host,
+        accept: "application/json, text/event-stream",
+        "content-type": "application/json",
+      },
+    }, (response) => {
+      const chunks = [];
+      response.on("data", (chunk) => chunks.push(chunk));
+      response.on("end", () => {
+        const text = Buffer.concat(chunks).toString("utf8");
+        resolve({
+          status: response.statusCode,
+          text,
+          result: text ? JSON.parse(text) : undefined,
+        });
+      });
+    });
+    request.on("error", reject);
+    request.end(JSON.stringify(message));
+  });
+}
+
+test("hosted MCP exposes safe public raise tools over stateless HTTP", async (t) => {
+  const fakeApi = await startFakeApi();
+  const apiServer = createServer(app);
+  await new Promise((resolve) => apiServer.listen(0, "127.0.0.1", resolve));
+  const originalBaseUrl = process.env.AGENT_RAISED_API_BASE_URL;
+  const originalNodeEnv = process.env.NODE_ENV;
+  process.env.AGENT_RAISED_API_BASE_URL = fakeApi.baseUrl;
+  process.env.NODE_ENV = "test";
+  t.after(async () => {
+    if (originalBaseUrl === undefined) delete process.env.AGENT_RAISED_API_BASE_URL;
+    else process.env.AGENT_RAISED_API_BASE_URL = originalBaseUrl;
+    if (originalNodeEnv === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = originalNodeEnv;
+    await fakeApi.close();
+    await new Promise((resolve) => apiServer.close(resolve));
+  });
+  const mcpUrl = `http://127.0.0.1:${apiServer.address().port}`;
+
+  const rejectedHost = await remoteMcpRequestWithHost(
+    mcpUrl,
+    "untrusted.example",
+    { jsonrpc: "2.0", id: 99, method: "initialize", params: {} },
+  );
+  assert.equal(rejectedHost.status, 403);
+
+  const initialize = await remoteMcpRequest(mcpUrl, {
+    jsonrpc: "2.0",
+    id: 1,
+    method: "initialize",
+    params: {
+      protocolVersion: "2025-11-25",
+      capabilities: {},
+      clientInfo: { name: "agent-raised-remote-test", version: "1.0.0" },
+    },
+  });
+  assert.equal(initialize.status, 200, initialize.text);
+  assert.equal(initialize.result.error, undefined, initialize.text);
+
+  await remoteMcpRequest(mcpUrl, {
+    jsonrpc: "2.0",
+    method: "notifications/initialized",
+  }, { headers: { "mcp-protocol-version": "2025-11-25" } });
+
+  const listed = await remoteMcpRequest(mcpUrl, {
+    jsonrpc: "2.0",
+    id: 2,
+    method: "tools/list",
+  }, { headers: { "mcp-protocol-version": "2025-11-25" } });
+  assert.equal(listed.status, 200, listed.text);
+  const names = listed.result.result.tools.map(({ name }) => name).sort();
+  assert.deepEqual(names, [
+    "claim_or_update_raise",
+    "get_raise",
+    "list_raises",
+    "soft_commit",
+  ]);
+
+  const listResult = await remoteMcpRequest(mcpUrl, {
+    jsonrpc: "2.0",
+    id: 3,
+    method: "tools/call",
+    params: { name: "list_raises", arguments: { keyword: "privacy" } },
+  }, { headers: { "mcp-protocol-version": "2025-11-25" } });
+  assert.equal(listResult.status, 200, listResult.text);
+  const publicRaises = JSON.parse(listResult.result.result.content[0].text).raises;
+  assert.deepEqual(publicRaises.map(({ id }) => id), ["approved-raise"]);
+  assert.equal(JSON.stringify(publicRaises).includes("commitments"), false);
+
+  const detail = await remoteMcpRequest(mcpUrl, {
+    jsonrpc: "2.0",
+    id: 4,
+    method: "tools/call",
+    params: { name: "get_raise", arguments: { raiseId: "approved-raise" } },
+  }, { headers: { "mcp-protocol-version": "2025-11-25" } });
+  assert.equal(detail.status, 200, detail.text);
+  assert.equal(JSON.parse(detail.result.result.content[0].text).raise.name, "Privacy Fund");
+
+  const publish = await remoteMcpRequest(mcpUrl, {
+    jsonrpc: "2.0",
+    id: 5,
+    method: "tools/call",
+    params: {
+      name: "claim_or_update_raise",
+      arguments: {
+        action: "create",
+        name: "Synthetic hosted raise",
+        thesis: "A sufficiently detailed hosted demo thesis.",
+        stage: "Seed",
+        range: { min: 100_000, max: 500_000 },
+      },
+    },
+  }, { headers: { "mcp-protocol-version": "2025-11-25" } });
+  assert.equal(publish.status, 200, publish.text);
+  assert.equal(JSON.parse(publish.result.result.content[0].text).status, "pending");
+
+  const commitment = await remoteMcpRequest(mcpUrl, {
+    jsonrpc: "2.0",
+    id: 6,
+    method: "tools/call",
+    params: {
+      name: "soft_commit",
+      arguments: {
+        raiseId: "approved-raise",
+        commitmentId: "remote-demo-commitment",
+        identifier: "private-demo-alias",
+        amount: 1200,
+      },
+    },
+  }, { headers: { "mcp-protocol-version": "2025-11-25" } });
+  assert.equal(commitment.status, 200, commitment.text);
+  assert.equal(commitment.result.result.content[0].text, "Soft commitment recorded.");
+  assert.equal(commitment.text.includes("private-demo-alias"), false);
+  assert.equal(commitment.text.includes("1200"), false);
+});
 
 test("standalone MCP exposes exactly four tools and preserves the existing public/role boundaries", async (t) => {
   const fakeApi = await startFakeApi();
