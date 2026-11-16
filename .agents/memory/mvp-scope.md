@@ -46,3 +46,16 @@ from the demonstrated commitment features.
 **How to apply:** Retain clear proposed-workflow identification and human
 approval/decision beats unless a separate implementation is authorized. Do not
 imply the app already ingests files, performs AI reviews or commits for investors.
+
+The proposed Raise.md preparation step includes an agent drafting a sourced
+file, identifying missing information, and waiting for founder approval. This
+is a larger product workflow, not a small polish task. The animation's
+confidential NEAR quote is also future scope: the current app does not request a
+live Intents quote.
+
+**Why:** The user explicitly separated these animated capabilities from what
+the current app demonstrates.
+
+**How to apply:** Keep the sourced preparation/review workflow and live quote
+flow distinct from current capabilities. Treat either as future product work,
+and do not claim the live quote flow works until it is built and verified.
