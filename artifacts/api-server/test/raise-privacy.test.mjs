@@ -209,6 +209,45 @@ test("public raise routes expose summaries only while sponsors retain private de
     await request("/raises?category=not-a-category", 400);
   });
 
+  await t.test("public investor ticket filters use inclusive range overlap", async () => {
+    const atMinimum = await request("/raises?minRange=500000", 200);
+    assert.ok(atMinimum.some((raise) => raise.id === id), "A raise ending at the minimum matches");
+    assert.ok(atMinimum.every((raise) => raise.range.max >= 500_000));
+
+    const atMaximum = await request("/raises?maxRange=100000", 200);
+    assert.ok(atMaximum.some((raise) => raise.id === id), "A raise starting at the maximum matches");
+    assert.ok(atMaximum.every((raise) => raise.range.min <= 100_000));
+
+    const bounded = await request("/raises?minRange=250000&maxRange=250000", 200);
+    assert.ok(bounded.some((raise) => raise.id === id));
+    assert.ok(bounded.every((raise) => raise.range.max >= 250_000 && raise.range.min <= 250_000));
+
+    const combined = await request("/raises?category=ai-agents&minRange=500000", 200);
+    assert.ok(combined.length > 0);
+    assert.ok(combined.every((raise) =>
+      raise.categories?.includes("ai-agents") && raise.range.max >= 500_000,
+    ));
+    assertPublic([...atMinimum, ...atMaximum, ...bounded, ...combined]);
+  });
+
+  await t.test("public investor ticket filters reject invalid bounds and empty safely", async () => {
+    for (const query of [
+      "minRange=not-a-number",
+      "minRange=0",
+      "minRange=-1",
+      "minRange=1.5",
+      "maxRange=9007199254740992",
+      "minRange=500000&maxRange=100000",
+      "minRange=1&minRange=2",
+    ]) {
+      const error = await request(`/raises?${query}`, 400);
+      assert.match(error.error, /invalid|must not exceed/i);
+    }
+
+    const noMatches = await request("/raises?minRange=9007199254740991", 200);
+    assert.deepEqual(noMatches, []);
+  });
+
   await t.test("Raise.md exposes the public summary without private records", async () => {
     const { response, text } = await requestMarkdown(`${path}/markdown`, 200);
     assert.match(response.headers.get("content-type") ?? "", /^text\/markdown\b/);

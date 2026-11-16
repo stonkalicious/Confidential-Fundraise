@@ -801,6 +801,7 @@ export const getGetRaisesUrl = (params?: GetRaisesParams,) => {
 }
 
 /**
+ * When ticket filters are provided, return raises whose public round range overlaps the inclusive investor ticket interval. Category and ticket filters are combined.
  * @summary Get approved public raises and aggregate totals
  */
 export const getRaises = async (params?: GetRaisesParams, options?: Parameters<typeof customFetch>[1]): Promise<RaiseSummary[]> => {
@@ -825,7 +826,7 @@ export const getGetRaisesQueryKey = (params?: GetRaisesParams,) => {
     }
 
 
-export const getGetRaisesQueryOptions = <TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<unknown>>(params?: GetRaisesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getGetRaisesQueryOptions = <TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<ErrorMessage>>(params?: GetRaisesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -844,10 +845,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetRaisesQueryResult = NonNullable<Awaited<ReturnType<typeof getRaises>>>
-export type GetRaisesQueryError = ErrorType<unknown>
+export type GetRaisesQueryError = ErrorType<ErrorMessage>
 
 
-export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<unknown>>(
+export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<ErrorMessage>>(
  params: undefined |  GetRaisesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getRaises>>,
@@ -857,7 +858,7 @@ export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TErr
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<unknown>>(
+export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<ErrorMessage>>(
  params?: GetRaisesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getRaises>>,
@@ -867,7 +868,7 @@ export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TErr
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<unknown>>(
+export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<ErrorMessage>>(
  params?: GetRaisesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -875,7 +876,7 @@ export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TErr
  * @summary Get approved public raises and aggregate totals
  */
 
-export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<unknown>>(
+export function useGetRaises<TData = Awaited<ReturnType<typeof getRaises>>, TError = ErrorType<ErrorMessage>>(
  params?: GetRaisesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRaises>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {

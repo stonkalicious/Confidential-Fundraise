@@ -122,10 +122,19 @@ export const SubmitRaiseResponse = zod.object({
 
 
 /**
+ * When ticket filters are provided, return raises whose public round range overlaps the inclusive investor ticket interval. Category and ticket filters are combined.
  * @summary Get approved public raises and aggregate totals
  */
+export const getRaisesQueryMinRangeMax = 9007199254740991;
+
+export const getRaisesQueryMaxRangeMax = 9007199254740991;
+
+
+
 export const GetRaisesQueryParams = zod.object({
-  "category": zod.enum(['privacy-security', 'ai-agents', 'intents-payments', 'consumer-real-world']).optional().describe('Return only raises assigned to this category')
+  "category": zod.enum(['privacy-security', 'ai-agents', 'intents-payments', 'consumer-real-world']).optional().describe('Return only raises assigned to this category'),
+  "minRange": zod.coerce.number().int().min(1).max(getRaisesQueryMinRangeMax).optional().describe('Minimum investor ticket in USD; include raises whose public round maximum is at least this amount'),
+  "maxRange": zod.coerce.number().int().min(1).max(getRaisesQueryMaxRangeMax).optional().describe('Maximum investor ticket in USD; include raises whose public round minimum is at most this amount')
 })
 
 

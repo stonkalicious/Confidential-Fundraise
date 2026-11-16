@@ -10,4 +10,16 @@ import type { RaiseCategory } from './raiseCategory';
 export type GetRaisesParams = {
   /** Return only raises assigned to this category */
   category?: RaiseCategory;
+  /**
+   * Minimum investor ticket in USD; include raises whose public round maximum is at least this amount
+   * @minimum 1
+   * @maximum 9007199254740991
+   */
+  minRange?: number;
+  /**
+   * Maximum investor ticket in USD; include raises whose public round minimum is at most this amount
+   * @minimum 1
+   * @maximum 9007199254740991
+   */
+  maxRange?: number;
 };

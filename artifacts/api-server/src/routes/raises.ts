@@ -1,7 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { validateRaiseSubmission } from "@workspace/api-zod/raise-submission";
 import {
-  RaiseCategory as RaiseCategoryValues,
   ApproveRaiseParams,
   ApproveRaiseResponse,
   ClaimRaiseBody,
@@ -12,6 +11,7 @@ import {
   GetPrivateRaiseResponse,
   GetRaiseByIdParams,
   GetRaiseByIdResponse,
+  GetRaisesQueryParams,
   GetRaisesResponse,
   DisconnectNearIntentsSessionResponse,
   SubmitRaiseBody,
@@ -41,13 +41,6 @@ const rateLimitWindows = new Map<string, number[]>();
 const NEAR_REFRESH_COOKIE = "near_intents_refresh";
 const NEAR_ACCOUNT_COOKIE = "near_intents_account";
 const NEAR_SESSION_COOKIE_PATH = "/api/near-intents/session";
-type PublicRaiseCategory = (typeof RaiseCategoryValues)[keyof typeof RaiseCategoryValues];
-const supportedRaiseCategories = Object.values(RaiseCategoryValues);
-
-function isPublicRaiseCategory(value: unknown): value is PublicRaiseCategory {
-  return typeof value === "string" &&
-    supportedRaiseCategories.includes(value as PublicRaiseCategory);
-}
 
 function noStore(res: Response): Response {
   return res.set("Cache-Control", "no-store");
@@ -164,18 +157,26 @@ router.post("/raises", async (req, res): Promise<void> => {
 });
 
 router.get("/raises", async (req, res): Promise<void> => {
-  let category: PublicRaiseCategory | undefined;
-  const rawCategory = req.query.category;
-  if (rawCategory !== undefined && !isPublicRaiseCategory(rawCategory)) {
-    noStore(res).status(400).json({ error: "Invalid raise category filter." });
+  const parsedFilters = GetRaisesQueryParams.safeParse(req.query);
+  if (!parsedFilters.success) {
+    noStore(res).status(400).json({ error: "Invalid raise filters." });
     return;
   }
-  if (rawCategory !== undefined) category = rawCategory;
+  const { category, minRange, maxRange } = parsedFilters.data;
+  if (minRange !== undefined && maxRange !== undefined && minRange > maxRange) {
+    noStore(res).status(400).json({
+      error: "Minimum investor ticket must not exceed maximum investor ticket.",
+    });
+    return;
+  }
 
   const raises = await getRaisesWithConfirmedTestnetCounts();
-  const filtered = category
-    ? raises.filter((raise) => raise.categories?.includes(category))
-    : raises;
+  const filtered = raises.filter((raise) => {
+    if (category && !raise.categories?.includes(category)) return false;
+    if (minRange !== undefined && raise.range.max < minRange) return false;
+    if (maxRange !== undefined && raise.range.min > maxRange) return false;
+    return true;
+  });
   noStore(res).json(GetRaisesResponse.parse(filtered));
 });
 

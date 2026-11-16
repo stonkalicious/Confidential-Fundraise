@@ -185,6 +185,7 @@ paths:
       operationId: getRaises
       tags: [raises]
       summary: Get approved public raises and aggregate totals
+      description: When ticket filters are provided, return raises whose public round range overlaps the inclusive investor ticket interval. Category and ticket filters are combined.
       parameters:
         - name: category
           in: query
@@ -192,6 +193,22 @@ paths:
           description: Return only raises assigned to this category
           schema:
             $ref: "#/components/schemas/RaiseCategory"
+        - name: minRange
+          in: query
+          required: false
+          description: Minimum investor ticket in USD; include raises whose public round maximum is at least this amount
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9007199254740991
+        - name: maxRange
+          in: query
+          required: false
+          description: Maximum investor ticket in USD; include raises whose public round minimum is at most this amount
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9007199254740991
       responses:
         "200":
           description: Approved raises with aggregate totals only
@@ -201,6 +218,12 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/RaiseSummary"
+        "400":
+          description: Invalid category or investor ticket range
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
   /raises/pending:
     get:
       operationId: getPendingRaises
