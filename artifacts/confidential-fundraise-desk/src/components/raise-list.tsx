@@ -15,6 +15,7 @@ import { Link } from 'wouter';
 import { getSafeSourceLink, RAISE_CATEGORIES, type Raise, type RaiseCategory } from '@/data/raises';
 import SiteHeader from '@/components/site-header';
 import { validateRaiseForm } from '@/lib/raise-submission';
+import { parseInvestorTicketRange, raiseMatchesInvestorTicketRange } from '@/lib/raise-filter';
 
 function errorMessage(error: unknown, fallback: string): string {
   if (error && typeof error === 'object' && 'data' in error) {
@@ -48,6 +49,8 @@ export default function RaiseList({
   const [submissionError, setSubmissionError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<SubmissionErrors>({});
   const [selectedCategory, setSelectedCategory] = useState<RaiseCategory | null>(null);
+  const [investorMin, setInvestorMin] = useState('');
+  const [investorMax, setInvestorMax] = useState('');
 
   function clearFieldError(field: SubmissionField) {
     setSubmissionError('');
@@ -157,31 +160,19 @@ export default function RaiseList({
     }
   }
 
-  const visibleRaises = selectedCategory
-    ? raises.filter((raise) => raise.categories?.includes(selectedCategory))
-    : raises;
+  const investorTicketRange = parseInvestorTicketRange(investorMin, investorMax);
+  const visibleRaises = investorTicketRange.error
+    ? []
+    : raises.filter((raise) => {
+      const matchesCategory = !selectedCategory || raise.categories?.includes(selectedCategory);
+      return matchesCategory && raiseMatchesInvestorTicketRange(raise.roundRange, investorTicketRange.range);
+    });
 
   return (
     <div className="app-shell">
       <SiteHeader />
       <main className="frame">
         <div className="raise-home-grid">
-          <section className="raise-submit-card raise-how-card" aria-labelledby="raise-how-title">
-            <h2 className="section-title" id="raise-how-title">How it works</h2>
-            <video
-              className="raise-how-video"
-              controls
-              playsInline
-              preload="metadata"
-              poster={getGetWalkthroughMediaUrl('walkthrough-589be0760638.webp')}
-              src={getGetWalkthroughMediaUrl('walkthrough-589be0760638.mp4')}
-              aria-label="Agent Raised walkthrough"
-              data-testid="how-it-works-video"
-            />
-            <p className="raise-how-disclosure">
-              Includes proposed agent workflows; not all features are implemented.
-            </p>
-          </section>
           <section className="raise-list-column">
             <h1 className="section-title">Active raises</h1>
             <div className="raise-category-filters" role="group" aria-label="Categories">
@@ -205,6 +196,41 @@ export default function RaiseList({
                 </button>
               ))}
             </div>
+            <div className="raise-ticket-filters" role="group" aria-label="Investor ticket range">
+              <div>
+                <label className="field-label" htmlFor="investor-ticket-min">Minimum (USD)</label>
+                <input
+                  className="field"
+                  id="investor-ticket-min"
+                  data-testid="input-investor-ticket-min"
+                  type="number"
+                  min="1"
+                  step="1"
+                  inputMode="numeric"
+                  value={investorMin}
+                  onChange={(event) => setInvestorMin(event.target.value)}
+                />
+              </div>
+              <div>
+                <label className="field-label" htmlFor="investor-ticket-max">Maximum (USD)</label>
+                <input
+                  className="field"
+                  id="investor-ticket-max"
+                  data-testid="input-investor-ticket-max"
+                  type="number"
+                  min="1"
+                  step="1"
+                  inputMode="numeric"
+                  value={investorMax}
+                  onChange={(event) => setInvestorMax(event.target.value)}
+                />
+              </div>
+            </div>
+            {investorTicketRange.error && (
+              <p className="inline-error" role="alert" data-testid="investor-ticket-error">
+                {investorTicketRange.error}
+              </p>
+            )}
             <ul className="raise-list" data-testid="raise-list">
               {visibleRaises.map((raise) => {
                 const sourceLink = getSafeSourceLink(raise.sourceLink);
@@ -262,9 +288,30 @@ export default function RaiseList({
                 );
               })}
             </ul>
+            {!investorTicketRange.error && visibleRaises.length === 0 && (
+              <p className="field-hint" data-testid="raise-filter-empty">
+                No raises match these filters.
+              </p>
+            )}
           </section>
-
-          <aside className="raise-submission-column">
+          <div className="raise-right-column">
+            <section className="raise-submit-card raise-how-card" aria-labelledby="raise-how-title">
+              <h2 className="section-title" id="raise-how-title">How it works</h2>
+              <video
+                className="raise-how-video"
+                controls
+                playsInline
+                preload="metadata"
+                poster={getGetWalkthroughMediaUrl('walkthrough-589be0760638.webp')}
+                src={getGetWalkthroughMediaUrl('walkthrough-589be0760638.mp4')}
+                aria-label="Agent Raised walkthrough"
+                data-testid="how-it-works-video"
+              />
+              <p className="raise-how-disclosure">
+                Includes proposed agent workflows; not all features are implemented.
+              </p>
+            </section>
+            <aside className="raise-submission-column">
             <form className="raise-submit-card" onSubmit={submitRaise} noValidate>
               <h2 className="section-title">Submit a raise</h2>
               <div className="field-wrap">
@@ -415,7 +462,8 @@ export default function RaiseList({
                 ))}
               </div>
             </details>
-          </aside>
+            </aside>
+          </div>
         </div>
       </main>
       <footer className="footer">Demo only — public pages show approved raises and aggregate totals.</footer>
