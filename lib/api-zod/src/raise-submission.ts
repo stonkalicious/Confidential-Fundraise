@@ -1,5 +1,5 @@
 // Shared by the form and route. Keep these limits aligned with RaiseSubmissionInput.
-export type SubmissionField = 'name' | 'thesis' | 'stage' | 'rangeMin' | 'rangeMax';
+export type SubmissionField = 'name' | 'thesis' | 'stage' | 'rangeMin' | 'rangeMax' | 'sourceLink';
 export type SubmissionErrors = Partial<Record<SubmissionField, string>>;
 
 const textRules = {
@@ -12,6 +12,11 @@ function record(value: unknown): Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
     ? value as Record<string, unknown>
     : {};
+}
+
+function isHttpUrl(value: string): boolean {
+  return /^https:\/\/(?:\[[\da-f:.]+\]|[a-z\d](?:[a-z\d.-]*[a-z\d])?)(?::\d{1,5})?(?:[/?#][^\s]*)?$/i.test(value)
+    || /^http:\/\/(?:\[[\da-f:.]+\]|[a-z\d](?:[a-z\d.-]*[a-z\d])?)(?::\d{1,5})?(?:[/?#][^\s]*)?$/i.test(value);
 }
 
 export function validateRaiseSubmission(value: unknown) {
@@ -38,9 +43,27 @@ export function validateRaiseSubmission(value: unknown) {
   if (validMin && validMax && (range.max as number) < (range.min as number)) {
     errors.rangeMax = 'Range maximum must be at least the minimum.';
   }
+  const rawSourceLink = body.sourceLink;
+  let sourceLink: string | undefined;
+  if (rawSourceLink !== undefined) {
+    if (typeof rawSourceLink !== 'string') {
+      errors.sourceLink = 'Enter a valid HTTP or HTTPS source URL.';
+    } else if (rawSourceLink.trim()) {
+      sourceLink = rawSourceLink.trim();
+      if (sourceLink.length > 2048) {
+        errors.sourceLink = 'Source URL must be at most 2048 characters.';
+      } else if (!isHttpUrl(sourceLink)) {
+        errors.sourceLink = 'Enter a valid HTTP or HTTPS source URL.';
+      }
+    }
+  }
   return {
     errors,
-    input: { ...text, range: { min: range.min as number, max: range.max as number } },
+    input: {
+      ...text,
+      range: { min: range.min as number, max: range.max as number },
+      ...(sourceLink && !errors.sourceLink ? { sourceLink } : {}),
+    },
   };
 }
 
@@ -48,7 +71,7 @@ export function validateRaiseSubmission(value: unknown) {
 export function submissionErrorsFromResponse(value: unknown): SubmissionErrors {
   const fields = record(record(value).fieldErrors);
   const errors: SubmissionErrors = {};
-  for (const field of ['name', 'thesis', 'stage', 'rangeMin', 'rangeMax'] as const) {
+  for (const field of ['name', 'thesis', 'stage', 'rangeMin', 'rangeMax', 'sourceLink'] as const) {
     const message = fields[field];
     if (typeof message === 'string' && message.trim() && message.length <= 160) {
       errors[field] = message;

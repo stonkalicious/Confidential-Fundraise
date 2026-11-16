@@ -1,7 +1,7 @@
 import { validateRaiseSubmission } from '@workspace/api-zod/raise-submission';
 
 export function validateRaiseForm(values: {
-  name: string; thesis: string; stage: string; rangeMin: string; rangeMax: string;
+  name: string; thesis: string; stage: string; rangeMin: string; rangeMax: string; sourceLink: string;
 }) {
   // Match number inputs, without introducing formatted currency or other radices.
   const number = (value: string) =>
@@ -11,5 +11,6 @@ export function validateRaiseForm(values: {
     thesis: values.thesis,
     stage: values.stage,
     range: { min: number(values.rangeMin), max: number(values.rangeMax) },
+    sourceLink: values.sourceLink,
   });
 }

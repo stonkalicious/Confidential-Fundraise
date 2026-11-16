@@ -4,7 +4,7 @@ import { validateRaiseForm } from '../src/lib/raise-submission.ts';
 import { submissionErrorsFromResponse } from '@workspace/api-zod/raise-submission';
 
 const example = {
-  name: 'test', thesis: 'test', stage: 'angel', rangeMin: '1000000', rangeMax: '5000000',
+  name: 'test', thesis: 'test', stage: 'angel', rangeMin: '1000000', rangeMax: '5000000', sourceLink: '',
 };
 const valid = { ...example, thesis: '1234567890' };
 
@@ -27,6 +27,17 @@ test('text is trimmed before all minimum and maximum checks', () => {
   }
   assert.equal(validateRaiseForm({ ...valid, thesis: ' 123456789 ' }).errors.thesis,
     'Short thesis must be at least 10 characters.');
+});
+
+test('optional source URL is trimmed, included when valid, and rejects non-web URLs', () => {
+  const validSource = validateRaiseForm({ ...valid, sourceLink: ' https://example.org/raise ' });
+  assert.deepEqual(validSource.errors, {});
+  assert.equal(validSource.input.sourceLink, 'https://example.org/raise');
+  assert.equal(Object.hasOwn(validateRaiseForm(valid).input, 'sourceLink'), false);
+
+  for (const sourceLink of ['ftp://example.org', 'javascript:alert(1)', 'example.org', 'x'.repeat(2049)]) {
+    assert.ok(validateRaiseForm({ ...valid, sourceLink }).errors.sourceLink);
+  }
 });
 
 test('range fields reject malformed, nonpositive, fractional, unsafe, and reversed bounds', () => {

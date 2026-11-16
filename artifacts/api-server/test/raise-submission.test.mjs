@@ -10,6 +10,7 @@ const screenshot = {
   name: 'test', thesis: 'test', stage: 'angel', range: { min: 1000000, max: 5000000 },
 };
 const valid = { ...screenshot, thesis: '1234567890' };
+const sourceLink = 'https://example.org/company';
 
 test('submission route validates fields and queues valid raises only in isolated memory', async (t) => {
   // Deliberately do not initializeRaiseStore: this process never writes to the database.
@@ -70,23 +71,29 @@ test('submission route validates fields and queues valid raises only in isolated
   for (const body of [[], {}]) {
     await invalid(body, ['name', 'thesis', 'stage', 'rangeMin', 'rangeMax']);
   }
+  for (const value of [null, 42, [], {}, 'ftp://example.org', 'javascript:alert(1)', 'example.org', 'x'.repeat(2049)]) {
+    await invalid({ ...valid, sourceLink: value }, ['sourceLink']);
+  }
   // JSON primitives are rejected by the existing body parser before routing.
   for (const body of [null, 'bad']) {
     assert.deepEqual(Object.keys(validateRaiseSubmission(body).errors),
       ['name', 'thesis', 'stage', 'rangeMin', 'rangeMax']);
   }
   // Exercise the real route/store without any persisted records or live approval code.
+  const submitted = [];
   for (const input of [
-    valid,
+    { ...valid, sourceLink },
     { name: ' xy ', thesis: ' 1234567890 ', stage: ' a ', range: { min: 1, max: 1 } },
     { name: 'n'.repeat(120), thesis: 't'.repeat(280), stage: 's'.repeat(60),
       range: { min: Number.MAX_SAFE_INTEGER, max: Number.MAX_SAFE_INTEGER } },
   ]) {
     const receipt = await post(input, 201);
+    submitted.push(receipt);
     assert.deepEqual(receipt, { id: receipt.id, status: 'pending' });
     const pending = (await getPendingRaises()).find((raise) => raise.id === receipt.id);
     assert.deepEqual(pending, { id: receipt.id, status: 'pending',
-      name: input.name.trim(), thesis: input.thesis.trim(), stage: input.stage.trim(), range: input.range });
+      name: input.name.trim(), thesis: input.thesis.trim(), stage: input.stage.trim(), range: input.range,
+      ...(input.sourceLink ? { sourceLink: input.sourceLink } : {}) });
     assert.deepEqual(await getRaises(), publicBefore);
     assert.equal((await fetch(`${base}/${receipt.id}`)).status, 404);
     assert.equal((await fetch(`${base}/pending`)).status, 401);
@@ -97,4 +104,17 @@ test('submission route validates fields and queues valid raises only in isolated
     assert.equal(response.headers.get('cache-control'), 'no-store');
     assert.deepEqual((await response.json()).find((raise) => raise.id === receipt.id), pending);
   }
+  const sourceRaiseId = submitted[0].id;
+  const approved = await fetch(`${base}/${sourceRaiseId}/approve`, {
+    method: 'POST',
+    headers: { authorization: 'Bearer isolated-submission-approval' },
+  });
+  assert.equal(approved.status, 200);
+  assert.equal((await approved.json()).sourceLink, sourceLink);
+  const publicRaise = await fetch(`${base}/${sourceRaiseId}`);
+  assert.equal(publicRaise.status, 200);
+  assert.equal((await publicRaise.json()).sourceLink, sourceLink);
+  const markdown = await fetch(`${base}/${sourceRaiseId}/markdown`);
+  assert.equal(markdown.status, 200);
+  assert.match(await markdown.text(), new RegExp(`Public source: ${sourceLink.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}`));
 });

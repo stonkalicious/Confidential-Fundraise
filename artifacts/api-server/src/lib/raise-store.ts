@@ -571,6 +571,7 @@ export async function getPendingRaises(): Promise<PendingRaise[]> {
         thesis: raise.thesis,
         stage: raise.stage,
         range: raise.range,
+        ...(raise.sourceLink ? { sourceLink: raise.sourceLink } : {}),
         status: "pending" as const,
       })),
   );
@@ -588,6 +589,7 @@ export function submitRaiseRecord(
       thesis: input.thesis.trim(),
       stage: input.stage.trim(),
       range: { ...input.range },
+      ...(input.sourceLink ? { sourceLink: input.sourceLink.trim() } : {}),
       status: "pending",
       commitments: [],
       softTotal: 0,

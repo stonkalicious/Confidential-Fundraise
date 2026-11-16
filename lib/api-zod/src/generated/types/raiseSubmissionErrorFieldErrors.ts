@@ -17,4 +17,6 @@ export type RaiseSubmissionErrorFieldErrors = {
   rangeMin?: string;
   /** @maxLength 160 */
   rangeMax?: string;
+  /** @maxLength 160 */
+  sourceLink?: string;
 };

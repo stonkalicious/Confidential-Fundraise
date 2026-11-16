@@ -997,6 +997,10 @@ components:
           type: string
         range:
           $ref: "#/components/schemas/RaiseRange"
+        sourceLink:
+          type: string
+          format: uri
+          maxLength: 2048
         status:
           type: string
           enum: [pending]
@@ -1027,6 +1031,10 @@ components:
           maxLength: 60
         range:
           $ref: "#/components/schemas/RaiseRange"
+        sourceLink:
+          type: string
+          format: uri
+          maxLength: 2048
       required: [name, thesis, stage, range]
     RaiseClaim:
       type: object
@@ -1119,6 +1127,7 @@ components:
             stage: { type: string, maxLength: 160 }
             rangeMin: { type: string, maxLength: 160 }
             rangeMax: { type: string, maxLength: 160 }
+            sourceLink: { type: string, maxLength: 160 }
     ErrorMessage:
       type: object
       properties:

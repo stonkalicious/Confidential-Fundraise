@@ -100,6 +100,8 @@ export const submitRaiseBodyStageMax = 60;
 
 
 
+export const submitRaiseBodySourceLinkMax = 2048;
+
 
 
 export const SubmitRaiseBody = zod.object({
@@ -109,7 +111,8 @@ export const SubmitRaiseBody = zod.object({
   "range": zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
-})
+}),
+  "sourceLink": zod.url().max(submitRaiseBodySourceLinkMax).optional()
 })
 
 export const SubmitRaiseResponse = zod.object({
@@ -162,6 +165,8 @@ export const GetRaisesResponse = zod.array(GetRaisesResponseItem)
  */
 
 
+export const getPendingRaisesResponseSourceLinkMax = 2048;
+
 
 
 export const GetPendingRaisesResponseItem = zod.object({
@@ -173,6 +178,7 @@ export const GetPendingRaisesResponseItem = zod.object({
   "min": zod.int().min(1),
   "max": zod.int().min(1)
 }),
+  "sourceLink": zod.url().max(getPendingRaisesResponseSourceLinkMax).optional(),
   "status": zod.enum(['pending'])
 })
 export const GetPendingRaisesResponse = zod.array(GetPendingRaisesResponseItem)

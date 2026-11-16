@@ -270,6 +270,8 @@ export interface PendingRaise {
   thesis: string;
   stage: string;
   range: RaiseRange;
+  /** @maxLength 2048 */
+  sourceLink?: string;
   status: PendingRaiseStatus;
 }
 
@@ -302,6 +304,8 @@ export interface RaiseSubmissionInput {
      */
   stage: string;
   range: RaiseRange;
+  /** @maxLength 2048 */
+  sourceLink?: string;
 }
 
 export interface SoftCommitmentInput {
@@ -337,6 +341,8 @@ export type RaiseSubmissionErrorFieldErrors = {
   rangeMin?: string;
   /** @maxLength 160 */
   rangeMax?: string;
+  /** @maxLength 160 */
+  sourceLink?: string;
 };
 
 export interface RaiseSubmissionError {

@@ -42,6 +42,7 @@ export default function RaiseList({
   const [stage, setStage] = useState('');
   const [rangeMin, setRangeMin] = useState('');
   const [rangeMax, setRangeMax] = useState('');
+  const [sourceLink, setSourceLink] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submissionMessage, setSubmissionMessage] = useState('');
   const [submissionError, setSubmissionError] = useState('');
@@ -62,7 +63,7 @@ export default function RaiseList({
     setFieldErrors(errors);
     const first = Object.keys(errors)[0] as SubmissionField | undefined;
     const ids = { name: 'raise-name', thesis: 'raise-thesis', stage: 'raise-stage',
-      rangeMin: 'raise-range-min', rangeMax: 'raise-range-max' };
+      rangeMin: 'raise-range-min', rangeMax: 'raise-range-max', sourceLink: 'raise-source-link' };
     if (first) form.querySelector<HTMLElement>(`#${ids[first]}`)?.focus();
   }
 
@@ -91,7 +92,7 @@ export default function RaiseList({
     const form = event.currentTarget;
     setSubmissionError('');
     setSubmissionMessage('');
-    const { input, errors } = validateRaiseForm({ name, thesis, stage, rangeMin, rangeMax });
+    const { input, errors } = validateRaiseForm({ name, thesis, stage, rangeMin, rangeMax, sourceLink });
     showFieldErrors(errors, form);
     if (Object.keys(errors).length > 0) {
       return;
@@ -104,6 +105,7 @@ export default function RaiseList({
       setStage('');
       setRangeMin('');
       setRangeMax('');
+      setSourceLink('');
       setSubmissionMessage(`Submitted for manual review. Reference: ${receipt.id}. Your raise is not public yet. No notification is sent; keep this reference.`);
     } catch (error) {
       const errors = submissionErrorsFromResponse(
@@ -342,6 +344,21 @@ export default function RaiseList({
                   {fieldError('rangeMax')}
                 </div>
               </div>
+              <div className="field-wrap">
+                <label className="field-label" htmlFor="raise-source-link">Public source URL (optional)</label>
+                <input
+                  className="field"
+                  id="raise-source-link"
+                  data-testid="input-raise-source-link"
+                  type="url"
+                  autoComplete="url"
+                  value={sourceLink}
+                  onChange={(event) => { setSourceLink(event.target.value); clearFieldError('sourceLink'); }}
+                  {...errorProps('sourceLink')}
+                  maxLength={2048}
+                />
+                {fieldError('sourceLink')}
+              </div>
               {submissionError && <p className="inline-error" role="alert">{submissionError}</p>}
               {submissionMessage && <p className="form-status" role="status">{submissionMessage}</p>}
               <button className="primary-button" type="submit" disabled={submitting}>
@@ -379,6 +396,13 @@ export default function RaiseList({
                     <div className="raise-details">
                       {raise.stage} · {format(raise.range.min)} – {format(raise.range.max)}
                     </div>
+                    {getSafeSourceLink(raise.sourceLink) && (
+                      <p className="raise-details">
+                        <a href={getSafeSourceLink(raise.sourceLink)} target="_blank" rel="noopener noreferrer">
+                          Review public source
+                        </a>
+                      </p>
+                    )}
                     <button
                       className="mark-button"
                       type="button"

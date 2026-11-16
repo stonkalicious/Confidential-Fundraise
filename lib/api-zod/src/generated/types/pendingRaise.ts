@@ -14,5 +14,7 @@ export interface PendingRaise {
   thesis: string;
   stage: string;
   range: RaiseRange;
+  /** @maxLength 2048 */
+  sourceLink?: string;
   status: PendingRaiseStatus;
 }
